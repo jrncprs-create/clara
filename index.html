@@ -1,613 +1,237 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clara</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clara</title>
 
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
-      overflow: hidden;
-    }
+<style>
+* { box-sizing: border-box; }
 
-    body {
-      padding: 14px;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.06), transparent 28%),
-        #000;
-    }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
 
-    .app {
-      width: 100%;
-      height: calc(100vh - 28px);
-      display: grid;
-      grid-template-columns: 1.15fr 1fr 1fr;
-      grid-template-rows: auto 1fr;
-      gap: 14px;
-    }
+body {
+  padding: 14px;
+}
 
-    .panel {
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 22px;
-      background: rgba(255,255,255,0.02);
-      overflow: hidden;
-      min-height: 0;
-      min-width: 0;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-    }
+.app {
+  width: 100%;
+  height: calc(100vh - 28px);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 14px;
+}
 
-    .panel-header {
-      height: 44px;
-      padding: 0 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
+.panel {
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 22px;
+  background: rgba(255,255,255,0.02);
+  overflow: hidden;
+  min-height: 0;
+}
 
-    .panel-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.92);
-      margin: 0;
-    }
+.panel-header {
+  height: 44px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
 
-    .panel-subtitle {
-      font-size: 12px;
-      color: rgba(255,255,255,0.42);
-    }
+.panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
 
-    .panel-body {
-      height: calc(100% - 44px);
-      overflow: auto;
-    }
+.panel-body {
+  height: calc(100% - 44px);
+  overflow: auto;
+}
 
-    .agenda-panel {
-      grid-column: 1 / 2;
-      grid-row: 1 / 3;
-    }
+/* layout */
+.agenda-panel { grid-column: 1; grid-row: 1 / 3; }
+.tasks-panel { grid-column: 2; grid-row: 1; }
+.notes-panel { grid-column: 3; grid-row: 1; }
+.appointments-panel { grid-column: 2; grid-row: 2; }
+.chat-panel { grid-column: 3; grid-row: 2; }
 
-    .tasks-panel {
-      grid-column: 2 / 3;
-      grid-row: 1 / 2;
-    }
+/* agenda */
+.agenda-day {
+  padding: 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
 
-    .notes-panel {
-      grid-column: 3 / 4;
-      grid-row: 1 / 2;
-    }
+.agenda-date {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
 
-    .appointments-panel {
-      grid-column: 2 / 3;
-      grid-row: 2 / 3;
-    }
+.agenda-empty {
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+}
 
-    .chat-panel {
-      grid-column: 3 / 4;
-      grid-row: 2 / 3;
-    }
+/* cards */
+.card {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 14px;
+}
 
-    .agenda-list {
-      padding: 0;
-    }
+.card-title { font-weight: 600; }
+.card-meta { font-size: 13px; opacity: 0.6; }
 
-    .agenda-day {
-      padding: 18px 18px 16px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
+/* chat */
+.chat-wrap {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
-    .agenda-day:last-child {
-      border-bottom: none;
-    }
+.chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow: auto;
+}
 
-    .agenda-date {
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 12px;
-      color: rgba(255,255,255,0.96);
-    }
+.chat-bubble {
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+}
 
-    .agenda-items {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+.clara { background: rgba(255,255,255,0.08); }
+.user { background: #fff; color: #000; }
 
-    .agenda-item {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
+.chat-inputbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
 
-    .agenda-item-title {
-      font-size: 15px;
-      font-weight: 600;
-      line-height: 1.3;
-      color: #fff;
-    }
+.chat-input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #111;
+  color: #fff;
+}
 
-    .agenda-item-meta {
-      font-size: 13px;
-      color: rgba(255,255,255,0.55);
-      line-height: 1.3;
-    }
-
-    .agenda-empty {
-      font-size: 14px;
-      color: rgba(255,255,255,0.30);
-    }
-
-    .card-list {
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .card {
-      border: 1px solid rgba(255,255,255,0.08);
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-      border-radius: 18px;
-      padding: 14px 14px 13px 14px;
-    }
-
-    .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      line-height: 1.3;
-      margin-bottom: 5px;
-      color: #fff;
-    }
-
-    .card-meta {
-      font-size: 13px;
-      color: rgba(255,255,255,0.70);
-      line-height: 1.3;
-      margin-bottom: 3px;
-    }
-
-    .card-sub {
-      font-size: 13px;
-      color: rgba(255,255,255,0.44);
-      line-height: 1.3;
-    }
-
-    .empty {
-      padding: 16px;
-      font-size: 14px;
-      color: rgba(255,255,255,0.35);
-    }
-
-    .chat-wrap {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .chat-messages {
-      flex: 1;
-      padding: 14px;
-      overflow: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chat-bubble {
-      max-width: 88%;
-      border-radius: 16px;
-      padding: 12px 14px;
-      font-size: 14px;
-      line-height: 1.4;
-      white-space: pre-wrap;
-    }
-
-    .chat-bubble.clara {
-      align-self: flex-start;
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.92);
-    }
-
-    .chat-bubble.user {
-      align-self: flex-end;
-      background: rgba(255,255,255,0.92);
-      color: #000;
-    }
-
-    .chat-inputbar {
-      padding: 12px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-    }
-
-    .chat-input {
-      width: 100%;
-      height: 46px;
-      border: 1px solid rgba(255,255,255,0.08);
-      outline: none;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.04);
-      color: #fff;
-      padding: 0 14px;
-      font-size: 14px;
-    }
-
-    .chat-input::placeholder {
-      color: rgba(255,255,255,0.35);
-    }
-
-    .chat-send {
-      height: 46px;
-      padding: 0 16px;
-      border: none;
-      border-radius: 14px;
-      background: #fff;
-      color: #000;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    @media (max-width: 1200px) {
-      body {
-        overflow: auto;
-      }
-
-      .app {
-        height: auto;
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
-      }
-
-      .agenda-panel,
-      .tasks-panel,
-      .notes-panel,
-      .appointments-panel,
-      .chat-panel {
-        grid-column: auto;
-        grid-row: auto;
-        min-height: 340px;
-      }
-    }
-  </style>
+.chat-send {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <section class="panel agenda-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">Time table</h2>
-        <div class="panel-subtitle">Agenda-overzicht</div>
-      </div>
-      <div class="panel-body" id="agendaList"></div>
-    </section>
 
-    <section class="panel tasks-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">ToDo’s</h2>
-        <div class="panel-subtitle">Laatste items</div>
-      </div>
-      <div class="panel-body" id="tasksList"></div>
-    </section>
+<div class="app">
 
-    <section class="panel notes-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">Notities</h2>
-        <div class="panel-subtitle">Recent</div>
-      </div>
-      <div class="panel-body" id="notesList"></div>
-    </section>
-
-    <section class="panel appointments-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">Afspraken</h2>
-        <div class="panel-subtitle">Komend en recent</div>
-      </div>
-      <div class="panel-body" id="appointmentsList"></div>
-    </section>
-
-    <section class="panel chat-panel">
-      <div class="panel-header">
-        <h2 class="panel-title">Chat</h2>
-        <div class="panel-subtitle">Clara</div>
-      </div>
-      <div class="panel-body">
-        <div class="chat-wrap">
-          <div class="chat-messages" id="chatMessages">
-            <div class="chat-bubble clara">Waar wil je iets aan toevoegen of verduidelijken?</div>
-          </div>
-          <div class="chat-inputbar">
-            <input id="chatInput" class="chat-input" type="text" placeholder="Typ je bericht..." />
-            <button id="chatSend" class="chat-send">Verstuur</button>
-          </div>
-        </div>
-      </div>
-    </section>
+<!-- TIME TABLE -->
+<div class="panel agenda-panel">
+  <div class="panel-header">
+    <div class="panel-title">Time table</div>
   </div>
+  <div class="panel-body" id="agenda"></div>
+</div>
 
-  <script>
-    const agendaList = document.getElementById('agendaList')
-    const tasksList = document.getElementById('tasksList')
-    const notesList = document.getElementById('notesList')
-    const appointmentsList = document.getElementById('appointmentsList')
-    const chatMessages = document.getElementById('chatMessages')
-    const chatInput = document.getElementById('chatInput')
-    const chatSend = document.getElementById('chatSend')
+<!-- TODOS -->
+<div class="panel tasks-panel">
+  <div class="panel-header">
+    <div class="panel-title">ToDo’s</div>
+  </div>
+  <div class="panel-body" id="tasks"></div>
+</div>
 
-    function escapeHtml(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-    }
+<!-- NOTES -->
+<div class="panel notes-panel">
+  <div class="panel-header">
+    <div class="panel-title">Notities</div>
+  </div>
+  <div class="panel-body" id="notes"></div>
+</div>
 
-    function getAmsterdamNow() {
-      const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Europe/Amsterdam',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hourCycle: 'h23'
-      }).formatToParts(new Date())
+<!-- APPOINTMENTS -->
+<div class="panel appointments-panel">
+  <div class="panel-header">
+    <div class="panel-title">Afspraken</div>
+  </div>
+  <div class="panel-body" id="appointments"></div>
+</div>
 
-      const map = {}
-      for (const part of parts) map[part.type] = part.value
+<!-- CHAT -->
+<div class="panel chat-panel">
+  <div class="panel-header">
+    <div class="panel-title">Chat</div>
+  </div>
+  <div class="panel-body">
+    <div class="chat-wrap">
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-inputbar">
+        <input id="chatInput" class="chat-input" placeholder="Typ..." />
+        <button id="chatSend" class="chat-send">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      return new Date(`${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}:${map.second}`)
-    }
+</div>
 
-    function getAmsterdamTodayStart() {
-      const now = getAmsterdamNow()
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    }
+<script>
+function getDays() {
+  const days = []
+  const today = new Date()
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    days.push(d.toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long' }))
+  }
+  return days
+}
 
-    function parseDate(value) {
-      if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return null
-      const [y, m, d] = String(value).split('-').map(Number)
-      return new Date(y, m - 1, d)
-    }
+function renderAgenda() {
+  const el = document.getElementById('agenda')
+  el.innerHTML = getDays().map(d => `
+    <div class="agenda-day">
+      <div class="agenda-date">${d}</div>
+      <div class="agenda-empty">geen items</div>
+    </div>
+  `).join('')
+}
 
-    function formatDateLong(date) {
-      return new Intl.DateTimeFormat('nl-NL', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      }).format(date)
-    }
+function chat(text) {
+  const el = document.getElementById('chatMessages')
+  el.innerHTML += `<div class="chat-bubble user">${text}</div>`
+  setTimeout(() => {
+    el.innerHTML += `<div class="chat-bubble clara">Opgeslagen.</div>`
+    el.scrollTop = el.scrollHeight
+  }, 400)
+}
 
-    function formatDateShort(dateStr, timeStr = '') {
-      const date = parseDate(dateStr)
-      if (!date) return 'nieuw'
+document.getElementById('chatSend').onclick = () => {
+  const input = document.getElementById('chatInput')
+  chat(input.value)
+  input.value = ''
+}
 
-      const today = getAmsterdamTodayStart()
-      const tomorrow = new Date(today)
-      tomorrow.setDate(tomorrow.getDate() + 1)
+renderAgenda()
+</script>
 
-      let label = new Intl.DateTimeFormat('nl-NL', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }).format(date)
-
-      if (sameDay(date, today)) label = 'vandaag'
-      if (sameDay(date, tomorrow)) label = 'morgen'
-
-      return timeStr ? `${label} ${timeStr}` : label
-    }
-
-    function sameDay(a, b) {
-      return a &&
-        b &&
-        a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate()
-    }
-
-    function buildDays(count = 7) {
-      const start = getAmsterdamTodayStart()
-      const days = []
-
-      for (let i = 0; i < count; i++) {
-        const day = new Date(start)
-        day.setDate(start.getDate() + i)
-        days.push(day)
-      }
-
-      return days
-    }
-
-    function renderAgenda(data) {
-      const agendaItems = Array.isArray(data.agenda) ? data.agenda : []
-      const taskItems = Array.isArray(data.tasks) ? data.tasks : []
-
-      const combined = [...agendaItems, ...taskItems]
-        .filter(item => parseDate(item.date))
-        .map(item => ({
-          ...item,
-          _date: parseDate(item.date),
-          _typeLabel: ['afspraak', 'agenda'].includes((item.type || '').toLowerCase()) ? 'afspraak' : 'todo'
-        }))
-        .sort((a, b) => {
-          const aDate = `${a.date || ''} ${a.time || ''}`
-          const bDate = `${b.date || ''} ${b.time || ''}`
-          return aDate.localeCompare(bDate)
-        })
-
-      const days = buildDays(7)
-
-      agendaList.innerHTML = `
-        <div class="agenda-list">
-          ${days.map(day => {
-            const dayItems = combined.filter(item => sameDay(item._date, day))
-
-            return `
-              <div class="agenda-day">
-                <div class="agenda-date">${escapeHtml(formatDateLong(day))}</div>
-                <div class="agenda-items">
-                  ${
-                    dayItems.length
-                      ? dayItems.map(item => `
-                        <div class="agenda-item">
-                          <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-                          <div class="agenda-item-meta">${escapeHtml(item.time || '')}${item.time ? ' · ' : ''}${escapeHtml(item._typeLabel)}</div>
-                        </div>
-                      `).join('')
-                      : `<div class="agenda-empty">geen items</div>`
-                  }
-                </div>
-              </div>
-            `
-          }).join('')}
-        </div>
-      `
-    }
-
-    function renderTasks(data) {
-      const tasks = Array.isArray(data.tasks) ? data.tasks : []
-
-      if (!tasks.length) {
-        tasksList.innerHTML = `<div class="empty">Geen taken</div>`
-        return
-      }
-
-      tasksList.innerHTML = `
-        <div class="card-list">
-          ${tasks.map(item => `
-            <div class="card">
-              <div class="card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              ${item.project ? `<div class="card-meta">${escapeHtml(item.project)}</div>` : ''}
-              <div class="card-sub">${escapeHtml(formatDateShort(item.date, item.time))}</div>
-            </div>
-          `).join('')}
-        </div>
-      `
-    }
-
-    function renderNotes(data) {
-      const notes = Array.isArray(data.notes) ? data.notes : []
-
-      if (!notes.length) {
-        notesList.innerHTML = `<div class="empty">Geen notities</div>`
-        return
-      }
-
-      notesList.innerHTML = `
-        <div class="card-list">
-          ${notes.map(item => `
-            <div class="card">
-              <div class="card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              <div class="card-sub">${escapeHtml(item.summary || '')}</div>
-            </div>
-          `).join('')}
-        </div>
-      `
-    }
-
-    function renderAppointments(data) {
-      const agenda = Array.isArray(data.agenda) ? data.agenda : []
-
-      if (!agenda.length) {
-        appointmentsList.innerHTML = `<div class="empty">Geen afspraken</div>`
-        return
-      }
-
-      appointmentsList.innerHTML = `
-        <div class="card-list">
-          ${agenda.map(item => `
-            <div class="card">
-              <div class="card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              <div class="card-meta">${escapeHtml(formatDateShort(item.date, item.time))}</div>
-              <div class="card-sub">${escapeHtml(item.summary || '')}</div>
-            </div>
-          `).join('')}
-        </div>
-      `
-    }
-
-    function addChatBubble(text, sender = 'clara') {
-      const bubble = document.createElement('div')
-      bubble.className = `chat-bubble ${sender}`
-      bubble.textContent = text
-      chatMessages.appendChild(bubble)
-      chatMessages.scrollTop = chatMessages.scrollHeight
-    }
-
-    async function sendChat() {
-      const text = chatInput.value.trim()
-      if (!text) return
-
-      addChatBubble(text, 'user')
-      chatInput.value = ''
-
-      try {
-        const response = await fetch('/api/add', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'notitie',
-            title: text,
-            raw: text,
-            summary: text,
-            status: 'nieuw'
-          })
-        })
-
-        const result = await response.json()
-
-        if (!response.ok) {
-          addChatBubble('Opslaan ging mis.')
-          return
-        }
-
-        addChatBubble('Opgeslagen.')
-        await loadDashboard()
-      } catch (error) {
-        addChatBubble('Verbinding mislukt.')
-      }
-    }
-
-    chatSend.addEventListener('click', sendChat)
-    chatInput.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') sendChat()
-    })
-
-    async function loadDashboard() {
-      try {
-        const response = await fetch('/api/dashboard')
-        const data = await response.json()
-
-        renderAgenda(data)
-        renderTasks(data)
-        renderNotes(data)
-        renderAppointments(data)
-      } catch (error) {
-        agendaList.innerHTML = `<div class="empty">Kon agenda niet laden</div>`
-        tasksList.innerHTML = `<div class="empty">Kon taken niet laden</div>`
-        notesList.innerHTML = `<div class="empty">Kon notities niet laden</div>`
-        appointmentsList.innerHTML = `<div class="empty">Kon afspraken niet laden</div>`
-      }
-    }
-
-    loadDashboard()
-  </script>
 </body>
 </html>
