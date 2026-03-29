@@ -5,28 +5,45 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 )
 
-function getAmsterdamToday() {
-  const now = new Date()
-  const amsterdamString = now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' })
-  const amsterdamNow = new Date(amsterdamString)
+function parseDate(value) {
+  if (!value) return null
+  const str = String(value).trim()
 
-  const year = amsterdamNow.getFullYear()
-  const month = String(amsterdamNow.getMonth() + 1).padStart(2, '0')
-  const day = String(amsterdamNow.getDate()).padStart(2, '0')
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y, m, d] = str.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
 
-  return new Date(`${year}-${month}-${day}T00:00:00`)
+  return null
 }
 
-function parseDateValue(value) {
-  if (!value) return null
+function getTodayStart() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
 
-  const str = String(value).trim()
-  if (!str) return null
+function dedupeRows(rows) {
+  const seen = new Set()
+  const result = []
 
-  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  if (!match) return null
+  for (const row of rows) {
+    const key = row.id
+      ? `id:${row.id}`
+      : [
+          (row.type || '').toLowerCase().trim(),
+          (row.title || '').toLowerCase().trim(),
+          (row.project || '').toLowerCase().trim(),
+          (row.date || '').toLowerCase().trim(),
+          (row.time || '').toLowerCase().trim(),
+          (row.summary || '').toLowerCase().trim()
+        ].join('|')
 
-  return new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00`)
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push(row)
+  }
+
+  return result
 }
 
 module.exports = async function handler(req, res) {
@@ -45,23 +62,46 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    const rows = Array.isArray(data) ? data : []
-    const today = getAmsterdamToday()
-    const weekEnd = new Date(today)
-    weekEnd.setDate(weekEnd.getDate() + 7)
+    const rows = dedupeRows(Array.isArray(data) ? data : [])
+    const today = getTodayStart()
+    const nextWeek = new Date(today)
+    nextWeek.setDate(nextWeek.getDate() + 7)
 
-    const agenda = rows
-      .filter(item => {
-        const type = (item.type || '').toLowerCase()
-        const itemDate = parseDateValue(item.date)
+    const agenda = rows.filter(item => {
+      const type = (item.type || '').toLowerCase()
+      const itemDate = parseDate(item.date)
+      if (!itemDate) return false
 
-        const isAgendaType = ['agenda', 'afspraak'].includes(type)
-        const isDatedTask = ['task', 'taak'].includes(type) && itemDate
+      const isAppointment = ['agenda', 'afspraak'].includes(type)
+      const isDatedTask = ['task', 'taak'].includes(type)
 
-        if (!isAgendaType && !isDatedTask) return false
-        if (!itemDate) return false
+      if (!isAppointment && !isDatedTask) return false
+      return itemDate >= today && itemDate < nextWeek
+    })
 
-        return itemDate >= today && itemDate < weekEnd
+    const tasks = rows.filter(item => {
+      const type = (item.type || '').toLowerCase()
+      const status = (item.status || '').toLowerCase()
+      return ['task', 'taak'].includes(type) && !['klaar', 'done'].includes(status)
+    })
+
+    const notes = rows.filter(item => {
+      const type = (item.type || '').toLowerCase()
+      return ['note', 'notitie', 'project', 'idee'].includes(type)
+    })
+
+    return res.status(200).json({
+      agenda,
+      tasks,
+      notes
+    })
+  } catch (e) {
+    return res.status(500).json({
+      error: 'server_error',
+      details: e.message
+    })
+  }
+}        return itemDate >= today && itemDate < weekEnd
       })
       .sort((a, b) => {
         const dateA = parseDateValue(a.date)
