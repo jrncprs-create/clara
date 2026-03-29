@@ -4,8 +4,207 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clara Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      padding: 20px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      height: calc(100vh - 40px);
+    }
+
+    .card {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      padding: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .card h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .content {
+      overflow: auto;
+      min-height: 0;
+      padding-right: 4px;
+    }
+
+    .item {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .item:last-child {
+      border-bottom: none;
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .meta {
+      font-size: 13px;
+      opacity: 0.65;
+      line-height: 1.4;
+    }
+
+    .empty {
+      opacity: 0.45;
+      font-size: 14px;
+    }
+
+    .loading {
+      opacity: 0.6;
+      font-size: 14px;
+    }
+
+    .wide {
+      grid-row: span 2;
+    }
+
+    @media (max-width: 900px) {
+      html, body {
+        overflow: auto;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        height: auto;
+      }
+
+      .wide {
+        grid-row: span 1;
+      }
+
+      .card {
+        min-height: 240px;
+      }
+    }
+  </style>
 </head>
 <body>
-  Clara dashboard in opbouw
+  <div class="dashboard">
+    <section class="card wide">
+      <h2>Deze week</h2>
+      <div class="content" id="agenda">
+        <div class="loading">Laden...</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recente taken</h2>
+      <div class="content" id="tasks">
+        <div class="loading">Laden...</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Projecten en notities</h2>
+      <div class="content" id="notes">
+        <div class="loading">Laden...</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const WEBHOOK_URL = "PLAK_HIER_STRAKS_JE_MAKE_DASHBOARD_WEBHOOK";
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderList(containerId, items, formatter) {
+      const el = document.getElementById(containerId);
+
+      if (!items || !items.length) {
+        el.innerHTML = '<div class="empty">Nog geen items.</div>';
+        return;
+      }
+
+      el.innerHTML = items.map(formatter).join("");
+    }
+
+    async function loadDashboard() {
+      const agendaEl = document.getElementById("agenda");
+      const tasksEl = document.getElementById("tasks");
+      const notesEl = document.getElementById("notes");
+
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: "GET"
+        });
+
+        if (!res.ok) {
+          throw new Error("HTTP " + res.status);
+        }
+
+        const data = await res.json();
+
+        renderList("agenda", data.agenda || [], (item) => `
+          <div class="item">
+            <div class="title">${escapeHtml(item.title || "Zonder titel")}</div>
+            <div class="meta">${escapeHtml(item.date || "")} ${escapeHtml(item.time || "")}</div>
+          </div>
+        `);
+
+        renderList("tasks", data.tasks || [], (item) => `
+          <div class="item">
+            <div class="title">${escapeHtml(item.title || "Zonder titel")}</div>
+            <div class="meta">${escapeHtml(item.project || "")} ${escapeHtml(item.status || "")}</div>
+          </div>
+        `);
+
+        renderList("notes", data.notes || [], (item) => `
+          <div class="item">
+            <div class="title">${escapeHtml(item.title || "Zonder titel")}</div>
+            <div class="meta">${escapeHtml(item.type || "")}</div>
+          </div>
+        `);
+
+      } catch (error) {
+        agendaEl.innerHTML = '<div class="empty">Kon dashboarddata niet laden.</div>';
+        tasksEl.innerHTML = '<div class="empty">Kon dashboarddata niet laden.</div>';
+        notesEl.innerHTML = '<div class="empty">Kon dashboarddata niet laden.</div>';
+      }
+    }
+
+    loadDashboard();
+  </script>
 </body>
 </html>
