@@ -22,31 +22,15 @@ module.exports = async function handler(req, res) {
     if (['idea', 'idee'].includes(rawType)) normalizedType = 'idee'
     if (['project'].includes(rawType)) normalizedType = 'project'
 
-    const title =
-      body.title ||
-      body.titel ||
-      body.name ||
-      'Zonder titel'
-
-    const dateValue =
-      body.date ||
-      body.datum ||
-      null
-
-    const summary =
-      body.summary ||
-      body.samenvatting ||
-      body.raw ||
-      ''
-
     const item = {
-      type: normalizedType,
-      title: title,
-      summary: summary,
+      type: normalizedType || 'notitie',
+      title: body.title || body.titel || body.name || 'Zonder titel',
+      summary: body.summary || body.samenvatting || body.raw || '',
       project: body.project || '',
       status: body.status || 'nieuw',
-      date: dateValue,
+      date: body.date || body.datum || '',
       time: body.time || '',
+      note_type: body.note_type || '',
       raw: body.raw || ''
     }
 
@@ -56,7 +40,12 @@ module.exports = async function handler(req, res) {
       .select()
 
     if (error) {
-      throw error
+      return res.status(500).json({
+        error: 'failed_to_write',
+        details: error.message,
+        hint: error.hint || null,
+        code: error.code || null
+      })
     }
 
     return res.status(200).json({
