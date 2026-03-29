@@ -7,506 +7,410 @@
   <style>
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     html, body {
+      margin: 0;
       width: 100%;
       height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
       overflow: hidden;
-      background: #050505;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
     }
 
     body {
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
+      padding: 20px;
     }
 
     .dashboard {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: calc(100vh - 40px);
       display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr;
-      grid-template-rows: 88px 1fr 1fr;
-      gap: 16px;
-      padding: 16px;
-      background:
-        radial-gradient(circle at top center, rgba(255,255,255,0.05), transparent 35%),
-        #050505;
-    }
-
-    .topbar {
-      grid-column: 1 / 4;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 8px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-logo {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 0 18px rgba(255,255,255,0.35);
-      flex: 0 0 auto;
-    }
-
-    .brand h1 {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-
-    .brand p {
-      font-size: 12px;
-      color: rgba(255,255,255,0.55);
-      margin-top: 2px;
-    }
-
-    .status {
-      font-size: 13px;
-      color: rgba(255,255,255,0.62);
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
     }
 
     .panel {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 22px;
-      padding: 18px 18px 16px 18px;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-    }
-
-    .panel.large {
-      grid-row: 2 / 4;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .panel-title {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-    }
-
-    .panel-subtitle {
-      font-size: 12px;
-      color: rgba(255,255,255,0.45);
-    }
-
-    .list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow: auto;
-      min-height: 0;
-      padding-right: 4px;
-    }
-
-    .list::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .list::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.10);
-      border-radius: 999px;
-    }
-
-    .item {
-      background: rgba(255,255,255,0.035);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px;
-      padding: 12px 13px;
-    }
-
-    .item-title {
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 1.35;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    .item-meta {
-      font-size: 12px;
-      line-height: 1.4;
-      color: rgba(255,255,255,0.56);
-    }
-
-    .empty {
-      color: rgba(255,255,255,0.38);
-      font-size: 13px;
-      padding: 6px 2px;
-    }
-
-    .week-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 10px;
-      min-height: 0;
-      flex: 1;
-    }
-
-    .day {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
       border-radius: 18px;
-      padding: 10px;
+      background: rgba(255,255,255,0.03);
       min-height: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      backdrop-filter: blur(12px);
     }
 
-    .day-name {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.42);
-      margin-bottom: 4px;
+    .panel-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex: 0 0 auto;
     }
 
-    .day-date {
-      font-size: 16px;
+    .panel-title {
+      margin: 0;
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.72);
     }
 
-    .day-items {
+    .panel-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      padding: 0;
+    }
+
+    .timeline-day {
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .timeline-day:last-child {
+      border-bottom: none;
+    }
+
+    .timeline-date {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .timeline-items {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      overflow: auto;
-      padding-right: 2px;
+      gap: 10px;
     }
 
-    .agenda-chip {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 8px;
+    .timeline-empty {
+      font-size: 14px;
+      color: rgba(255,255,255,0.28);
     }
 
-    .agenda-time {
-      font-size: 11px;
-      color: rgba(255,255,255,0.5);
-      margin-bottom: 3px;
+    .timeline-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-left: 2px;
     }
 
-    .agenda-title {
-      font-size: 12px;
-      line-height: 1.3;
+    .timeline-item-title {
+      font-size: 15px;
+      line-height: 1.35;
       color: #fff;
     }
 
-    .loading {
-      color: rgba(255,255,255,0.4);
-      font-size: 13px;
+    .timeline-item-meta {
+      font-size: 12px;
+      line-height: 1.3;
+      color: rgba(255,255,255,0.5);
+      text-transform: lowercase;
     }
 
-    @media (max-width: 1200px) {
-      html, body {
-        overflow: auto;
-      }
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+    }
 
+    .todo-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .todo-item:last-child {
+      border-bottom: none;
+    }
+
+    .todo-title {
+      font-size: 15px;
+      line-height: 1.35;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    .todo-project {
+      font-size: 12px;
+      color: rgba(255,255,255,0.48);
+      margin-bottom: 5px;
+    }
+
+    .todo-meta {
+      font-size: 12px;
+      color: rgba(255,255,255,0.58);
+      text-transform: lowercase;
+    }
+
+    .todo-meta.status-not-done {
+      color: rgba(255,255,255,0.42);
+    }
+
+    .empty-state {
+      padding: 20px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.35);
+    }
+
+    @media (max-width: 980px) {
       .dashboard {
-        height: auto;
-        min-height: 100vh;
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto auto;
       }
 
-      .topbar,
-      .panel.large {
-        grid-column: auto;
-        grid-row: auto;
-      }
-
-      .week-grid {
-        grid-template-columns: 1fr;
+      body {
+        overflow: auto;
       }
     }
   </style>
 </head>
 <body>
   <div class="dashboard">
-    <div class="topbar">
-      <div class="brand">
-        <div class="brand-logo"></div>
-        <div>
-          <h1>Clara</h1>
-          <p>Dashboard</p>
-        </div>
-      </div>
-      <div class="status" id="sync-status">Bezig met laden...</div>
-    </div>
-
-    <section class="panel large">
+    <section class="panel">
       <div class="panel-header">
-        <div class="panel-title">Deze week</div>
-        <div class="panel-subtitle">Agenda-overzicht</div>
+        <h2 class="panel-title">Time table</h2>
       </div>
-      <div class="week-grid" id="week-grid">
-        <div class="loading">Laden...</div>
-      </div>
+      <div class="panel-body" id="timeline"></div>
     </section>
 
     <section class="panel">
       <div class="panel-header">
-        <div class="panel-title">Recente taken</div>
-        <div class="panel-subtitle">Laatste items</div>
+        <h2 class="panel-title">ToDo’s</h2>
       </div>
-      <div class="list" id="tasks-list">
-        <div class="loading">Laden...</div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Notities</div>
-        <div class="panel-subtitle">Recent</div>
-      </div>
-      <div class="list" id="notes-list">
-        <div class="loading">Laden...</div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Afspraken</div>
-        <div class="panel-subtitle">Komend en recent</div>
-      </div>
-      <div class="list" id="agenda-list">
-        <div class="loading">Laden...</div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Systeem</div>
-        <div class="panel-subtitle">Status</div>
-      </div>
-      <div class="list">
-        <div class="item">
-          <div class="item-title" id="count-agenda">0 afspraken</div>
-          <div class="item-meta">Items in agenda</div>
-        </div>
-        <div class="item">
-          <div class="item-title" id="count-tasks">0 taken</div>
-          <div class="item-meta">Items in taken</div>
-        </div>
-        <div class="item">
-          <div class="item-title" id="count-notes">0 notities</div>
-          <div class="item-meta">Items in notities</div>
-        </div>
-      </div>
+      <div class="panel-body" id="todos"></div>
     </section>
   </div>
 
   <script>
-    function escapeHtml(str) {
-      return String(str || '')
+    const timelineEl = document.getElementById('timeline')
+    const todosEl = document.getElementById('todos')
+
+    function getAmsterdamNow() {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Amsterdam',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23'
+      }).formatToParts(new Date())
+
+      const map = {}
+      for (const part of parts) {
+        map[part.type] = part.value
+      }
+
+      return new Date(`${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}:${map.second}`)
+    }
+
+    function getAmsterdamTodayStart() {
+      const now = getAmsterdamNow()
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    }
+
+    function parseDate(dateStr) {
+      if (!dateStr) return null
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null
+
+      const [year, month, day] = dateStr.split('-').map(Number)
+      return new Date(year, month - 1, day)
+    }
+
+    function parseDateTime(dateStr, timeStr) {
+      const date = parseDate(dateStr)
+      if (!date) return null
+
+      if (!timeStr || !/^\d{1,2}:\d{2}$/.test(timeStr)) {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59)
+      }
+
+      const [hours, minutes] = timeStr.split(':').map(Number)
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes, 0)
+    }
+
+    function sameDay(a, b) {
+      return (
+        a &&
+        b &&
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+      )
+    }
+
+    function formatTimelineDate(date) {
+      return new Intl.DateTimeFormat('nl-NL', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(date)
+    }
+
+    function formatShortDateLabel(dateStr, timeStr) {
+      const date = parseDate(dateStr)
+      if (!date) return 'nieuw'
+
+      const today = getAmsterdamTodayStart()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+
+      let dayLabel = new Intl.DateTimeFormat('nl-NL', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short'
+      }).format(date)
+
+      if (sameDay(date, today)) dayLabel = 'vandaag'
+      if (sameDay(date, tomorrow)) dayLabel = 'morgen'
+
+      if (timeStr) return `${dayLabel} ${timeStr}`
+      return dayLabel
+    }
+
+    function normalizeTodoMeta(item) {
+      const now = getAmsterdamNow()
+      const hasDate = !!parseDate(item.date)
+      const hasTime = !!item.time
+      const status = (item.status || '').toLowerCase()
+
+      if (hasDate && hasTime) {
+        const moment = parseDateTime(item.date, item.time)
+        if (moment && moment < now && status !== 'klaar' && status !== 'done') {
+          return { text: 'niet gedaan', className: 'status-not-done' }
+        }
+      }
+
+      if (hasDate) {
+        return { text: formatShortDateLabel(item.date, item.time), className: '' }
+      }
+
+      if (status === 'nieuw') {
+        return { text: 'nieuw', className: '' }
+      }
+
+      return { text: item.status || 'open', className: '' }
+    }
+
+    function buildTimelineDays(days = 7) {
+      const today = getAmsterdamTodayStart()
+      const result = []
+
+      for (let i = 0; i < days; i++) {
+        const date = new Date(today)
+        date.setDate(today.getDate() + i)
+        result.push(date)
+      }
+
+      return result
+    }
+
+    function getTimelineItems(data) {
+      const agendaItems = Array.isArray(data.agenda) ? data.agenda : []
+      const taskItems = Array.isArray(data.tasks) ? data.tasks : []
+
+      return [...agendaItems, ...taskItems]
+        .filter(item => parseDate(item.date))
+        .map(item => {
+          const type = (item.type || '').toLowerCase()
+          return {
+            ...item,
+            _dateObj: parseDate(item.date),
+            _timeObj: parseDateTime(item.date, item.time),
+            _kind: ['afspraak', 'agenda'].includes(type) ? 'afspraak' : 'todo'
+          }
+        })
+        .sort((a, b) => {
+          const aTime = a._timeObj ? a._timeObj.getTime() : 0
+          const bTime = b._timeObj ? b._timeObj.getTime() : 0
+          return aTime - bTime
+        })
+    }
+
+    function renderTimeline(data) {
+      const days = buildTimelineDays(7)
+      const items = getTimelineItems(data)
+
+      timelineEl.innerHTML = days.map(day => {
+        const dayItems = items.filter(item => sameDay(item._dateObj, day))
+
+        return `
+          <div class="timeline-day">
+            <div class="timeline-date">${formatTimelineDate(day)}</div>
+            <div class="timeline-items">
+              ${
+                dayItems.length
+                  ? dayItems.map(item => `
+                      <div class="timeline-item">
+                        <div class="timeline-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                        <div class="timeline-item-meta">
+                          ${item.time ? `${escapeHtml(item.time)} · ` : ''}${item._kind}
+                        </div>
+                      </div>
+                    `).join('')
+                  : `<div class="timeline-empty">geen items</div>`
+              }
+            </div>
+          </div>
+        `
+      }).join('')
+    }
+
+    function renderTodos(data) {
+      const tasks = Array.isArray(data.tasks) ? data.tasks : []
+      const openTasks = tasks.filter(item => {
+        const status = (item.status || '').toLowerCase()
+        return status !== 'klaar' && status !== 'done'
+      })
+
+      if (!openTasks.length) {
+        todosEl.innerHTML = `<div class="empty-state">geen open todo’s</div>`
+        return
+      }
+
+      todosEl.innerHTML = `
+        <div class="todo-list">
+          ${openTasks.map(item => {
+            const meta = normalizeTodoMeta(item)
+
+            return `
+              <div class="todo-item">
+                <div class="todo-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                ${item.project ? `<div class="todo-project">${escapeHtml(item.project)}</div>` : ''}
+                <div class="todo-meta ${meta.className}">${escapeHtml(meta.text)}</div>
+              </div>
+            `
+          }).join('')}
+        </div>
+      `
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function getTitle(item) {
-      return item?.title || item?.titel || item?.name || 'Zonder titel';
-    }
-
-    function getSummary(item) {
-      return item?.summary || item?.samenvatting || item?.content || '';
-    }
-
-    function getDateValue(item) {
-      return item?.date || item?.datum || item?.created_at || null;
-    }
-
-    function formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      return new Intl.DateTimeFormat('nl-NL', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }).format(date);
-    }
-
-    function formatTime(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      if (hours === '00' && minutes === '00') return 'Hele dag';
-      return `${hours}:${minutes}`;
-    }
-
-    function sortByDateDesc(items) {
-      return [...items].sort((a, b) => {
-        const aDate = new Date(getDateValue(a) || 0).getTime();
-        const bDate = new Date(getDateValue(b) || 0).getTime();
-        return bDate - aDate;
-      });
-    }
-
-    function sortByDateAsc(items) {
-      return [...items].sort((a, b) => {
-        const aDate = new Date(getDateValue(a) || 0).getTime();
-        const bDate = new Date(getDateValue(b) || 0).getTime();
-        return aDate - bDate;
-      });
-    }
-
-    function renderSimpleList(elementId, items, emptyText) {
-      const el = document.getElementById(elementId);
-      if (!el) return;
-
-      if (!items.length) {
-        el.innerHTML = `<div class="empty">${escapeHtml(emptyText)}</div>`;
-        return;
-      }
-
-      el.innerHTML = items.map(item => {
-        const title = getTitle(item);
-        const summary = getSummary(item);
-        const date = formatDate(getDateValue(item));
-        return `
-          <div class="item">
-            <div class="item-title">${escapeHtml(title)}</div>
-            <div class="item-meta">
-              ${date ? escapeHtml(date) : ''}
-              ${summary ? `<br>${escapeHtml(summary)}` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function getStartOfWeek(date) {
-      const d = new Date(date);
-      const day = d.getDay();
-      const diff = day === 0 ? -6 : 1 - day;
-      d.setDate(d.getDate() + diff);
-      d.setHours(0, 0, 0, 0);
-      return d;
-    }
-
-    function renderWeekAgenda(items) {
-      const grid = document.getElementById('week-grid');
-      if (!grid) return;
-
-      const now = new Date();
-      const start = getStartOfWeek(now);
-      const days = [];
-
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
-        days.push(d);
-      }
-
-      const labels = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
-
-      grid.innerHTML = days.map((day, index) => {
-        const dayItems = sortByDateAsc(items).filter(item => {
-          const raw = getDateValue(item);
-          if (!raw) return false;
-          const itemDate = new Date(raw);
-          if (isNaN(itemDate.getTime())) return false;
-
-          return (
-            itemDate.getFullYear() === day.getFullYear() &&
-            itemDate.getMonth() === day.getMonth() &&
-            itemDate.getDate() === day.getDate()
-          );
-        });
-
-        return `
-          <div class="day">
-            <div class="day-name">${labels[index]}</div>
-            <div class="day-date">${day.getDate()}</div>
-            <div class="day-items">
-              ${
-                dayItems.length
-                  ? dayItems.map(item => `
-                    <div class="agenda-chip">
-                      <div class="agenda-time">${escapeHtml(formatTime(getDateValue(item)))}</div>
-                      <div class="agenda-title">${escapeHtml(getTitle(item))}</div>
-                    </div>
-                  `).join('')
-                  : `<div class="empty">Geen items</div>`
-              }
-            </div>
-          </div>
-        `;
-      }).join('');
+        .replace(/'/g, '&#039;')
     }
 
     async function loadDashboard() {
-      const status = document.getElementById('sync-status');
-
       try {
-        const res = await fetch('/api/dashboard', { cache: 'no-store' });
+        const response = await fetch('/api/dashboard')
+        const data = await response.json()
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        const agenda = Array.isArray(data.agenda) ? data.agenda : [];
-        const tasks = Array.isArray(data.tasks) ? data.tasks : [];
-        const notes = Array.isArray(data.notes) ? data.notes : [];
-
-        renderSimpleList('agenda-list', sortByDateAsc(agenda).slice(0, 8), 'Geen afspraken');
-        renderSimpleList('tasks-list', sortByDateDesc(tasks).slice(0, 8), 'Geen taken');
-        renderSimpleList('notes-list', sortByDateDesc(notes).slice(0, 8), 'Geen notities');
-        renderWeekAgenda(agenda);
-
-        document.getElementById('count-agenda').textContent = `${agenda.length} afspraken`;
-        document.getElementById('count-tasks').textContent = `${tasks.length} taken`;
-        document.getElementById('count-notes').textContent = `${notes.length} notities`;
-
-        status.textContent = 'Verbonden';
-      } catch (err) {
-        console.error('Dashboard load error:', err);
-
-        document.getElementById('agenda-list').innerHTML = `<div class="empty">Kon agenda niet laden</div>`;
-        document.getElementById('tasks-list').innerHTML = `<div class="empty">Kon taken niet laden</div>`;
-        document.getElementById('notes-list').innerHTML = `<div class="empty">Kon notities niet laden</div>`;
-        document.getElementById('week-grid').innerHTML = `<div class="empty">Kon weekoverzicht niet laden</div>`;
-        document.getElementById('sync-status').textContent = 'Fout bij laden';
+        renderTimeline(data)
+        renderTodos(data)
+      } catch (error) {
+        timelineEl.innerHTML = `<div class="empty-state">kon time table niet laden</div>`
+        todosEl.innerHTML = `<div class="empty-state">kon todo’s niet laden</div>`
       }
     }
 
-    loadDashboard();
-    setInterval(loadDashboard, 30000);
+    loadDashboard()
   </script>
 </body>
 </html>
