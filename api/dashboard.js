@@ -13,21 +13,37 @@ module.exports = async function handler(req, res) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      throw error
+      return res.status(500).json({
+        error: 'supabase_error',
+        details: error.message,
+        hint: error.hint || null,
+        code: error.code || null
+      })
     }
 
-    const agenda = data.filter(item => item.type === 'agenda')
-    const tasks = data.filter(item => item.type === 'task')
-    const notes = data.filter(item => item.type === 'note')
+    const rows = Array.isArray(data) ? data : []
 
-    res.status(200).json({
+    const agenda = rows.filter(item =>
+      ['agenda', 'afspraak'].includes((item.type || '').toLowerCase())
+    )
+
+    const tasks = rows.filter(item =>
+      ['task', 'taak'].includes((item.type || '').toLowerCase())
+    )
+
+    const notes = rows.filter(item =>
+      ['note', 'notitie', 'project', 'idee'].includes((item.type || '').toLowerCase())
+    )
+
+    return res.status(200).json({
       agenda,
       tasks,
       notes
     })
-  } catch (err) {
-    res.status(500).json({
-      error: err.message || 'Unknown server error'
+  } catch (e) {
+    return res.status(500).json({
+      error: 'server_error',
+      details: e.message
     })
   }
 }
