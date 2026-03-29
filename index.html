@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clara Dashboard</title>
+  <title>Clara</title>
   <style>
     * {
       box-sizing: border-box;
@@ -20,171 +20,341 @@
     }
 
     body {
-      padding: 20px;
+      padding: 14px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.06), transparent 28%),
+        #000;
     }
 
-    .dashboard {
+    .app {
       width: 100%;
-      height: calc(100vh - 40px);
+      height: calc(100vh - 28px);
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 20px;
+      grid-template-columns: 1.15fr 1fr 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
     }
 
     .panel {
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 18px;
-      background: rgba(255,255,255,0.03);
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.02);
       overflow: hidden;
-      backdrop-filter: blur(12px);
+      min-height: 0;
+      min-width: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
     .panel-header {
-      padding: 18px 20px 14px;
+      height: 44px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      flex: 0 0 auto;
     }
 
     .panel-title {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.72);
+      color: rgba(255,255,255,0.92);
+      margin: 0;
+    }
+
+    .panel-subtitle {
+      font-size: 12px;
+      color: rgba(255,255,255,0.42);
     }
 
     .panel-body {
-      flex: 1 1 auto;
-      min-height: 0;
+      height: calc(100% - 44px);
       overflow: auto;
+    }
+
+    .agenda-panel {
+      grid-column: 1 / 2;
+      grid-row: 1 / 3;
+    }
+
+    .tasks-panel {
+      grid-column: 2 / 3;
+      grid-row: 1 / 2;
+    }
+
+    .notes-panel {
+      grid-column: 3 / 4;
+      grid-row: 1 / 2;
+    }
+
+    .appointments-panel {
+      grid-column: 2 / 3;
+      grid-row: 2 / 3;
+    }
+
+    .chat-panel {
+      grid-column: 3 / 4;
+      grid-row: 2 / 3;
+    }
+
+    .agenda-list {
       padding: 0;
     }
 
-    .timeline-day {
-      padding: 18px 20px 16px;
+    .agenda-day {
+      padding: 18px 18px 16px 18px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
-    .timeline-day:last-child {
+    .agenda-day:last-child {
       border-bottom: none;
     }
 
-    .timeline-date {
-      font-size: 15px;
-      font-weight: 600;
+    .agenda-date {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.2;
       margin-bottom: 12px;
-      color: rgba(255,255,255,0.92);
+      color: rgba(255,255,255,0.96);
     }
 
-    .timeline-items {
+    .agenda-items {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .timeline-empty {
-      font-size: 14px;
-      color: rgba(255,255,255,0.28);
-    }
-
-    .timeline-item {
+    .agenda-item {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding-left: 2px;
+      gap: 3px;
     }
 
-    .timeline-item-title {
+    .agenda-item-title {
       font-size: 15px;
-      line-height: 1.35;
-      color: #fff;
-    }
-
-    .timeline-item-meta {
-      font-size: 12px;
+      font-weight: 600;
       line-height: 1.3;
-      color: rgba(255,255,255,0.5);
-      text-transform: lowercase;
+      color: #fff;
     }
 
-    .todo-list {
+    .agenda-item-meta {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.3;
+    }
+
+    .agenda-empty {
+      font-size: 14px;
+      color: rgba(255,255,255,0.30);
+    }
+
+    .card-list {
+      padding: 12px;
       display: flex;
       flex-direction: column;
+      gap: 12px;
     }
 
-    .todo-item {
-      padding: 16px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+    .card {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius: 18px;
+      padding: 14px 14px 13px 14px;
     }
 
-    .todo-item:last-child {
-      border-bottom: none;
-    }
-
-    .todo-title {
+    .card-title {
       font-size: 15px;
-      line-height: 1.35;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 5px;
       color: #fff;
-      margin-bottom: 5px;
     }
 
-    .todo-project {
-      font-size: 12px;
-      color: rgba(255,255,255,0.48);
-      margin-bottom: 5px;
+    .card-meta {
+      font-size: 13px;
+      color: rgba(255,255,255,0.70);
+      line-height: 1.3;
+      margin-bottom: 3px;
     }
 
-    .todo-meta {
-      font-size: 12px;
-      color: rgba(255,255,255,0.58);
-      text-transform: lowercase;
+    .card-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.44);
+      line-height: 1.3;
     }
 
-    .todo-meta.status-not-done {
-      color: rgba(255,255,255,0.42);
-    }
-
-    .empty-state {
-      padding: 20px;
+    .empty {
+      padding: 16px;
       font-size: 14px;
       color: rgba(255,255,255,0.35);
     }
 
-    @media (max-width: 980px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
+    .chat-wrap {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
 
+    .chat-messages {
+      flex: 1;
+      padding: 14px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-bubble {
+      max-width: 88%;
+      border-radius: 16px;
+      padding: 12px 14px;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    .chat-bubble.clara {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.92);
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: rgba(255,255,255,0.92);
+      color: #000;
+    }
+
+    .chat-inputbar {
+      padding: 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .chat-input {
+      width: 100%;
+      height: 46px;
+      border: 1px solid rgba(255,255,255,0.08);
+      outline: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      padding: 0 14px;
+      font-size: 14px;
+    }
+
+    .chat-input::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .chat-send {
+      height: 46px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 14px;
+      background: #fff;
+      color: #000;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1200px) {
       body {
         overflow: auto;
+      }
+
+      .app {
+        height: auto;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+
+      .agenda-panel,
+      .tasks-panel,
+      .notes-panel,
+      .appointments-panel,
+      .chat-panel {
+        grid-column: auto;
+        grid-row: auto;
+        min-height: 340px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="dashboard">
-    <section class="panel">
+  <div class="app">
+    <section class="panel agenda-panel">
       <div class="panel-header">
         <h2 class="panel-title">Time table</h2>
+        <div class="panel-subtitle">Agenda-overzicht</div>
       </div>
-      <div class="panel-body" id="timeline"></div>
+      <div class="panel-body" id="agendaList"></div>
     </section>
 
-    <section class="panel">
+    <section class="panel tasks-panel">
       <div class="panel-header">
         <h2 class="panel-title">ToDo’s</h2>
+        <div class="panel-subtitle">Laatste items</div>
       </div>
-      <div class="panel-body" id="todos"></div>
+      <div class="panel-body" id="tasksList"></div>
+    </section>
+
+    <section class="panel notes-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Notities</h2>
+        <div class="panel-subtitle">Recent</div>
+      </div>
+      <div class="panel-body" id="notesList"></div>
+    </section>
+
+    <section class="panel appointments-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Afspraken</h2>
+        <div class="panel-subtitle">Komend en recent</div>
+      </div>
+      <div class="panel-body" id="appointmentsList"></div>
+    </section>
+
+    <section class="panel chat-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Chat</h2>
+        <div class="panel-subtitle">Clara</div>
+      </div>
+      <div class="panel-body">
+        <div class="chat-wrap">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-bubble clara">Waar wil je iets aan toevoegen of verduidelijken?</div>
+          </div>
+          <div class="chat-inputbar">
+            <input id="chatInput" class="chat-input" type="text" placeholder="Typ je bericht..." />
+            <button id="chatSend" class="chat-send">Verstuur</button>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 
   <script>
-    const timelineEl = document.getElementById('timeline')
-    const todosEl = document.getElementById('todos')
+    const agendaList = document.getElementById('agendaList')
+    const tasksList = document.getElementById('tasksList')
+    const notesList = document.getElementById('notesList')
+    const appointmentsList = document.getElementById('appointmentsList')
+    const chatMessages = document.getElementById('chatMessages')
+    const chatInput = document.getElementById('chatInput')
+    const chatSend = document.getElementById('chatSend')
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+    }
 
     function getAmsterdamNow() {
       const parts = new Intl.DateTimeFormat('en-CA', {
@@ -199,9 +369,7 @@
       }).formatToParts(new Date())
 
       const map = {}
-      for (const part of parts) {
-        map[part.type] = part.value
-      }
+      for (const part of parts) map[part.type] = part.value
 
       return new Date(`${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}:${map.second}`)
     }
@@ -211,37 +379,13 @@
       return new Date(now.getFullYear(), now.getMonth(), now.getDate())
     }
 
-    function parseDate(dateStr) {
-      if (!dateStr) return null
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null
-
-      const [year, month, day] = dateStr.split('-').map(Number)
-      return new Date(year, month - 1, day)
+    function parseDate(value) {
+      if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return null
+      const [y, m, d] = String(value).split('-').map(Number)
+      return new Date(y, m - 1, d)
     }
 
-    function parseDateTime(dateStr, timeStr) {
-      const date = parseDate(dateStr)
-      if (!date) return null
-
-      if (!timeStr || !/^\d{1,2}:\d{2}$/.test(timeStr)) {
-        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59)
-      }
-
-      const [hours, minutes] = timeStr.split(':').map(Number)
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes, 0)
-    }
-
-    function sameDay(a, b) {
-      return (
-        a &&
-        b &&
-        a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate()
-      )
-    }
-
-    function formatTimelineDate(date) {
+    function formatDateLong(date) {
       return new Intl.DateTimeFormat('nl-NL', {
         weekday: 'long',
         day: 'numeric',
@@ -250,7 +394,7 @@
       }).format(date)
     }
 
-    function formatShortDateLabel(dateStr, timeStr) {
+    function formatDateShort(dateStr, timeStr = '') {
       const date = parseDate(dateStr)
       if (!date) return 'nieuw'
 
@@ -258,129 +402,78 @@
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
 
-      let dayLabel = new Intl.DateTimeFormat('nl-NL', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short'
+      let label = new Intl.DateTimeFormat('nl-NL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       }).format(date)
 
-      if (sameDay(date, today)) dayLabel = 'vandaag'
-      if (sameDay(date, tomorrow)) dayLabel = 'morgen'
+      if (sameDay(date, today)) label = 'vandaag'
+      if (sameDay(date, tomorrow)) label = 'morgen'
 
-      if (timeStr) return `${dayLabel} ${timeStr}`
-      return dayLabel
+      return timeStr ? `${label} ${timeStr}` : label
     }
 
-    function normalizeTodoMeta(item) {
-      const now = getAmsterdamNow()
-      const hasDate = !!parseDate(item.date)
-      const hasTime = !!item.time
-      const status = (item.status || '').toLowerCase()
-
-      if (hasDate && hasTime) {
-        const moment = parseDateTime(item.date, item.time)
-        if (moment && moment < now && status !== 'klaar' && status !== 'done') {
-          return { text: 'niet gedaan', className: 'status-not-done' }
-        }
-      }
-
-      if (hasDate) {
-        return { text: formatShortDateLabel(item.date, item.time), className: '' }
-      }
-
-      if (status === 'nieuw') {
-        return { text: 'nieuw', className: '' }
-      }
-
-      return { text: item.status || 'open', className: '' }
+    function sameDay(a, b) {
+      return a &&
+        b &&
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
     }
 
-    function buildTimelineDays(days = 7) {
-      const today = getAmsterdamTodayStart()
-      const result = []
+    function buildDays(count = 7) {
+      const start = getAmsterdamTodayStart()
+      const days = []
 
-      for (let i = 0; i < days; i++) {
-        const date = new Date(today)
-        date.setDate(today.getDate() + i)
-        result.push(date)
+      for (let i = 0; i < count; i++) {
+        const day = new Date(start)
+        day.setDate(start.getDate() + i)
+        days.push(day)
       }
 
-      return result
+      return days
     }
 
-    function getTimelineItems(data) {
+    function renderAgenda(data) {
       const agendaItems = Array.isArray(data.agenda) ? data.agenda : []
       const taskItems = Array.isArray(data.tasks) ? data.tasks : []
 
-      return [...agendaItems, ...taskItems]
+      const combined = [...agendaItems, ...taskItems]
         .filter(item => parseDate(item.date))
-        .map(item => {
-          const type = (item.type || '').toLowerCase()
-          return {
-            ...item,
-            _dateObj: parseDate(item.date),
-            _timeObj: parseDateTime(item.date, item.time),
-            _kind: ['afspraak', 'agenda'].includes(type) ? 'afspraak' : 'todo'
-          }
-        })
+        .map(item => ({
+          ...item,
+          _date: parseDate(item.date),
+          _typeLabel: ['afspraak', 'agenda'].includes((item.type || '').toLowerCase()) ? 'afspraak' : 'todo'
+        }))
         .sort((a, b) => {
-          const aTime = a._timeObj ? a._timeObj.getTime() : 0
-          const bTime = b._timeObj ? b._timeObj.getTime() : 0
-          return aTime - bTime
+          const aDate = `${a.date || ''} ${a.time || ''}`
+          const bDate = `${b.date || ''} ${b.time || ''}`
+          return aDate.localeCompare(bDate)
         })
-    }
 
-    function renderTimeline(data) {
-      const days = buildTimelineDays(7)
-      const items = getTimelineItems(data)
+      const days = buildDays(7)
 
-      timelineEl.innerHTML = days.map(day => {
-        const dayItems = items.filter(item => sameDay(item._dateObj, day))
-
-        return `
-          <div class="timeline-day">
-            <div class="timeline-date">${formatTimelineDate(day)}</div>
-            <div class="timeline-items">
-              ${
-                dayItems.length
-                  ? dayItems.map(item => `
-                      <div class="timeline-item">
-                        <div class="timeline-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-                        <div class="timeline-item-meta">
-                          ${item.time ? `${escapeHtml(item.time)} · ` : ''}${item._kind}
-                        </div>
-                      </div>
-                    `).join('')
-                  : `<div class="timeline-empty">geen items</div>`
-              }
-            </div>
-          </div>
-        `
-      }).join('')
-    }
-
-    function renderTodos(data) {
-      const tasks = Array.isArray(data.tasks) ? data.tasks : []
-      const openTasks = tasks.filter(item => {
-        const status = (item.status || '').toLowerCase()
-        return status !== 'klaar' && status !== 'done'
-      })
-
-      if (!openTasks.length) {
-        todosEl.innerHTML = `<div class="empty-state">geen open todo’s</div>`
-        return
-      }
-
-      todosEl.innerHTML = `
-        <div class="todo-list">
-          ${openTasks.map(item => {
-            const meta = normalizeTodoMeta(item)
+      agendaList.innerHTML = `
+        <div class="agenda-list">
+          ${days.map(day => {
+            const dayItems = combined.filter(item => sameDay(item._date, day))
 
             return `
-              <div class="todo-item">
-                <div class="todo-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-                ${item.project ? `<div class="todo-project">${escapeHtml(item.project)}</div>` : ''}
-                <div class="todo-meta ${meta.className}">${escapeHtml(meta.text)}</div>
+              <div class="agenda-day">
+                <div class="agenda-date">${escapeHtml(formatDateLong(day))}</div>
+                <div class="agenda-items">
+                  ${
+                    dayItems.length
+                      ? dayItems.map(item => `
+                        <div class="agenda-item">
+                          <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                          <div class="agenda-item-meta">${escapeHtml(item.time || '')}${item.time ? ' · ' : ''}${escapeHtml(item._typeLabel)}</div>
+                        </div>
+                      `).join('')
+                      : `<div class="agenda-empty">geen items</div>`
+                  }
+                </div>
               </div>
             `
           }).join('')}
@@ -388,25 +481,129 @@
       `
     }
 
-    function escapeHtml(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
+    function renderTasks(data) {
+      const tasks = Array.isArray(data.tasks) ? data.tasks : []
+
+      if (!tasks.length) {
+        tasksList.innerHTML = `<div class="empty">Geen taken</div>`
+        return
+      }
+
+      tasksList.innerHTML = `
+        <div class="card-list">
+          ${tasks.map(item => `
+            <div class="card">
+              <div class="card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              ${item.project ? `<div class="card-meta">${escapeHtml(item.project)}</div>` : ''}
+              <div class="card-sub">${escapeHtml(formatDateShort(item.date, item.time))}</div>
+            </div>
+          `).join('')}
+        </div>
+      `
     }
+
+    function renderNotes(data) {
+      const notes = Array.isArray(data.notes) ? data.notes : []
+
+      if (!notes.length) {
+        notesList.innerHTML = `<div class="empty">Geen notities</div>`
+        return
+      }
+
+      notesList.innerHTML = `
+        <div class="card-list">
+          ${notes.map(item => `
+            <div class="card">
+              <div class="card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              <div class="card-sub">${escapeHtml(item.summary || '')}</div>
+            </div>
+          `).join('')}
+        </div>
+      `
+    }
+
+    function renderAppointments(data) {
+      const agenda = Array.isArray(data.agenda) ? data.agenda : []
+
+      if (!agenda.length) {
+        appointmentsList.innerHTML = `<div class="empty">Geen afspraken</div>`
+        return
+      }
+
+      appointmentsList.innerHTML = `
+        <div class="card-list">
+          ${agenda.map(item => `
+            <div class="card">
+              <div class="card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              <div class="card-meta">${escapeHtml(formatDateShort(item.date, item.time))}</div>
+              <div class="card-sub">${escapeHtml(item.summary || '')}</div>
+            </div>
+          `).join('')}
+        </div>
+      `
+    }
+
+    function addChatBubble(text, sender = 'clara') {
+      const bubble = document.createElement('div')
+      bubble.className = `chat-bubble ${sender}`
+      bubble.textContent = text
+      chatMessages.appendChild(bubble)
+      chatMessages.scrollTop = chatMessages.scrollHeight
+    }
+
+    async function sendChat() {
+      const text = chatInput.value.trim()
+      if (!text) return
+
+      addChatBubble(text, 'user')
+      chatInput.value = ''
+
+      try {
+        const response = await fetch('/api/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'notitie',
+            title: text,
+            raw: text,
+            summary: text,
+            status: 'nieuw'
+          })
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+          addChatBubble('Opslaan ging mis.')
+          return
+        }
+
+        addChatBubble('Opgeslagen.')
+        await loadDashboard()
+      } catch (error) {
+        addChatBubble('Verbinding mislukt.')
+      }
+    }
+
+    chatSend.addEventListener('click', sendChat)
+    chatInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') sendChat()
+    })
 
     async function loadDashboard() {
       try {
         const response = await fetch('/api/dashboard')
         const data = await response.json()
 
-        renderTimeline(data)
-        renderTodos(data)
+        renderAgenda(data)
+        renderTasks(data)
+        renderNotes(data)
+        renderAppointments(data)
       } catch (error) {
-        timelineEl.innerHTML = `<div class="empty-state">kon time table niet laden</div>`
-        todosEl.innerHTML = `<div class="empty-state">kon todo’s niet laden</div>`
+        agendaList.innerHTML = `<div class="empty">Kon agenda niet laden</div>`
+        tasksList.innerHTML = `<div class="empty">Kon taken niet laden</div>`
+        notesList.innerHTML = `<div class="empty">Kon notities niet laden</div>`
+        appointmentsList.innerHTML = `<div class="empty">Kon afspraken niet laden</div>`
       }
     }
 
