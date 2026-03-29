@@ -1,7 +1,19 @@
 {
   "inbox": [],
-  "tasks": [],
+  "tasks": [
+    {
+      "title": "Werkplaats opruimen",
+      "project": "Baggerbeest",
+      "status": "nieuw"
+    }
+  ],
   "projects": [],
-  "agenda": [],
+  "agenda": [
+    {
+      "title": "Call Ernesto",
+      "date": "Maandag 30 maart",
+      "time": "14:00"
+    }
+  ],
   "focus": []
 }
