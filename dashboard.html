@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clara Dashboard</title>
+
   <style>
     * {
       box-sizing: border-box;
@@ -113,8 +114,10 @@
     }
   </style>
 </head>
+
 <body>
   <div class="dashboard">
+
     <section class="card wide">
       <h2>Deze week</h2>
       <div class="content" id="agenda">
@@ -135,10 +138,11 @@
         <div class="loading">Laden...</div>
       </div>
     </section>
+
   </div>
 
   <script>
-    const WEBHOOK_URL = "PLAK_HIER_STRAKS_JE_MAKE_DASHBOARD_WEBHOOK";
+    const WEBHOOK_URL = "/api/dashboard";
 
     function escapeHtml(str) {
       return String(str || "")
@@ -166,9 +170,7 @@
       const notesEl = document.getElementById("notes");
 
       try {
-        const res = await fetch(WEBHOOK_URL, {
-          method: "GET"
-        });
+        const res = await fetch(WEBHOOK_URL);
 
         if (!res.ok) {
           throw new Error("HTTP " + res.status);
@@ -176,24 +178,24 @@
 
         const data = await res.json();
 
-        renderList("agenda", data.agenda || [], (item) => `
+        renderList("agenda", data.agenda, (item) => `
           <div class="item">
-            <div class="title">${escapeHtml(item.title || "Zonder titel")}</div>
-            <div class="meta">${escapeHtml(item.date || "")} ${escapeHtml(item.time || "")}</div>
+            <div class="title">${escapeHtml(item.title)}</div>
+            <div class="meta">${escapeHtml(item.date)} ${escapeHtml(item.time)}</div>
           </div>
         `);
 
-        renderList("tasks", data.tasks || [], (item) => `
+        renderList("tasks", data.tasks, (item) => `
           <div class="item">
-            <div class="title">${escapeHtml(item.title || "Zonder titel")}</div>
-            <div class="meta">${escapeHtml(item.project || "")} ${escapeHtml(item.status || "")}</div>
+            <div class="title">${escapeHtml(item.title)}</div>
+            <div class="meta">${escapeHtml(item.project)} • ${escapeHtml(item.status)}</div>
           </div>
         `);
 
-        renderList("notes", data.notes || [], (item) => `
+        renderList("notes", data.notes, (item) => `
           <div class="item">
-            <div class="title">${escapeHtml(item.title || "Zonder titel")}</div>
-            <div class="meta">${escapeHtml(item.type || "")}</div>
+            <div class="title">${escapeHtml(item.title)}</div>
+            <div class="meta">${escapeHtml(item.type)}</div>
           </div>
         `);
 
