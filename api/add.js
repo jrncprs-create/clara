@@ -1,5 +1,10 @@
-import fs from "fs";
-import path from "path";
+let memory = {
+  inbox: [],
+  tasks: [],
+  projects: [],
+  agenda: [],
+  focus: []
+};
 
 export default function handler(req, res) {
   if (req.method !== "POST") {
@@ -7,10 +12,6 @@ export default function handler(req, res) {
   }
 
   try {
-    const filePath = path.join(process.cwd(), "api", "data", "clara.json");
-    const fileData = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(fileData);
-
     const body = req.body;
 
     if (!body || !body.type) {
@@ -18,7 +19,7 @@ export default function handler(req, res) {
     }
 
     if (body.type === "task") {
-      data.tasks.push({
+      memory.tasks.push({
         title: body.title || "",
         project: body.project || "",
         status: body.status || "nieuw"
@@ -26,7 +27,7 @@ export default function handler(req, res) {
     }
 
     if (body.type === "agenda") {
-      data.agenda.push({
+      memory.agenda.push({
         title: body.title || "",
         date: body.date || "",
         time: body.time || ""
@@ -34,15 +35,13 @@ export default function handler(req, res) {
     }
 
     if (body.type === "note") {
-      data.projects.push({
+      memory.projects.push({
         title: body.title || "",
         type: body.noteType || "notitie"
       });
     }
 
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-
-    res.status(200).json({ success: true, data });
+    res.status(200).json({ success: true, memory });
 
   } catch (e) {
     res.status(500).json({
