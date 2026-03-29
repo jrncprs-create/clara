@@ -5,44 +5,177 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 )
 
-function normalizeType(type = '') {
-  const t = String(type).toLowerCase().trim()
+function getAmsterdamDate(offsetDays = 0) {
+  const now = new Date()
+  const local = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' }))
+  local.setDate(local.getDate() + offsetDays)
 
-  if (['taak', 'task', 'todo', 'to-do'].includes(t)) return 'taak'
-  if (['afspraak', 'agenda', 'meeting', 'call'].includes(t)) return 'afspraak'
-  if (['notitie', 'note', 'memo'].includes(t)) return 'notitie'
-  if (['idee', 'idea'].includes(t)) return 'idee'
-  if (['project'].includes(t)) return 'project'
+  const year = local.getFullYear()
+  const month = String(local.getMonth() + 1).padStart(2, '0')
+  const day = String(local.getDate()).padStart(2, '0')
 
-  return 'notitie'
+  return `${year}-${month}-${day}`
 }
 
-function safeString(value, fallback = '') {
-  if (value === null || value === undefined) return fallback
-  return String(value)
+function normalizeDate(input) {
+  if (!input) return ''
+  const value = String(input).trim().toLowerCase()
+
+  if (value === 'vandaag') return getAmsterdamDate(0)
+  if (value === 'morgen') return getAmsterdamDate(1)
+  if (value === 'overmorgen') return getAmsterdamDate(2)
+
+  return input
 }
 
-function extractOutputText(data) {
-  if (typeof data.output_text === 'string' && data.output_text.trim()) {
-    return data.output_text.trim()
+function fallbackParse(text) {
+  const raw = String(text || '').trim()
+  const lower = raw.toLowerCase()
+
+  let type = 'notitie'
+  if (
+    lower.includes('afspraak') ||
+    lower.includes('call') ||
+    lower.includes('meeting') ||
+    lower.includes('overleg') ||
+    /\b\d{1,2}:\d{2}\b/.test(lower)
+  ) {
+    type = 'afspraak'
+  } else if (
+    lower.includes('moet') ||
+    lower.includes('taak') ||
+    lower.includes('todo') ||
+    lower.includes('opruimen') ||
+    lower.includes('bellen') ||
+    lower.includes('afronden')
+  ) {
+    type = 'taak'
   }
 
-  if (!Array.isArray(data.output)) return ''
+  let date = ''
+  if (lower.includes('vandaag')) date = 'vandaag'
+  if (lower.includes('morgen')) date = 'morgen'
+  if (lower.includes('overmorgen')) date = 'overmorgen'
 
-  const parts = []
+  const timeMatch = raw.match(/\b(\d{1,2}:\d{2})\b/)
+  const time = timeMatch ? timeMatch[1] : ''
 
-  for (const item of data.output) {
-    if (!item || !Array.isArray(item.content)) continue
+  return {
+    type,
+    title: raw.slice(0, 80) || 'Zonder titel',
+    summary: raw,
+    project: '',
+    status: 'nieuw',
+    date,
+    time,
+    raw
+  }
+}
 
-    for (const content of item.content) {
-      if (!content) continue
-      if (content.type === 'output_text' && typeof content.text === 'string') {
-        parts.push(content.text)
-      }
+async function parseWithOpenAI(text) {
+  if (!process.env.OPENAI_API_KEY) return fallbackParse(text)
+
+  const today = getAmsterdamDate(0)
+
+  const prompt = `
+Je bent Clara.
+Zet de input om naar 1 JSON object.
+
+Regels:
+- Geef alleen geldige JSON terug
+- Types alleen: taak, afspraak, notitie, idee, project
+- title moet kort en helder zijn
+- summary is 1 korte zin
+- project alleen invullen als expliciet genoemd
+- status standaard "nieuw"
+- date alleen invullen als het echt in de tekst staat of direct afleidbaar is
+- Gebruik voor relatieve datumwoorden een echte datum in formaat YYYY-MM-DD
+- Vandaag in Amsterdam is ${today}
+- time alleen als expliciet genoemd in HH:MM
+- raw moet exact de originele input zijn
+
+Formaat:
+{
+  "type": "",
+  "title": "",
+  "summary": "",
+  "project": "",
+  "status": "nieuw",
+  "date": "",
+  "time": "",
+  "raw": ""
+}
+
+Input:
+${text}
+`.trim()
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4.1-mini',
+      temperature: 0.2,
+      messages: [
+        {
+          role: 'system',
+          content: 'Geef alleen JSON terug.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    })
+  })
+
+  if (!response.ok) {
+    return fallbackParse(text)
+  }
+
+  const json = await response.json()
+  const content = json?.choices?.[0]?.message?.content || '{}'
+
+  try {
+    const parsed = JSON.parse(content)
+    return {
+      type: parsed.type || 'notitie',
+      title: parsed.title || text.slice(0, 80) || 'Zonder titel',
+      summary: parsed.summary || text,
+      project: parsed.project || '',
+      status: parsed.status || 'nieuw',
+      date: parsed.date || '',
+      time: parsed.time || '',
+      raw: parsed.raw || text
     }
+  } catch {
+    return fallbackParse(text)
+  }
+}
+
+function buildReply(item) {
+  const type = (item.type || '').toLowerCase()
+  const title = item.title || 'Zonder titel'
+
+  if (type === 'afspraak') {
+    if (item.date && item.time) return `Afspraak opgeslagen: ${title} op ${item.date} om ${item.time}.`
+    if (item.date) return `Afspraak opgeslagen: ${title} op ${item.date}.`
+    return `Afspraak opgeslagen: ${title}.`
   }
 
-  return parts.join('\n').trim()
+  if (type === 'taak') {
+    if (item.date && item.time) return `ToDo opgeslagen: ${title} op ${item.date} om ${item.time}.`
+    if (item.date) return `ToDo opgeslagen: ${title} voor ${item.date}.`
+    return `ToDo opgeslagen: ${title}.`
+  }
+
+  if (type === 'idee') return `Idee opgeslagen: ${title}.`
+  if (type === 'project') return `Project opgeslagen: ${title}.`
+
+  return `Notitie opgeslagen: ${title}.`
 }
 
 module.exports = async function handler(req, res) {
@@ -52,154 +185,43 @@ module.exports = async function handler(req, res) {
     }
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    const message = safeString(body.message).trim()
+    const message = String(body.message || '').trim()
 
     if (!message) {
       return res.status(400).json({ error: 'missing_message' })
     }
 
-    const schema = {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        reply: { type: 'string' },
-        items: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              type: { type: 'string' },
-              title: { type: 'string' },
-              summary: { type: 'string' },
-              project: { type: 'string' },
-              status: { type: 'string' },
-              date: { type: 'string' },
-              time: { type: 'string' },
-              note_type: { type: 'string' },
-              raw: { type: 'string' }
-            },
-            required: [
-              'type',
-              'title',
-              'summary',
-              'project',
-              'status',
-              'date',
-              'time',
-              'note_type',
-              'raw'
-            ]
-          }
-        }
-      },
-      required: ['reply', 'items']
+    const parsed = await parseWithOpenAI(message)
+
+    const item = {
+      type: parsed.type || 'notitie',
+      title: parsed.title || 'Zonder titel',
+      summary: parsed.summary || message,
+      project: parsed.project || '',
+      status: parsed.status || 'nieuw',
+      date: normalizeDate(parsed.date || ''),
+      time: parsed.time || '',
+      note_type: 'general',
+      raw: parsed.raw || message
     }
 
-    const openaiRes = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-5.4',
-        instructions: [
-          'Je bent Clara, een persoonlijke AI-operator voor Jeroen Cuypers van Begeister.',
-          'Zet input om in bruikbare items voor een dashboard.',
-          'Herken taken, afspraken, notities, ideeën en projecten.',
-          'Gebruik Nederlands.',
-          'Wees kort en direct.',
-          'Als iets een afspraak is, gebruik type "afspraak".',
-          'Als iets een taak is, gebruik type "taak".',
-          'Als iets een notitie is, gebruik type "notitie".',
-          'Als iets een idee is, gebruik type "idee".',
-          'Als iets een project is, gebruik type "project".',
-          'Gebruik lege strings als informatie ontbreekt.',
-          'Geef in reply een korte menselijke reactie van maximaal 2 zinnen.',
-          'Maak title kort en duidelijk.',
-          'Maak summary compact.',
-          'Zet de originele gebruikersinput ook in raw.'
-        ].join('\n'),
-        input: message,
-        text: {
-          format: {
-            type: 'json_schema',
-            strict: true,
-            name: 'clara_chat_output',
-            schema
-          }
-        }
-      })
-    })
+    const { data, error } = await supabase
+      .from('clara_items')
+      .insert([item])
+      .select()
+      .single()
 
-    const openaiData = await openaiRes.json()
-
-    if (!openaiRes.ok) {
+    if (error) {
       return res.status(500).json({
-        error: 'openai_error',
-        details: openaiData
+        error: 'supabase_error',
+        details: error.message
       })
-    }
-
-    const rawText = extractOutputText(openaiData)
-
-    if (!rawText) {
-      return res.status(500).json({
-        error: 'missing_model_output',
-        details: openaiData
-      })
-    }
-
-    let parsed
-    try {
-      parsed = JSON.parse(rawText)
-    } catch (err) {
-      return res.status(500).json({
-        error: 'invalid_model_json',
-        rawText
-      })
-    }
-
-    const reply = safeString(parsed.reply, 'Opgeslagen.')
-    const items = Array.isArray(parsed.items) ? parsed.items : []
-
-    const cleanedItems = items.map((item) => ({
-      type: normalizeType(item.type),
-      title: safeString(item.title, 'Zonder titel'),
-      summary: safeString(item.summary),
-      project: safeString(item.project),
-      status: safeString(item.status, 'nieuw') || 'nieuw',
-      date: safeString(item.date),
-      time: safeString(item.time),
-      note_type: safeString(item.note_type, 'general') || 'general',
-      raw: safeString(item.raw, message)
-    }))
-
-    let inserted = []
-
-    if (cleanedItems.length) {
-      const { data, error } = await supabase
-        .from('clara_items')
-        .insert(cleanedItems)
-        .select('*')
-
-      if (error) {
-        return res.status(500).json({
-          error: 'supabase_error',
-          details: error.message,
-          hint: error.hint || null,
-          code: error.code || null
-        })
-      }
-
-      inserted = Array.isArray(data) ? data : []
     }
 
     return res.status(200).json({
       success: true,
-      reply,
-      items: inserted
+      reply: buildReply(item),
+      item: data || item
     })
   } catch (e) {
     return res.status(500).json({
