@@ -1,18 +1,20 @@
-import { createClient } from '@supabase/supabase-js'
+const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
 )
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const { data, error } = await supabase
       .from('clara_items')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
     const agenda = data.filter(item => item.type === 'agenda')
     const tasks = data.filter(item => item.type === 'task')
@@ -24,6 +26,8 @@ export default async function handler(req, res) {
       notes
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({
+      error: err.message || 'Unknown server error'
+    })
   }
 }
