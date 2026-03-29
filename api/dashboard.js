@@ -1,17 +1,29 @@
-import fs from "fs";
-import path from "path";
+import { createClient } from '@supabase/supabase-js'
 
-export default function handler(req, res) {
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+)
+
+export default async function handler(req, res) {
   try {
-    const filePath = path.join(process.cwd(), "api", "data", "clara.json");
-    const fileData = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(fileData);
+    const { data, error } = await supabase
+      .from('clara_items')
+      .select('*')
+      .order('created_at', { ascending: false })
 
-    res.status(200).json(data);
-  } catch (e) {
-    res.status(500).json({
-      error: "failed_to_read_data",
-      details: e.message
-    });
+    if (error) throw error
+
+    const agenda = data.filter(item => item.type === 'agenda')
+    const tasks = data.filter(item => item.type === 'task')
+    const notes = data.filter(item => item.type === 'note')
+
+    res.status(200).json({
+      agenda,
+      tasks,
+      notes
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
   }
 }
