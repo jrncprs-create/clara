@@ -1,16 +1,11 @@
-import fs from "fs";
-import path from "path";
+import memory from "./add";
 
 export default function handler(req, res) {
   try {
-    const filePath = path.join(process.cwd(), "api", "data", "clara.json");
-    const fileData = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(fileData);
-
-    res.status(200).json(data);
+    res.status(200).json(memory.default || memory);
   } catch (e) {
     res.status(500).json({
-      error: "failed_to_read_data",
+      error: "failed_to_read_memory",
       details: e.message
     });
   }
