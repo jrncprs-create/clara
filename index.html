@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clara Dashboard</title>
+
+<style>
+body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 50vh 50vh;
+    gap: 20px;
+    padding: 20px;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.card {
+    border: 1px solid #333;
+    padding: 20px;
+    border-radius: 12px;
+    overflow: auto;
+}
+
+h2 {
+    margin-top: 0;
+    font-weight: 400;
+}
+
+.item {
+    margin-bottom: 12px;
+    opacity: 0.85;
+}
+
+.highlight {
+    font-weight: 600;
+}
+
+.small {
+    font-size: 0.85em;
+    opacity: 0.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h2>🔥 Prioriteit</h2>
+        <div id="priority"></div>
+    </div>
+
+    <div class="card">
+        <h2>📅 Deze week</h2>
+        <div id="agenda"></div>
+    </div>
+
+    <div class="card">
+        <h2>🧠 Context</h2>
+        <div id="context"></div>
+    </div>
+
+    <div class="card">
+        <h2>⚡ Suggested actions</h2>
+        <div id="actions"></div>
+    </div>
+
+</div>
+
+<script>
+fetch('clara_data.json')
+    .then(res => res.json())
+    .then(data => {
+
+        const priority = document.getElementById('priority');
+        const agenda = document.getElementById('agenda');
+        const context = document.getElementById('context');
+        const actions = document.getElementById('actions');
+
+        // PRIORITY
+        data.items
+            .filter(i => i.priority === "hoog")
+            .forEach(i => {
+                priority.innerHTML += `<div class="item highlight">${i.title}</div>`;
+            });
+
+        // AGENDA
+        data.items
+            .filter(i => i.type === "afspraak")
+            .forEach(i => {
+                agenda.innerHTML += `<div class="item">${i.title} — ${i.date} ${i.time}</div>`;
+            });
+
+        // CONTEXT (ideeën + projecten)
+        data.items
+            .filter(i => i.type === "idee")
+            .forEach(i => {
+                context.innerHTML += `<div class="item">${i.title}</div>`;
+            });
+
+        // ACTIONS
+        data.suggested_actions.forEach(a => {
+            actions.innerHTML += `<div class="item">${a}</div>`;
+        });
+
+    });
+</script>
+
+</body>
+</html>
