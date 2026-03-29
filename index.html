@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clara Dashboard</title>
+  <title>Clara</title>
 
   <style>
     * {
@@ -21,7 +21,88 @@
     }
 
     body {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
       padding: 20px;
+    }
+
+    .panel {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .chat {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 40px);
+    }
+
+    .chat-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .messages {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: rgba(255,255,255,0.12);
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .composer {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .composer input {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .composer button {
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      padding: 0 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     .dashboard {
@@ -29,7 +110,6 @@
       grid-template-columns: 1.2fr 1fr;
       grid-template-rows: 1fr 1fr;
       gap: 20px;
-      width: 100%;
       height: calc(100vh - 40px);
     }
 
@@ -93,15 +173,23 @@
       grid-row: span 2;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1100px) {
       html, body {
         overflow: auto;
+      }
+
+      body {
+        grid-template-columns: 1fr;
+      }
+
+      .chat,
+      .dashboard {
+        height: auto;
       }
 
       .dashboard {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
-        height: auto;
       }
 
       .wide {
@@ -116,8 +204,26 @@
 </head>
 
 <body>
-  <div class="dashboard">
+  <section class="panel chat">
+    <div class="chat-header">Clara</div>
 
+    <div class="messages" id="messages">
+      <div class="message assistant">Waar wil je iets toevoegen?
+
+1. Taak
+2. Afspraak
+3. Project
+4. Notitie
+5. Idee</div>
+    </div>
+
+    <form class="composer" id="chatForm">
+      <input id="chatInput" type="text" placeholder="Typ je bericht..." autocomplete="off" />
+      <button type="submit">Verstuur</button>
+    </form>
+  </section>
+
+  <div class="dashboard">
     <section class="card wide">
       <h2>Deze week</h2>
       <div class="content" id="agenda">
@@ -138,7 +244,6 @@
         <div class="loading">Laden...</div>
       </div>
     </section>
-
   </div>
 
   <script>
@@ -206,6 +311,15 @@
       }
     }
 
+    function addMessage(role, text) {
+      const messages = document.getElementById("messages");
+      const div = document.createElement("div");
+      div.className = `message ${role}`;
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
     function resetChatAfterDone(message) {
       if (typeof message === "string" && message.includes("Klaar is Clara")) {
         setTimeout(() => {
@@ -214,14 +328,23 @@
       }
     }
 
+    document.getElementById("chatForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      addMessage("user", text);
+      input.value = "";
+
+      const fakeReply = `Ontvangen.\n\n${text}\n\nKlaar is Clara :)`;
+      addMessage("assistant", fakeReply);
+      resetChatAfterDone(fakeReply);
+    });
+
     loadDashboard();
-
-    /*
-      GEBRUIK LATER ZO:
-      resetChatAfterDone(reply);
-
-      waarbij "reply" de tekst is die Clara GPT terugstuurt.
-    */
   </script>
 </body>
 </html>
