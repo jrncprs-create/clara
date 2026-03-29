@@ -192,7 +192,7 @@
           </div>
         `);
 
-        renderList("notes", data.notes, (item) => `
+        renderList("notes", data.projects, (item) => `
           <div class="item">
             <div class="title">${escapeHtml(item.title)}</div>
             <div class="meta">${escapeHtml(item.type)}</div>
@@ -206,7 +206,22 @@
       }
     }
 
+    function resetChatAfterDone(message) {
+      if (typeof message === "string" && message.includes("Klaar is Clara")) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      }
+    }
+
     loadDashboard();
+
+    /*
+      GEBRUIK LATER ZO:
+      resetChatAfterDone(reply);
+
+      waarbij "reply" de tekst is die Clara GPT terugstuurt.
+    */
   </script>
 </body>
 </html>
