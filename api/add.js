@@ -6,11 +6,11 @@ const supabase = createClient(
 )
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'method_not_allowed' })
-  }
-
   try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'method_not_allowed' })
+    }
+
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
     const rawType = (body.type || '').toLowerCase()
@@ -24,37 +24,39 @@ module.exports = async function handler(req, res) {
 
     const item = {
       type: normalizedType || 'notitie',
-      title: body.title || body.titel || body.name || 'Zonder titel',
-      summary: body.summary || body.samenvatting || body.raw || '',
+      title: body.title || 'Zonder titel',
+      summary: body.summary || '',
       project: body.project || '',
       status: body.status || 'nieuw',
-      date: body.date || body.datum || '',
+      date: body.date || '',
       time: body.time || '',
-      note_type: body.note_type || '',
+      note_type: body.note_type || 'general',
       raw: body.raw || ''
     }
+
+    console.log('INSERT ITEM:', item)
 
     const { data, error } = await supabase
       .from('clara_items')
       .insert([item])
-      .select()
 
     if (error) {
+      console.error('SUPABASE ERROR:', error)
       return res.status(500).json({
-        error: 'failed_to_write',
-        details: error.message,
-        hint: error.hint || null,
-        code: error.code || null
+        error: 'supabase_error',
+        details: error.message
       })
     }
 
     return res.status(200).json({
       success: true,
-      item: data?.[0] || item
+      inserted: item
     })
+
   } catch (e) {
+    console.error('SERVER ERROR:', e)
     return res.status(500).json({
-      error: 'failed_to_write',
+      error: 'server_error',
       details: e.message
     })
   }
