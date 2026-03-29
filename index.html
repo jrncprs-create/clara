@@ -105,6 +105,11 @@
       cursor: pointer;
     }
 
+    .composer button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
     .dashboard {
       display: grid;
       grid-template-columns: 1.2fr 1fr;
@@ -219,7 +224,7 @@
 
     <form class="composer" id="chatForm">
       <input id="chatInput" type="text" placeholder="Typ je bericht..." autocomplete="off" />
-      <button type="submit">Verstuur</button>
+      <button id="sendButton" type="submit">Verstuur</button>
     </form>
   </section>
 
@@ -247,7 +252,8 @@
   </div>
 
   <script>
-    const WEBHOOK_URL = "/api/dashboard";
+    const DASHBOARD_URL = "/api/dashboard";
+    const CHAT_URL = "/api/chat";
 
     function escapeHtml(str) {
       return String(str || "")
@@ -275,7 +281,7 @@
       const notesEl = document.getElementById("notes");
 
       try {
-        const res = await fetch(WEBHOOK_URL);
+        const res = await fetch(DASHBOARD_URL, { cache: "no-store" });
 
         if (!res.ok) {
           throw new Error("HTTP " + res.status);
@@ -283,21 +289,21 @@
 
         const data = await res.json();
 
-        renderList("agenda", data.agenda, (item) => `
+        renderList("agenda", data.agenda || [], (item) => `
           <div class="item">
             <div class="title">${escapeHtml(item.title)}</div>
             <div class="meta">${escapeHtml(item.date)} ${escapeHtml(item.time)}</div>
           </div>
         `);
 
-        renderList("tasks", data.tasks, (item) => `
+        renderList("tasks", data.tasks || [], (item) => `
           <div class="item">
             <div class="title">${escapeHtml(item.title)}</div>
-            <div class="meta">${escapeHtml(item.project)} • ${escapeHtml(item.status)}</div>
+            <div class="meta">${escapeHtml(item.project)}${item.project ? " • " : ""}${escapeHtml(item.status)}</div>
           </div>
         `);
 
-        renderList("notes", data.projects, (item) => `
+        renderList("notes", data.notes || [], (item) => `
           <div class="item">
             <div class="title">${escapeHtml(item.title)}</div>
             <div class="meta">${escapeHtml(item.type)}</div>
@@ -320,15 +326,16 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
-    function resetChatAfterDone(message) {
-      if (typeof message === "string" && message.includes("Klaar is Clara")) {
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
-      }
+    function setBusy(isBusy) {
+      const input = document.getElementById("chatInput");
+      const button = document.getElementById("sendButton");
+
+      input.disabled = isBusy;
+      button.disabled = isBusy;
+      button.textContent = isBusy ? "..." : "Verstuur";
     }
 
-    document.getElementById("chatForm").addEventListener("submit", (e) => {
+    document.getElementById("chatForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const input = document.getElementById("chatInput");
@@ -338,10 +345,45 @@
 
       addMessage("user", text);
       input.value = "";
+      setBusy(true);
 
-      const fakeReply = `Ontvangen.\n\n${text}\n\nKlaar is Clara :)`;
-      addMessage("assistant", fakeReply);
-      resetChatAfterDone(fakeReply);
+      try {
+        const res = await fetch(CHAT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: text
+          })
+        });
+
+        const rawText = await res.text();
+
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch (err) {
+          data = null;
+        }
+
+        if (!res.ok) {
+          const errorText = data?.details || data?.error || rawText || "Onbekende fout";
+          addMessage("assistant", `Er ging iets mis.\n${errorText}`);
+          return;
+        }
+
+        const reply = data?.reply || "Opgeslagen.";
+        addMessage("assistant", reply);
+
+        await loadDashboard();
+
+      } catch (error) {
+        addMessage("assistant", "Er ging iets mis met versturen.");
+      } finally {
+        setBusy(false);
+        input.focus();
+      }
     });
 
     loadDashboard();
