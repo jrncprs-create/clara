@@ -5,6 +5,32 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 )
 
+function getAmsterdamDateParts(offsetDays = 0) {
+  const now = new Date()
+  const amsterdamString = now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' })
+  const amsterdamNow = new Date(amsterdamString)
+  amsterdamNow.setDate(amsterdamNow.getDate() + offsetDays)
+
+  const year = amsterdamNow.getFullYear()
+  const month = String(amsterdamNow.getMonth() + 1).padStart(2, '0')
+  const day = String(amsterdamNow.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function normalizeDate(input) {
+  if (!input) return ''
+
+  const value = String(input).trim().toLowerCase()
+
+  if (!value) return ''
+  if (value === 'vandaag') return getAmsterdamDateParts(0)
+  if (value === 'morgen') return getAmsterdamDateParts(1)
+  if (value === 'overmorgen') return getAmsterdamDateParts(2)
+
+  return input
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -22,13 +48,15 @@ module.exports = async function handler(req, res) {
     if (['idea', 'idee'].includes(rawType)) normalizedType = 'idee'
     if (['project'].includes(rawType)) normalizedType = 'project'
 
+    const normalizedDate = normalizeDate(body.date || body.datum || '')
+
     const item = {
       type: normalizedType || 'notitie',
       title: body.title || body.titel || body.name || 'Zonder titel',
       summary: body.summary || body.samenvatting || body.raw || '',
       project: body.project || '',
       status: body.status || 'nieuw',
-      date: body.date || body.datum || '',
+      date: normalizedDate,
       time: body.time || '',
       note_type: body.note_type || 'general',
       raw: body.raw || ''
