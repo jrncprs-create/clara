@@ -24,37 +24,34 @@ module.exports = async function handler(req, res) {
 
     const item = {
       type: normalizedType || 'notitie',
-      title: body.title || 'Zonder titel',
-      summary: body.summary || '',
+      title: body.title || body.titel || body.name || 'Zonder titel',
+      summary: body.summary || body.samenvatting || body.raw || '',
       project: body.project || '',
       status: body.status || 'nieuw',
-      date: body.date || '',
+      date: body.date || body.datum || '',
       time: body.time || '',
       note_type: body.note_type || 'general',
       raw: body.raw || ''
     }
 
-    console.log('INSERT ITEM:', item)
-
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('clara_items')
       .insert([item])
 
     if (error) {
-      console.error('SUPABASE ERROR:', error)
       return res.status(500).json({
         error: 'supabase_error',
-        details: error.message
+        details: error.message,
+        hint: error.hint || null,
+        code: error.code || null
       })
     }
 
     return res.status(200).json({
       success: true,
-      inserted: item
+      item: item
     })
-
   } catch (e) {
-    console.error('SERVER ERROR:', e)
     return res.status(500).json({
       error: 'server_error',
       details: e.message
