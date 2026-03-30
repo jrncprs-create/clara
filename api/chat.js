@@ -24,9 +24,7 @@ function normalizeType(input) {
 }
 
 function getAmsterdamNow() {
-  const now = new Date()
-  const local = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' }))
-  return local
+  return new Date()
 }
 
 function pad2(n) {
