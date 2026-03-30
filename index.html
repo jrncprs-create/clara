@@ -956,7 +956,7 @@
 
     function renderAgenda(data = {}) {
       const agendaEl = document.getElementById('agenda');
-      const agenda = dedupeItems(Array.isArray(data.agenda) ? data.agenda : []);
+      const agenda = dedupeItems([   ...(Array.isArray(data.agenda) ? data.agenda : []),   ...(Array.isArray(data.tasks) ? data.tasks : []) ]);
 
       const items = agenda
         .map(item => ({ ...item, _date: parseDate(item.date) }))
