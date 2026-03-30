@@ -583,6 +583,48 @@
       background: transparent;
       color: rgba(255,255,255,0.80);
     }
+    .agenda-split {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  height: 100%;
+  min-height: 0;
+}
+
+.agenda-today-block,
+.agenda-upcoming-block {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.agenda-today-block {
+  padding: 14px 14px 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.agenda-upcoming-block {
+  padding: 14px;
+}
+
+.agenda-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 12px;
+}
+
+.today-timeline {
+  position: relative;
+  height: calc(100% - 24px);
+  min-height: 240px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+#upcomingAgenda {
+  height: calc(100% - 24px);
+  overflow: auto;
+}
 
     @media (max-width: 1100px) {
       html, body {
