@@ -1016,40 +1016,76 @@
         ...(Array.isArray(data.tasks) ? data.tasks : [])
       ]);
 
-      const items = agenda
-        .map(item => ({ ...item, _date: parseDate(item.date) }))
-        .filter(item => item._date);
+function renderAgenda(data = {}) {
+  const todayTimelineEl = document.getElementById('todayTimeline');
+  const upcomingAgendaEl = document.getElementById('upcomingAgenda');
 
-      const days = getDays(7);
+  if (!todayTimelineEl || !upcomingAgendaEl) return;
 
-      agendaEl.innerHTML = `
-        <div class="agenda-list">
-          ${days.map(day => {
-            const dayItems = items
-              .filter(item => sameDay(item._date, day))
-              .sort((a, b) => `${a.time || ''}`.localeCompare(`${b.time || ''}`));
+  const agenda = dedupeItems([
+    ...(Array.isArray(data.agenda) ? data.agenda : []),
+    ...(Array.isArray(data.tasks) ? data.tasks : [])
+  ]);
 
-            return `
-              <div class="agenda-day">
-                <div class="agenda-date">${escapeHtml(formatDayLong(day))}</div>
-                <div class="agenda-items">
-                  ${
-                    dayItems.length
-                      ? dayItems.map(item => `
-                        <div class="agenda-item">
-                          <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-                          <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
-                        </div>
-                      `).join('')
-                      : `<div class="agenda-empty">geen afspraken</div>`
-                  }
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
+  const items = agenda
+    .map(item => ({ ...item, _date: parseDate(item.date) }))
+    .filter(item => item._date)
+    .sort((a, b) => {
+      const dateDiff = a._date - b._date;
+      if (dateDiff !== 0) return dateDiff;
+      return `${a.time || ''}`.localeCompare(`${b.time || ''}`);
+    });
+
+  const today = getTodayStart();
+
+  const todayItems = items.filter(item => sameDay(item._date, today));
+  const futureItems = items.filter(item => item._date > today);
+
+  todayTimelineEl.innerHTML = `
+    <div class="agenda-items">
+      ${
+        todayItems.length
+          ? todayItems.map(item => `
+            <div class="agenda-item">
+              <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
+            </div>
+          `).join('')
+          : `<div class="agenda-empty">geen afspraken vandaag</div>`
+      }
+    </div>
+  `;
+
+  const days = getDays(7).slice(1);
+
+  upcomingAgendaEl.innerHTML = `
+    <div class="agenda-list">
+      ${days.map(day => {
+        const dayItems = futureItems
+          .filter(item => sameDay(item._date, day))
+          .sort((a, b) => `${a.time || ''}`.localeCompare(`${b.time || ''}`));
+
+        return `
+          <div class="agenda-day">
+            <div class="agenda-date">${escapeHtml(formatDayLong(day))}</div>
+            <div class="agenda-items">
+              ${
+                dayItems.length
+                  ? dayItems.map(item => `
+                    <div class="agenda-item">
+                      <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                      <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
+                    </div>
+                  `).join('')
+                  : `<div class="agenda-empty">geen afspraken</div>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
 
     function renderTasks(data = {}) {
       const tasksEl = document.getElementById('tasks');
