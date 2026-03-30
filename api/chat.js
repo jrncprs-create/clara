@@ -222,20 +222,20 @@ function sanitizeItemForSave(item) {
   const combinedText = [title, summary, sourceText].filter(Boolean).join(' | ')
 
   let dateFromAI = normalizeDate(item.date)
-const dateFromText = normalizeDate(combinedText)
+  const dateFromText = normalizeDate(combinedText)
 
-let date = ''
+  let date = ''
 
-if (dateFromText) {
-  date = dateFromText
-} else if (dateFromAI) {
-  const year = Number(dateFromAI.slice(0, 4))
-  const currentYear = new Date().getFullYear()
+  if (dateFromText) {
+    date = dateFromText
+  } else if (dateFromAI) {
+    const year = Number(dateFromAI.slice(0, 4))
+    const currentYear = new Date().getFullYear()
 
-  if (year >= currentYear) {
-    date = dateFromAI
+    if (year >= currentYear) {
+      date = dateFromAI
+    }
   }
-}
 
   let endDate = normalizeDate(item.end_date)
   if (!endDate) endDate = ''
@@ -361,6 +361,58 @@ ${text}
   return JSON.parse(content)
 }
 
+async function deleteItem(body) {
+  const itemId = safeString(body.id || body.item_id)
+
+  if (itemId) {
+    const { data, error } = await supabase
+      .from('clara_items')
+      .delete()
+      .eq('id', itemId)
+      .select('id, title')
+
+    if (error) {
+      throw new Error(`delete_failed: ${error.message}`)
+    }
+
+    return {
+      deleted: data?.length || 0,
+      item: data?.[0] || null
+    }
+  }
+
+  const type = normalizeType(body.type)
+  const title = safeString(body.title)
+  const date = safeString(body.date)
+  const time = safeString(body.time)
+  const project = safeString(body.project)
+
+  if (!title) {
+    throw new Error('delete_failed: missing id and title')
+  }
+
+  let query = supabase
+    .from('clara_items')
+    .delete()
+    .eq('type', type)
+    .eq('title', title)
+
+  if (date) query = query.eq('date', date)
+  if (time) query = query.eq('time', time)
+  if (project) query = query.eq('project', project)
+
+  const { data, error } = await query.select('id, title')
+
+  if (error) {
+    throw new Error(`delete_failed: ${error.message}`)
+  }
+
+  return {
+    deleted: data?.length || 0,
+    item: data?.[0] || null
+  }
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -448,6 +500,24 @@ module.exports = async function handler(req, res) {
         success: true,
         reply: `Opgeslagen. ${data?.length || inserts.length} item(s).`,
         saved: data?.length || inserts.length
+      })
+    }
+
+    if (action === 'delete_item') {
+      const result = await deleteItem(body)
+
+      if (!result.deleted) {
+        return res.status(404).json({
+          error: 'not_found',
+          details: 'Geen match gevonden om te verwijderen.'
+        })
+      }
+
+      return res.status(200).json({
+        success: true,
+        reply: `Verwijderd. ${result.deleted} item(s).`,
+        deleted: result.deleted,
+        item: result.item
       })
     }
 
