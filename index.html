@@ -1234,8 +1234,8 @@
         const result = await response.json();
 
         if (!response.ok) {
-          footerText.textContent = 'Opslaan ging mis.';
-          addChatBubble('Opslaan ging mis.', 'clara');
+          footerText.textContent = `Opslaan ging mis: ${result.details || 'unknown error'}`;
+          addChatBubble(`Opslaan ging mis: ${result.details || 'unknown error'}`, 'clara');
           return;
         }
 
@@ -1244,8 +1244,8 @@
         addChatBubble(result.reply || 'Opgeslagen.', 'clara');
         await loadDashboard();
       } catch (error) {
-        footerText.textContent = 'Verbinding mislukt.';
-        addChatBubble('Verbinding mislukt.', 'clara');
+        footerText.textContent = `Verbinding mislukt: ${error.message || 'unknown error'}`;
+        addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
       } finally {
         saveBtn.disabled = false;
         updateReviewFooter();
@@ -1273,7 +1273,7 @@
         const result = await response.json();
 
         if (!response.ok) {
-          addChatBubble('Opslaan ging mis.', 'clara');
+          addChatBubble(`Opslaan ging mis: ${result.details || 'unknown error'}`, 'clara');
           return;
         }
 
@@ -1286,7 +1286,7 @@
         addChatBubble(result.reply || 'Opgeslagen.', 'clara');
         await loadDashboard();
       } catch (error) {
-        addChatBubble('Verbinding mislukt.', 'clara');
+        addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
       } finally {
         button.disabled = false;
       }
