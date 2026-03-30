@@ -583,48 +583,150 @@
       background: transparent;
       color: rgba(255,255,255,0.80);
     }
+
     .agenda-split {
-  display: grid;
-  grid-template-rows: 1fr 1fr;
-  height: 100%;
-  min-height: 0;
-}
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      height: 100%;
+      min-height: 0;
+    }
 
-.agenda-today-block,
-.agenda-upcoming-block {
-  min-height: 0;
-  overflow: hidden;
-}
+    .agenda-today-block,
+    .agenda-upcoming-block {
+      min-height: 0;
+      overflow: hidden;
+    }
 
-.agenda-today-block {
-  padding: 14px 14px 10px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
+    .agenda-today-block {
+      padding: 14px 14px 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
 
-.agenda-upcoming-block {
-  padding: 14px;
-}
+    .agenda-upcoming-block {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
 
-.agenda-section-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.55);
-  margin-bottom: 12px;
-}
+    .agenda-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
 
-.today-timeline {
-  position: relative;
-  height: calc(100% - 24px);
-  min-height: 240px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
+    .today-timeline {
+      position: relative;
+      flex: 1;
+      min-height: 240px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+      background: rgba(255,255,255,0.01);
+    }
 
-#upcomingAgenda {
-  height: calc(100% - 24px);
-  overflow: auto;
-}
+    .timeline-grid {
+      position: absolute;
+      inset: 0;
+    }
+
+    .timeline-hour {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .timeline-hour-label {
+      position: absolute;
+      left: 0;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: rgba(255,255,255,0.28);
+      letter-spacing: 0.04em;
+      z-index: 2;
+    }
+
+    .timeline-events {
+      position: absolute;
+      inset: 0;
+      left: 42px;
+      right: 8px;
+    }
+
+    .timeline-event {
+      position: absolute;
+      left: 0;
+      right: 0;
+      min-height: 22px;
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      overflow: hidden;
+      z-index: 3;
+    }
+
+    .timeline-event-title {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timeline-event-meta {
+      font-size: 11px;
+      line-height: 1.2;
+      color: rgba(255,255,255,0.55);
+      margin-top: 2px;
+    }
+
+    .timeline-now-line {
+      position: absolute;
+      left: 36px;
+      right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.92);
+      z-index: 4;
+    }
+
+    .timeline-now-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      left: 33px;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+    }
+
+    .timeline-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.28);
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    #upcomingAgenda {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
 
     @media (max-width: 1100px) {
       html, body {
@@ -706,19 +808,19 @@
       <div class="panel-header">
         <div class="panel-title">Agenda</div>
       </div>
-     <div class="panel-body">
-  <div class="agenda-split">
-    <section class="agenda-today-block">
-      <div class="agenda-section-title">Vandaag</div>
-      <div id="todayTimeline" class="today-timeline"></div>
-    </section>
+      <div class="panel-body">
+        <div class="agenda-split">
+          <section class="agenda-today-block">
+            <div class="agenda-section-title">Vandaag</div>
+            <div id="todayTimeline" class="today-timeline"></div>
+          </section>
 
-    <section class="agenda-upcoming-block">
-      <div class="agenda-section-title">Vanaf morgen</div>
-      <div id="upcomingAgenda" class="agenda-list"></div>
-    </section>
-  </div>
-</div>
+          <section class="agenda-upcoming-block">
+            <div class="agenda-section-title">Vanaf morgen</div>
+            <div id="upcomingAgenda"></div>
+          </section>
+        </div>
+      </div>
     </div>
 
     <div class="panel tasks-panel">
@@ -984,6 +1086,34 @@
       return timeStr ? `${label} ${timeStr}` : label;
     }
 
+    function parseTimeToMinutes(value) {
+      const str = String(value || '').trim().toLowerCase();
+      if (!str) return null;
+
+      const normalized = str.replace('.', ':');
+      let match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+      if (match) {
+        const h = Number(match[1]);
+        const m = Number(match[2]);
+        if (h >= 0 && h <= 23 && m >= 0 && m <= 59) return h * 60 + m;
+      }
+
+      match = normalized.match(/^(\d{1,2})$/);
+      if (match) {
+        const h = Number(match[1]);
+        if (h >= 0 && h <= 23) return h * 60;
+      }
+
+      return null;
+    }
+
+    function formatMinutesToTime(minutes) {
+      const safe = Math.max(0, Math.min(1439, minutes));
+      const h = Math.floor(safe / 60);
+      const m = safe % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
     function dedupeItems(items) {
       const seen = new Set();
       const result = [];
@@ -1008,84 +1138,153 @@
       return result;
     }
 
-    function renderAgenda(data = {}) {
-      const agendaEl = document.getElementById('agenda');
+    function renderTodayTimeline(items) {
+      const el = document.getElementById('todayTimeline');
+      if (!el) return;
 
+      const hourMarks = Array.from({ length: 25 }, (_, i) => i);
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const nowTop = (nowMinutes / 1440) * 100;
+
+      const itemsWithTime = items
+        .map(item => {
+          const startMinutes = parseTimeToMinutes(item.time);
+          return { ...item, _startMinutes: startMinutes };
+        })
+        .filter(item => item._startMinutes !== null)
+        .sort((a, b) => a._startMinutes - b._startMinutes);
+
+      const itemsWithoutTime = items.filter(item => parseTimeToMinutes(item.time) === null);
+
+      const timelineEventsHtml = itemsWithTime.map(item => {
+        const top = (item._startMinutes / 1440) * 100;
+        const blockHeight = Math.max((50 / 1440) * 100, 4.2);
+        const meta = item.time ? item.time : 'hele dag';
+
+        return `
+          <div class="timeline-event" style="top:${top}%; height:${blockHeight}%;">
+            <div class="timeline-event-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+            <div class="timeline-event-meta">${escapeHtml(meta)}</div>
+          </div>
+        `;
+      }).join('');
+
+      const noTimeHtml = itemsWithoutTime.length
+        ? `
+          <div style="position:absolute; left:42px; right:8px; top:8px; z-index:6; display:flex; flex-direction:column; gap:6px;">
+            ${itemsWithoutTime.map(item => `
+              <div style="padding:6px 8px; border:1px solid rgba(255,255,255,0.10); border-radius:10px; background:rgba(255,255,255,0.03);">
+                <div style="font-size:12px; font-weight:600; line-height:1.2; color:#fff;">${escapeHtml(item.title || 'Zonder titel')}</div>
+                <div style="font-size:11px; line-height:1.2; color:rgba(255,255,255,0.50); margin-top:2px;">hele dag</div>
+              </div>
+            `).join('')}
+          </div>
+        `
+        : '';
+
+      const emptyHtml = !items.length
+        ? `<div class="timeline-empty">geen afspraken vandaag</div>`
+        : '';
+
+      el.innerHTML = `
+        <div class="timeline-grid">
+          ${hourMarks.map(hour => {
+            const top = (hour / 24) * 100;
+            const label = hour === 24 ? '' : `${String(hour).padStart(2, '0')}:00`;
+
+            return `
+              <div class="timeline-hour" style="top:${top}%"></div>
+              ${label ? `<div class="timeline-hour-label" style="top:${top}%">${label}</div>` : ''}
+            `;
+          }).join('')}
+
+          ${emptyHtml}
+          ${noTimeHtml}
+
+          <div class="timeline-events">
+            ${timelineEventsHtml}
+          </div>
+
+          <div class="timeline-now-line" style="top:${nowTop}%"></div>
+          <div class="timeline-now-dot" style="top:${nowTop}%"></div>
+        </div>
+      `;
+    }
+
+    function renderUpcomingAgenda(items) {
+      const upcomingAgendaEl = document.getElementById('upcomingAgenda');
+      if (!upcomingAgendaEl) return;
+
+      const days = getDays(7).slice(1);
+
+      upcomingAgendaEl.innerHTML = `
+        <div class="agenda-list">
+          ${days.map(day => {
+            const dayItems = items
+              .filter(item => sameDay(item._date, day))
+              .sort((a, b) => {
+                const aMinutes = parseTimeToMinutes(a.time);
+                const bMinutes = parseTimeToMinutes(b.time);
+
+                if (aMinutes === null && bMinutes === null) return 0;
+                if (aMinutes === null) return -1;
+                if (bMinutes === null) return 1;
+                return aMinutes - bMinutes;
+              });
+
+            return `
+              <div class="agenda-day">
+                <div class="agenda-date">${escapeHtml(formatDayLong(day))}</div>
+                <div class="agenda-items">
+                  ${
+                    dayItems.length
+                      ? dayItems.map(item => `
+                        <div class="agenda-item">
+                          <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                          <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
+                        </div>
+                      `).join('')
+                      : `<div class="agenda-empty">geen afspraken</div>`
+                  }
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderAgenda(data = {}) {
       const agenda = dedupeItems([
         ...(Array.isArray(data.agenda) ? data.agenda : []),
         ...(Array.isArray(data.tasks) ? data.tasks : [])
       ]);
 
-function renderAgenda(data = {}) {
-  const todayTimelineEl = document.getElementById('todayTimeline');
-  const upcomingAgendaEl = document.getElementById('upcomingAgenda');
+      const items = agenda
+        .map(item => ({ ...item, _date: parseDate(item.date) }))
+        .filter(item => item._date)
+        .sort((a, b) => {
+          const dateDiff = a._date - b._date;
+          if (dateDiff !== 0) return dateDiff;
 
-  if (!todayTimelineEl || !upcomingAgendaEl) return;
+          const aMinutes = parseTimeToMinutes(a.time);
+          const bMinutes = parseTimeToMinutes(b.time);
 
-  const agenda = dedupeItems([
-    ...(Array.isArray(data.agenda) ? data.agenda : []),
-    ...(Array.isArray(data.tasks) ? data.tasks : [])
-  ]);
+          if (aMinutes === null && bMinutes === null) return 0;
+          if (aMinutes === null) return -1;
+          if (bMinutes === null) return 1;
+          return aMinutes - bMinutes;
+        });
 
-  const items = agenda
-    .map(item => ({ ...item, _date: parseDate(item.date) }))
-    .filter(item => item._date)
-    .sort((a, b) => {
-      const dateDiff = a._date - b._date;
-      if (dateDiff !== 0) return dateDiff;
-      return `${a.time || ''}`.localeCompare(`${b.time || ''}`);
-    });
+      const today = getTodayStart();
 
-  const today = getTodayStart();
+      const todayItems = items.filter(item => sameDay(item._date, today));
+      const futureItems = items.filter(item => item._date > today);
 
-  const todayItems = items.filter(item => sameDay(item._date, today));
-  const futureItems = items.filter(item => item._date > today);
-
-  todayTimelineEl.innerHTML = `
-    <div class="agenda-items">
-      ${
-        todayItems.length
-          ? todayItems.map(item => `
-            <div class="agenda-item">
-              <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
-            </div>
-          `).join('')
-          : `<div class="agenda-empty">geen afspraken vandaag</div>`
-      }
-    </div>
-  `;
-
-  const days = getDays(7).slice(1);
-
-  upcomingAgendaEl.innerHTML = `
-    <div class="agenda-list">
-      ${days.map(day => {
-        const dayItems = futureItems
-          .filter(item => sameDay(item._date, day))
-          .sort((a, b) => `${a.time || ''}`.localeCompare(`${b.time || ''}`));
-
-        return `
-          <div class="agenda-day">
-            <div class="agenda-date">${escapeHtml(formatDayLong(day))}</div>
-            <div class="agenda-items">
-              ${
-                dayItems.length
-                  ? dayItems.map(item => `
-                    <div class="agenda-item">
-                      <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-                      <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
-                    </div>
-                  `).join('')
-                  : `<div class="agenda-empty">geen afspraken</div>`
-              }
-            </div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-}
+      renderTodayTimeline(todayItems);
+      renderUpcomingAgenda(futureItems);
+    }
 
     function renderTasks(data = {}) {
       const tasksEl = document.getElementById('tasks');
@@ -1436,6 +1635,10 @@ function renderAgenda(data = {}) {
         renderAppointments({});
       }
     }
+
+    setInterval(() => {
+      loadDashboard();
+    }, 60000);
 
     loadDashboard();
   </script>
