@@ -123,9 +123,20 @@ function normalizeTime(input) {
 }
 
 function sanitizeItemForSave(item) {
-  const normalizedDate = normalizeDate(item.date)
-  const normalizedEndDate = normalizeDate(item.end_date)
+  const sourceText = safeString(item.source_text)
+  const fallbackText = `${safeString(item.title)} ${safeString(item.summary)} ${sourceText}`.trim()
+
+  let normalizedDate = normalizeDate(item.date)
+  let normalizedEndDate = normalizeDate(item.end_date)
   const normalizedTime = normalizeTime(item.time)
+
+  if (!normalizedDate) {
+    normalizedDate = normalizeDate(fallbackText)
+  }
+
+  if (!normalizedEndDate) {
+    normalizedEndDate = normalizeDate(fallbackText)
+  }
 
   return {
     type: normalizeType(item.type),
@@ -138,8 +149,8 @@ function sanitizeItemForSave(item) {
     time: normalizedTime,
     priority: safeString(item.priority, 'middel'),
     note_type: 'general',
-    raw: safeString(item.source_text),
-    source_text: safeString(item.source_text)
+    raw: sourceText,
+    source_text: sourceText
   }
 }
 
