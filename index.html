@@ -983,7 +983,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v2.8 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
     let currentEditTempId = null;
@@ -1002,32 +1002,33 @@
       return new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }
 
-    function getDays(count = 7) {
-      const days = [];
-      const today = getTodayStart();
-
-      for (let i = 0; i < count; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        days.push(d);
-      }
-
-      return days;
+    function startOfDay(date) {
+      if (!date) return null;
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     }
 
     function parseDate(value) {
       if (!value) return null;
 
-      const str = String(value).trim().toLowerCase();
+      const raw = String(value).trim();
+      if (!raw) return null;
 
-      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-        const [y, m, d] = str.split('-').map(Number);
+      const str = raw.toLowerCase();
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+        const [y, m, d] = raw.split('-').map(Number);
         return new Date(y, m - 1, d);
       }
 
-      if (/^\d{4}-\d{2}-\d{2}t/.test(str)) {
-        const parsedIso = new Date(value);
-        return Number.isNaN(parsedIso.getTime()) ? null : parsedIso;
+      if (/^\d{4}-\d{2}-\d{2}[ t]/i.test(raw)) {
+        const datePart = raw.slice(0, 10);
+        const [y, m, d] = datePart.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+
+      if (/^\d{2}[\/.-]\d{2}[\/.-]\d{4}$/.test(raw)) {
+        const parts = raw.split(/[\/.-]/).map(Number);
+        return new Date(parts[2], parts[1] - 1, parts[0]);
       }
 
       const today = getTodayStart();
@@ -1046,8 +1047,10 @@
         return d;
       }
 
-      const parsed = new Date(value);
-      return Number.isNaN(parsed.getTime()) ? null : parsed;
+      const parsed = new Date(raw);
+      if (Number.isNaN(parsed.getTime())) return null;
+
+      return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
     }
 
     function sameDay(a, b) {
@@ -1107,13 +1110,6 @@
       return null;
     }
 
-    function formatMinutesToTime(minutes) {
-      const safe = Math.max(0, Math.min(1439, minutes));
-      const h = Math.floor(safe / 60);
-      const m = safe % 60;
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-    }
-
     function dedupeItems(items) {
       const seen = new Set();
       const result = [];
@@ -1138,6 +1134,42 @@
       return result;
     }
 
+    function normalizeDashboardItem(item, fallbackType = '') {
+      const type = String(item?.type || fallbackType || '').trim().toLowerCase();
+      const parsedDate = parseDate(item?.date);
+
+      return {
+        ...item,
+        type,
+        title: item?.title || '',
+        summary: item?.summary || '',
+        project: item?.project || '',
+        status: item?.status || '',
+        priority: item?.priority || '',
+        date: item?.date || '',
+        time: item?.time || '',
+        end_date: item?.end_date || '',
+        source_text: item?.source_text || '',
+        _date: parsedDate,
+        _dayStart: parsedDate ? startOfDay(parsedDate) : null,
+        _timeMinutes: parseTimeToMinutes(item?.time)
+      };
+    }
+
+    function sortByDateTime(a, b) {
+      const aDay = a._dayStart ? a._dayStart.getTime() : Infinity;
+      const bDay = b._dayStart ? b._dayStart.getTime() : Infinity;
+      if (aDay !== bDay) return aDay - bDay;
+
+      const aMinutes = a._timeMinutes;
+      const bMinutes = b._timeMinutes;
+
+      if (aMinutes === null && bMinutes === null) return 0;
+      if (aMinutes === null) return -1;
+      if (bMinutes === null) return 1;
+      return aMinutes - bMinutes;
+    }
+
     function renderTodayTimeline(items) {
       const el = document.getElementById('todayTimeline');
       if (!el) return;
@@ -1148,17 +1180,14 @@
       const nowTop = (nowMinutes / 1440) * 100;
 
       const itemsWithTime = items
-        .map(item => {
-          const startMinutes = parseTimeToMinutes(item.time);
-          return { ...item, _startMinutes: startMinutes };
-        })
-        .filter(item => item._startMinutes !== null)
-        .sort((a, b) => a._startMinutes - b._startMinutes);
+        .filter(item => item._timeMinutes !== null)
+        .sort((a, b) => a._timeMinutes - b._timeMinutes);
 
-      const itemsWithoutTime = items.filter(item => parseTimeToMinutes(item.time) === null);
+      const itemsWithoutTime = items
+        .filter(item => item._timeMinutes === null);
 
       const timelineEventsHtml = itemsWithTime.map(item => {
-        const top = (item._startMinutes / 1440) * 100;
+        const top = (item._timeMinutes / 1440) * 100;
         const blockHeight = Math.max((50 / 1440) * 100, 4.2);
         const meta = item.time ? item.time : 'hele dag';
 
@@ -1184,7 +1213,7 @@
         : '';
 
       const emptyHtml = !items.length
-        ? `<div class="timeline-empty">geen afspraken vandaag</div>`
+        ? `<div class="timeline-empty">geen items vandaag</div>`
         : '';
 
       el.innerHTML = `
@@ -1216,37 +1245,38 @@
       const upcomingAgendaEl = document.getElementById('upcomingAgenda');
       if (!upcomingAgendaEl) return;
 
-      const days = getDays(7).slice(1);
+      if (!items.length) {
+        upcomingAgendaEl.innerHTML = `<div class="empty">Geen geplande items vanaf morgen</div>`;
+        return;
+      }
+
+      const grouped = new Map();
+
+      items.forEach(item => {
+        if (!item._dayStart) return;
+        const key = item._dayStart.toISOString().slice(0, 10);
+        if (!grouped.has(key)) grouped.set(key, { date: item._dayStart, items: [] });
+        grouped.get(key).items.push(item);
+      });
+
+      const groups = Array.from(grouped.values())
+        .sort((a, b) => a.date - b.date);
 
       upcomingAgendaEl.innerHTML = `
         <div class="agenda-list">
-          ${days.map(day => {
-            const dayItems = items
-              .filter(item => sameDay(item._date, day))
-              .sort((a, b) => {
-                const aMinutes = parseTimeToMinutes(a.time);
-                const bMinutes = parseTimeToMinutes(b.time);
-
-                if (aMinutes === null && bMinutes === null) return 0;
-                if (aMinutes === null) return -1;
-                if (bMinutes === null) return 1;
-                return aMinutes - bMinutes;
-              });
+          ${groups.map(group => {
+            const dayItems = group.items.sort(sortByDateTime);
 
             return `
               <div class="agenda-day">
-                <div class="agenda-date">${escapeHtml(formatDayLong(day))}</div>
+                <div class="agenda-date">${escapeHtml(formatDayLong(group.date))}</div>
                 <div class="agenda-items">
-                  ${
-                    dayItems.length
-                      ? dayItems.map(item => `
-                        <div class="agenda-item">
-                          <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-                          <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
-                        </div>
-                      `).join('')
-                      : `<div class="agenda-empty">geen afspraken</div>`
-                  }
+                  ${dayItems.map(item => `
+                    <div class="agenda-item">
+                      <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                      <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
+                    </div>
+                  `).join('')}
                 </div>
               </div>
             `;
@@ -1256,31 +1286,20 @@
     }
 
     function renderAgenda(data = {}) {
-      const agenda = dedupeItems([
+      const combined = dedupeItems([
         ...(Array.isArray(data.agenda) ? data.agenda : []),
         ...(Array.isArray(data.tasks) ? data.tasks : [])
       ]);
 
-      const items = agenda
-        .map(item => ({ ...item, _date: parseDate(item.date) }))
-        .filter(item => item._date)
-        .sort((a, b) => {
-          const dateDiff = a._date - b._date;
-          if (dateDiff !== 0) return dateDiff;
-
-          const aMinutes = parseTimeToMinutes(a.time);
-          const bMinutes = parseTimeToMinutes(b.time);
-
-          if (aMinutes === null && bMinutes === null) return 0;
-          if (aMinutes === null) return -1;
-          if (bMinutes === null) return 1;
-          return aMinutes - bMinutes;
-        });
+      const items = combined
+        .map(item => normalizeDashboardItem(item))
+        .filter(item => item._dayStart)
+        .sort(sortByDateTime);
 
       const today = getTodayStart();
 
-      const todayItems = items.filter(item => sameDay(item._date, today));
-      const futureItems = items.filter(item => item._date > today);
+      const todayItems = items.filter(item => sameDay(item._dayStart, today));
+      const futureItems = items.filter(item => item._dayStart > today);
 
       renderTodayTimeline(todayItems);
       renderUpcomingAgenda(futureItems);
@@ -1288,7 +1307,8 @@
 
     function renderTasks(data = {}) {
       const tasksEl = document.getElementById('tasks');
-      const tasks = dedupeItems(Array.isArray(data.tasks) ? data.tasks : []);
+      const tasks = dedupeItems(Array.isArray(data.tasks) ? data.tasks : [])
+        .map(item => normalizeDashboardItem(item, 'taak'));
 
       if (!tasks.length) {
         tasksEl.innerHTML = `<div class="empty">Geen taken</div>`;
@@ -1312,7 +1332,8 @@
 
     function renderNotes(data = {}) {
       const notesEl = document.getElementById('notes');
-      const notes = dedupeItems(Array.isArray(data.notes) ? data.notes : []);
+      const notes = dedupeItems(Array.isArray(data.notes) ? data.notes : [])
+        .map(item => normalizeDashboardItem(item, 'notitie'));
 
       if (!notes.length) {
         notesEl.innerHTML = `<div class="empty">Geen notities</div>`;
@@ -1337,7 +1358,9 @@
     function renderAppointments(data = {}) {
       const appointmentsEl = document.getElementById('appointments');
       const agenda = dedupeItems(Array.isArray(data.agenda) ? data.agenda : [])
-        .filter(item => ['afspraak', 'agenda'].includes((item.type || '').toLowerCase()));
+        .map(item => normalizeDashboardItem(item, 'afspraak'))
+        .filter(item => ['afspraak', 'agenda'].includes((item.type || '').toLowerCase()))
+        .sort(sortByDateTime);
 
       if (!agenda.length) {
         appointmentsEl.innerHTML = `<div class="empty">Geen afspraken</div>`;
@@ -1621,13 +1644,13 @@
 
     async function loadDashboard() {
       try {
-        const response = await fetch('/api/dashboard');
+        const response = await fetch('/api/dashboard', { cache: 'no-store' });
         const data = await response.json();
 
-        renderAgenda(data);
-        renderTasks(data);
-        renderNotes(data);
-        renderAppointments(data);
+        renderAgenda(data || {});
+        renderTasks(data || {});
+        renderNotes(data || {});
+        renderAppointments(data || {});
       } catch (error) {
         renderAgenda({});
         renderTasks({});
