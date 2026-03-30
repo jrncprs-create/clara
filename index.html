@@ -130,6 +130,7 @@
       overflow: auto;
       min-height: 0;
       position: relative;
+      scroll-behavior: smooth;
     }
 
     .agenda-panel { grid-column: 1; grid-row: 1 / 3; }
@@ -144,12 +145,35 @@
     }
 
     .flat-item {
+      position: relative;
       padding: 16px 18px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
+      transition:
+        background 220ms ease,
+        border-color 220ms ease,
+        padding 220ms ease,
+        opacity 220ms ease;
     }
 
     .flat-item:last-child {
       border-bottom: none;
+    }
+
+    .flat-item.is-open {
+      background: rgba(255,255,255,0.02);
+      padding-top: 18px;
+      padding-bottom: 18px;
+    }
+
+    .flat-item.is-dimmed {
+      opacity: 0.42;
+    }
+
+    .flat-item-anchor {
+      position: relative;
+      top: -10px;
+      height: 1px;
+      pointer-events: none;
     }
 
     .flat-row {
@@ -167,15 +191,33 @@
       flex: 1;
     }
 
-    .flat-main {
+    .flat-topline {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .flat-main,
+    .flat-title {
       font-size: 15px;
       font-weight: 600;
       line-height: 1.3;
       color: #fff;
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    .flat-title {
+      font-size: 16px;
+      font-weight: 650;
+      line-height: 1.28;
     }
 
     .flat-meta,
-    .flat-sub {
+    .flat-sub,
+    .flat-compact-meta {
       font-size: 13px;
       line-height: 1.3;
     }
@@ -187,6 +229,12 @@
     .flat-sub {
       color: rgba(255,255,255,0.40);
       margin-top: 1px;
+    }
+
+    .flat-compact-meta {
+      color: rgba(255,255,255,0.50);
+      min-width: 0;
+      word-break: break-word;
     }
 
     .empty {
@@ -241,6 +289,134 @@
       width: 13px;
       height: 13px;
       stroke-width: 2.1;
+    }
+
+    .flat-edit-wrap {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition:
+        max-height 320ms ease,
+        opacity 220ms ease,
+        transform 220ms ease,
+        margin-top 220ms ease;
+      margin-top: 0;
+    }
+
+    .flat-item.is-open .flat-edit-wrap {
+      max-height: 900px;
+      opacity: 1;
+      transform: translateY(0);
+      margin-top: 14px;
+    }
+
+    .flat-edit-panel {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .flat-edit-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .flat-edit-group.single {
+      grid-template-columns: 1fr;
+    }
+
+    .flat-edit-group:last-of-type {
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .flat-edit-field {
+      padding: 12px 0;
+      min-width: 0;
+    }
+
+    .flat-edit-group .flat-edit-field:first-child {
+      padding-right: 12px;
+    }
+
+    .flat-edit-group .flat-edit-field:last-child {
+      padding-left: 12px;
+    }
+
+    .flat-edit-group.single .flat-edit-field:first-child,
+    .flat-edit-group.single .flat-edit-field:last-child {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .flat-edit-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.44);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .flat-edit-input,
+    .flat-edit-select {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 15px;
+      line-height: 1.3;
+      padding: 0;
+      font-family: inherit;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .flat-edit-input::placeholder {
+      color: rgba(255,255,255,0.28);
+    }
+
+    .flat-edit-select {
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .flat-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 14px;
+    }
+
+    .flat-edit-btn {
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.10);
+      transition: opacity 120ms ease, transform 120ms ease, background 120ms ease, color 120ms ease;
+    }
+
+    .flat-edit-btn:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+
+    .flat-edit-btn.secondary {
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+    }
+
+    .flat-edit-btn.primary {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
     }
 
     .chat-shell {
@@ -1036,6 +1212,24 @@
       .timeline-event {
         min-height: 64px;
       }
+
+      .flat-edit-group {
+        grid-template-columns: 1fr;
+      }
+
+      .flat-edit-group .flat-edit-field:first-child,
+      .flat-edit-group .flat-edit-field:last-child {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      .flat-edit-group .flat-edit-field {
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .flat-edit-group .flat-edit-field:last-child {
+        border-bottom: none;
+      }
     }
 
     @media (max-width: 760px) {
@@ -1067,6 +1261,15 @@
       .review-btn,
       .review-edit-btn,
       .confirm-btn {
+        width: 100%;
+      }
+
+      .flat-edit-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .flat-edit-btn {
         width: 100%;
       }
     }
@@ -1285,7 +1488,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v3.1 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v3.2 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
     let currentEditTempId = null;
@@ -1298,8 +1501,11 @@
 
     let dashboardEditIndex = new Map();
     let selectedAgendaDayKey = null;
-
     let pendingConfirmAction = null;
+
+    let dashboardInlineEditKey = null;
+    let dashboardInlineDraft = null;
+    let dashboardInlineSaving = false;
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -1568,9 +1774,65 @@
       };
     }
 
+    function formatCompactMeta(item, fallbackSub = '') {
+      const parts = [];
+
+      if (item.date || item.time) {
+        parts.push(formatShortDate(item.date, item.time));
+      } else if (fallbackSub) {
+        parts.push(fallbackSub);
+      }
+
+      if (item.project) {
+        parts.push(item.project);
+      }
+
+      if (item.summary && !item.project) {
+        parts.push(item.summary);
+      }
+
+      return parts.filter(Boolean).join(' • ');
+    }
+
+    function cloneInlineDraftFromItem(item) {
+      return {
+        id: item.id || '',
+        type: item.type || 'notitie',
+        title: item.title || '',
+        project: item.project || '',
+        summary: item.summary || '',
+        status: item.status || 'nieuw',
+        priority: item.priority || 'middel',
+        date: item.date || '',
+        end_date: item.end_date || '',
+        time: item.time || '',
+        source_text: item.source_text || ''
+      };
+    }
+
+    function supportsInlineEdit(item) {
+      const type = String(item?.type || '').toLowerCase();
+      return type === 'taak' || type === 'afspraak';
+    }
+
     function openDashboardEdit(editKey) {
       const item = dashboardEditIndex.get(editKey);
       if (!item) return;
+
+      if (supportsInlineEdit(item)) {
+        dashboardInlineEditKey = editKey;
+        dashboardInlineDraft = cloneInlineDraftFromItem(item);
+        dashboardInlineSaving = false;
+        renderAllPanels();
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            focusInlineEdit(editKey);
+          });
+        });
+
+        return;
+      }
 
       const reviewPayload = {
         reply: 'Controleer en pas dit item aan.',
@@ -1582,6 +1844,84 @@
 
       openReviewModal(reviewPayload);
       openEditItem(reviewPayload.review.items[0].temp_id);
+    }
+
+    function closeDashboardInlineEdit() {
+      dashboardInlineEditKey = null;
+      dashboardInlineDraft = null;
+      dashboardInlineSaving = false;
+      renderAllPanels();
+    }
+
+    function updateDashboardInlineField(field, value) {
+      if (!dashboardInlineDraft) return;
+      dashboardInlineDraft[field] = value;
+    }
+
+    async function saveDashboardInlineEdit() {
+      if (!dashboardInlineEditKey || !dashboardInlineDraft || dashboardInlineSaving) return;
+
+      const originalItem = dashboardEditIndex.get(dashboardInlineEditKey);
+      if (!originalItem?.id) return;
+
+      dashboardInlineSaving = true;
+      renderAllPanels();
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_item',
+            id: originalItem.id,
+            ...dashboardInlineDraft
+          })
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          addChatBubble(`Bijwerken ging mis: ${result.details || 'unknown error'}`, 'clara');
+          dashboardInlineSaving = false;
+          renderAllPanels();
+          return;
+        }
+
+        addChatBubble(result.reply || 'Item bijgewerkt.', 'clara');
+        dashboardInlineEditKey = null;
+        dashboardInlineDraft = null;
+        dashboardInlineSaving = false;
+        await loadDashboard();
+      } catch (error) {
+        addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
+        dashboardInlineSaving = false;
+        renderAllPanels();
+      }
+    }
+
+    function focusInlineEdit(editKey) {
+      const itemEl = document.querySelector(`[data-edit-key="${CSS.escape(editKey)}"]`);
+      if (!itemEl) return;
+
+      const panelBody = itemEl.closest('.panel-body');
+      const anchor = itemEl.querySelector('.flat-item-anchor') || itemEl;
+
+      if (panelBody) {
+        const panelRect = panelBody.getBoundingClientRect();
+        const anchorRect = anchor.getBoundingClientRect();
+        const currentScroll = panelBody.scrollTop;
+        const targetScroll = currentScroll + (anchorRect.top - panelRect.top) - 10;
+
+        panelBody.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: 'smooth'
+        });
+      }
+
+      setTimeout(() => {
+        const input = itemEl.querySelector('.flat-edit-input, .flat-edit-select');
+        if (input) input.focus();
+      }, 220);
     }
 
     function getActionButtonsHtml(editKey, label = 'Item') {
@@ -1597,17 +1937,111 @@
       `;
     }
 
-    function renderFlatItem(item, metaHtml = '', subHtml = '') {
+    function renderInlineEditPanel(item) {
+      const isOpen = dashboardInlineEditKey === item._editKey;
+      if (!isOpen || !dashboardInlineDraft) return '';
+
+      const draft = dashboardInlineDraft;
+      const disableAttr = dashboardInlineSaving ? 'disabled' : '';
+
       return `
-        <div class="flat-item">
+        <div class="flat-edit-wrap">
+          <div class="flat-edit-panel">
+            <div class="flat-edit-group single">
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Titel</div>
+                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.title || '')}" oninput="updateDashboardInlineField('title', this.value)" />
+              </div>
+            </div>
+
+            <div class="flat-edit-group single">
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Project</div>
+                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.project || '')}" oninput="updateDashboardInlineField('project', this.value)" />
+              </div>
+            </div>
+
+            <div class="flat-edit-group">
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Datum</div>
+                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.date || '')}" oninput="updateDashboardInlineField('date', this.value)" placeholder="2026-03-31" />
+              </div>
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Einddatum</div>
+                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.end_date || '')}" oninput="updateDashboardInlineField('end_date', this.value)" placeholder="2026-03-31" />
+              </div>
+            </div>
+
+            <div class="flat-edit-group">
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Tijd</div>
+                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.time || '')}" oninput="updateDashboardInlineField('time', this.value)" placeholder="14:00" />
+              </div>
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Type</div>
+                <select class="flat-edit-select" ${disableAttr} onchange="updateDashboardInlineField('type', this.value)">
+                  <option value="taak" ${draft.type === 'taak' ? 'selected' : ''}>taak</option>
+                  <option value="afspraak" ${draft.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flat-edit-group">
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Prioriteit</div>
+                <select class="flat-edit-select" ${disableAttr} onchange="updateDashboardInlineField('priority', this.value)">
+                  <option value="">-</option>
+                  <option value="hoog" ${draft.priority === 'hoog' ? 'selected' : ''}>hoog</option>
+                  <option value="middel" ${draft.priority === 'middel' ? 'selected' : ''}>middel</option>
+                  <option value="laag" ${draft.priority === 'laag' ? 'selected' : ''}>laag</option>
+                </select>
+              </div>
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Status</div>
+                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.status || '')}" oninput="updateDashboardInlineField('status', this.value)" />
+              </div>
+            </div>
+
+            <div class="flat-edit-group single">
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Brontekst</div>
+                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.source_text || '')}" oninput="updateDashboardInlineField('source_text', this.value)" />
+              </div>
+            </div>
+
+            <div class="flat-edit-actions">
+              <button class="flat-edit-btn secondary" ${disableAttr} type="button" onclick="closeDashboardInlineEdit()">Annuleren</button>
+              <button class="flat-edit-btn primary" ${disableAttr} type="button" onclick="saveDashboardInlineEdit()">${dashboardInlineSaving ? 'Opslaan...' : 'Opslaan'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFlatItem(item, metaHtml = '', subHtml = '', compactMeta = '') {
+      const isOpen = dashboardInlineEditKey === item._editKey;
+      const hasOtherOpen = !!dashboardInlineEditKey && dashboardInlineEditKey !== item._editKey;
+      const classes = [
+        'flat-item',
+        isOpen ? 'is-open' : '',
+        hasOtherOpen ? 'is-dimmed' : ''
+      ].filter(Boolean).join(' ');
+
+      const compact = compactMeta || formatCompactMeta(item);
+
+      return `
+        <div class="${classes}" data-edit-key="${escapeHtml(item._editKey)}">
+          <div class="flat-item-anchor"></div>
           <div class="flat-row">
-            <div class="flat-content">
-              <div class="flat-main">${escapeHtml(item.title || 'Zonder titel')}</div>
+            <div class="flat-topline">
+              <div class="flat-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              ${compact ? `<div class="flat-compact-meta">${escapeHtml(compact)}</div>` : ''}
               ${metaHtml}
               ${subHtml}
             </div>
             ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
           </div>
+          ${renderInlineEditPanel(item)}
         </div>
       `;
     }
@@ -1895,8 +2329,9 @@
         <div class="flat-list">
           ${tasks.map(item => renderFlatItem(
             item,
-            item.project ? `<div class="flat-meta">${escapeHtml(item.project)}</div>` : '',
-            `<div class="flat-sub">${escapeHtml(formatShortDate(item.date, item.time))}</div>`
+            '',
+            '',
+            formatCompactMeta(item, formatShortDate(item.date, item.time))
           )).join('')}
         </div>
       `;
@@ -1916,8 +2351,9 @@
         <div class="flat-list">
           ${notes.map(item => renderFlatItem(
             item,
-            item.project ? `<div class="flat-meta">${escapeHtml(item.project)}</div>` : '',
-            item.summary ? `<div class="flat-sub">${escapeHtml(item.summary)}</div>` : ''
+            '',
+            '',
+            formatCompactMeta(item, item.summary || '')
           )).join('')}
         </div>
       `;
@@ -1939,11 +2375,19 @@
         <div class="flat-list">
           ${agenda.map(item => renderFlatItem(
             item,
-            `<div class="flat-meta">${escapeHtml(formatShortDate(item.date, item.time))}</div>`,
-            item.summary ? `<div class="flat-sub">${escapeHtml(item.summary)}</div>` : ''
+            '',
+            '',
+            formatCompactMeta(item, formatShortDate(item.date, item.time))
           )).join('')}
         </div>
       `;
+    }
+
+    function renderAllPanels() {
+      renderAgenda(dashboardRawData);
+      renderTasks(dashboardRawData);
+      renderNotes(dashboardRawData);
+      renderAppointments(dashboardRawData);
     }
 
     function addChatBubble(text, sender) {
@@ -2165,6 +2609,13 @@
         }
 
         addChatBubble(result.reply || 'Item verwijderd.', 'clara');
+
+        if (dashboardInlineEditKey === item._editKey) {
+          dashboardInlineEditKey = null;
+          dashboardInlineDraft = null;
+          dashboardInlineSaving = false;
+        }
+
         await loadDashboard();
       } catch (error) {
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
@@ -2303,6 +2754,9 @@
     window.selectAgendaDay = selectAgendaDay;
     window.requestDashboardDelete = requestDashboardDelete;
     window.requestReviewDelete = requestReviewDelete;
+    window.closeDashboardInlineEdit = closeDashboardInlineEdit;
+    window.updateDashboardInlineField = updateDashboardInlineField;
+    window.saveDashboardInlineEdit = saveDashboardInlineEdit;
 
     async function loadDashboard() {
       try {
@@ -2317,17 +2771,17 @@
 
         buildDashboardEditIndex(dashboardRawData);
 
-        renderAgenda(dashboardRawData);
-        renderTasks(dashboardRawData);
-        renderNotes(dashboardRawData);
-        renderAppointments(dashboardRawData);
+        if (dashboardInlineEditKey && !dashboardEditIndex.has(dashboardInlineEditKey)) {
+          dashboardInlineEditKey = null;
+          dashboardInlineDraft = null;
+          dashboardInlineSaving = false;
+        }
+
+        renderAllPanels();
       } catch (error) {
         dashboardRawData = { agenda: [], tasks: [], notes: [] };
         buildDashboardEditIndex(dashboardRawData);
-        renderAgenda(dashboardRawData);
-        renderTasks(dashboardRawData);
-        renderNotes(dashboardRawData);
-        renderAppointments(dashboardRawData);
+        renderAllPanels();
       }
     }
 
