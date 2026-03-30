@@ -259,6 +259,45 @@ function sanitizeItemForSave(item) {
   }
 }
 
+function sanitizeItemForUpdate(item) {
+  const sourceText = safeString(item.source_text)
+  const title = safeString(item.title, 'Zonder titel')
+  const summary = safeString(item.summary)
+  const project = safeString(item.project)
+  const status = safeString(item.status, 'nieuw')
+  const priority = safeString(item.priority, 'middel')
+
+  const combinedText = [title, summary, sourceText].filter(Boolean).join(' | ')
+
+  let date = normalizeDate(item.date)
+  if (!date) {
+    date = normalizeDate(combinedText)
+  }
+
+  let endDate = normalizeDate(item.end_date)
+  if (!endDate) endDate = ''
+
+  let time = normalizeTime(item.time)
+  if (!time) {
+    time = extractTimeFromText(combinedText)
+  }
+
+  return {
+    type: normalizeType(item.type),
+    title,
+    summary,
+    project,
+    status,
+    date,
+    end_date: endDate,
+    time,
+    priority,
+    note_type: 'general',
+    raw: sourceText,
+    source_text: sourceText
+  }
+}
+
 async function parseWithOpenAI(text) {
   if (!process.env.OPENAI_API_KEY) {
     return {
@@ -413,6 +452,45 @@ async function deleteItem(body) {
   }
 }
 
+async function updateItem(body) {
+  const itemId = safeString(body.id || body.item_id)
+  if (!itemId) {
+    throw new Error('update_failed: missing id')
+  }
+
+  const cleaned = sanitizeItemForUpdate(body)
+  const now = new Date().toISOString()
+
+  const updatePayload = {
+    type: cleaned.type,
+    title: cleaned.title,
+    summary: cleaned.summary,
+    project: cleaned.project,
+    status: cleaned.status,
+    date: cleaned.date,
+    end_date: cleaned.end_date,
+    time: cleaned.time,
+    priority: cleaned.priority,
+    note_type: cleaned.note_type,
+    raw: cleaned.raw,
+    source_text: cleaned.source_text,
+    updated_at: now
+  }
+
+  const { data, error } = await supabase
+    .from('clara_items')
+    .update(updatePayload)
+    .eq('id', itemId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`update_failed: ${error.message}`)
+  }
+
+  return data
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -500,6 +578,16 @@ module.exports = async function handler(req, res) {
         success: true,
         reply: `Opgeslagen. ${data?.length || inserts.length} item(s).`,
         saved: data?.length || inserts.length
+      })
+    }
+
+    if (action === 'update_item') {
+      const updated = await updateItem(body)
+
+      return res.status(200).json({
+        success: true,
+        reply: 'Item bijgewerkt.',
+        item: updated
       })
     }
 
