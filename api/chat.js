@@ -23,33 +23,131 @@ function normalizeType(input) {
   return 'notitie'
 }
 
-function getAmsterdamNow() {
-  return new Date()
-}
-
 function pad2(n) {
   return String(n).padStart(2, '0')
 }
 
-function formatDateYMD(date) {
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+function getAmsterdamDateParts(baseDate = new Date()) {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Amsterdam',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+
+  const parts = fmt.formatToParts(baseDate)
+  const year = Number(parts.find(p => p.type === 'year')?.value)
+  const month = Number(parts.find(p => p.type === 'month')?.value)
+  const day = Number(parts.find(p => p.type === 'day')?.value)
+
+  return { year, month, day }
 }
 
-function addDays(date, days) {
-  const d = new Date(date)
-  d.setDate(d.getDate() + days)
+function makeUTCDateFromParts(year, month, day) {
+  return new Date(Date.UTC(year, month - 1, day))
+}
+
+function getAmsterdamTodayUTC() {
+  const { year, month, day } = getAmsterdamDateParts(new Date())
+  return makeUTCDateFromParts(year, month, day)
+}
+
+function addDaysUTC(date, days) {
+  const d = new Date(date.getTime())
+  d.setUTCDate(d.getUTCDate() + days)
   return d
 }
 
-function normalizeDutchRelativeDate(input) {
-  const raw = safeString(input).toLowerCase()
+function formatUTCDateYMD(date) {
+  return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`
+}
+
+function normalizeExplicitDateString(raw) {
+  const value = safeString(raw)
+  if (!value) return ''
+
+  let match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (match) {
+    const year = Number(match[1])
+    const month = Number(match[2])
+    const day = Number(match[3])
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${year}-${pad2(month)}-${pad2(day)}`
+    }
+  }
+
+  match = value.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/)
+  if (match) {
+    const day = Number(match[1])
+    const month = Number(match[2])
+    const year = Number(match[3])
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${year}-${pad2(month)}-${pad2(day)}`
+    }
+  }
+
+  match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (match) {
+    const day = Number(match[1])
+    const month = Number(match[2])
+    const year = Number(match[3])
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${year}-${pad2(month)}-${pad2(day)}`
+    }
+  }
+
+  match = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  if (match) {
+    const day = Number(match[1])
+    const month = Number(match[2])
+    const year = Number(match[3])
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${year}-${pad2(month)}-${pad2(day)}`
+    }
+  }
+
+  return ''
+}
+
+function extractRelativeDateFromText(text) {
+  const raw = safeString(text).toLowerCase()
   if (!raw) return ''
 
-  const today = getAmsterdamNow()
+  const today = getAmsterdamTodayUTC()
 
-  if (raw === 'vandaag') return formatDateYMD(today)
-  if (raw === 'morgen') return formatDateYMD(addDays(today, 1))
-  if (raw === 'overmorgen') return formatDateYMD(addDays(today, 2))
+  if (/\bovermorgen\b/.test(raw)) {
+    return formatUTCDateYMD(addDaysUTC(today, 2))
+  }
+
+  if (/\bmorgen\b/.test(raw)) {
+    return formatUTCDateYMD(addDaysUTC(today, 1))
+  }
+
+  if (/\bvandaag\b/.test(raw)) {
+    return formatUTCDateYMD(today)
+  }
+
+  return ''
+}
+
+function extractExplicitDateFromText(text) {
+  const raw = safeString(text)
+  if (!raw) return ''
+
+  const patterns = [
+    /\b\d{4}-\d{2}-\d{2}\b/,
+    /\b\d{1,2}-\d{1,2}-\d{4}\b/,
+    /\b\d{1,2}\/\d{1,2}\/\d{4}\b/,
+    /\b\d{1,2}\.\d{1,2}\.\d{4}\b/
+  ]
+
+  for (const pattern of patterns) {
+    const match = raw.match(pattern)
+    if (match) {
+      const normalized = normalizeExplicitDateString(match[0])
+      if (normalized) return normalized
+    }
+  }
 
   return ''
 }
@@ -58,62 +156,31 @@ function normalizeDate(input) {
   const raw = safeString(input)
   if (!raw) return ''
 
-  const relative = normalizeDutchRelativeDate(raw)
+  const explicit = normalizeExplicitDateString(raw)
+  if (explicit) return explicit
+
+  const relative = extractRelativeDateFromText(raw)
   if (relative) return relative
 
-  const trimmed = raw.trim()
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return trimmed
-  }
-
-  let match = trimmed.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/)
-  if (match) {
-    const day = pad2(match[1])
-    const month = pad2(match[2])
-    const year = match[3]
-    return `${year}-${month}-${day}`
-  }
-
-  match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-  if (match) {
-    const day = pad2(match[1])
-    const month = pad2(match[2])
-    const year = match[3]
-    return `${year}-${month}-${day}`
-  }
-
-  match = trimmed.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
-  if (match) {
-    const day = pad2(match[1])
-    const month = pad2(match[2])
-    const year = match[3]
-    return `${year}-${month}-${day}`
-  }
-
-  const parsed = new Date(trimmed)
-  if (!Number.isNaN(parsed.getTime())) {
-    return `${parsed.getFullYear()}-${pad2(parsed.getMonth() + 1)}-${pad2(parsed.getDate())}`
-  }
+  const embeddedExplicit = extractExplicitDateFromText(raw)
+  if (embeddedExplicit) return embeddedExplicit
 
   return ''
 }
 
 function normalizeTime(input) {
-  const raw = safeString(input)
+  const raw = safeString(input).toLowerCase().replace(/\./g, ':')
   if (!raw) return ''
 
-  const trimmed = raw.trim().toLowerCase().replace('.', ':')
-
-  if (/^\d{1,2}$/.test(trimmed)) {
-    return `${pad2(trimmed)}:00`
+  if (/^\d{1,2}$/.test(raw)) {
+    const hh = Number(raw)
+    if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
   }
 
-  const match = trimmed.match(/^(\d{1,2}):(\d{1,2})$/)
+  const match = raw.match(/^(\d{1,2}):(\d{1,2})$/)
   if (match) {
     const hh = Number(match[1])
     const mm = Number(match[2])
-
     if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
       return `${pad2(hh)}:${pad2(mm)}`
     }
@@ -122,32 +189,57 @@ function normalizeTime(input) {
   return ''
 }
 
+function extractTimeFromText(text) {
+  const raw = safeString(text).toLowerCase().replace(/\./g, ':')
+  if (!raw) return ''
+
+  let match = raw.match(/\b(\d{1,2}):(\d{2})\b/)
+  if (match) {
+    const hh = Number(match[1])
+    const mm = Number(match[2])
+    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+      return `${pad2(hh)}:${pad2(mm)}`
+    }
+  }
+
+  match = raw.match(/\bom\s+(\d{1,2})\b/)
+  if (match) {
+    const hh = Number(match[1])
+    if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
+  }
+
+  return ''
+}
+
 function sanitizeItemForSave(item) {
   const sourceText = safeString(item.source_text)
-  const fallbackText = `${safeString(item.title)} ${safeString(item.summary)} ${sourceText}`.trim()
+  const title = safeString(item.title, 'Zonder titel')
+  const summary = safeString(item.summary)
+  const project = safeString(item.project)
+  const status = safeString(item.status, 'nieuw')
+  const priority = safeString(item.priority, 'middel')
 
-  let normalizedDate = normalizeDate(item.date)
-  let normalizedEndDate = normalizeDate(item.end_date)
-  const normalizedTime = normalizeTime(item.time)
+  const combinedText = [title, summary, sourceText].filter(Boolean).join(' | ')
 
-  if (!normalizedDate) {
-    normalizedDate = normalizeDate(fallbackText)
-  }
+  let date = normalizeDate(item.date)
+  if (!date) date = normalizeDate(combinedText)
 
-  if (!normalizedEndDate) {
-    normalizedEndDate = normalizeDate(fallbackText)
-  }
+  let endDate = normalizeDate(item.end_date)
+  if (!endDate) endDate = ''
+
+  let time = normalizeTime(item.time)
+  if (!time) time = extractTimeFromText(combinedText)
 
   return {
     type: normalizeType(item.type),
-    title: safeString(item.title, 'Zonder titel'),
-    summary: safeString(item.summary),
-    project: safeString(item.project),
-    status: safeString(item.status, 'nieuw'),
-    date: normalizedDate,
-    end_date: normalizedEndDate,
-    time: normalizedTime,
-    priority: safeString(item.priority, 'middel'),
+    title,
+    summary,
+    project,
+    status,
+    date,
+    end_date: endDate,
+    time,
+    priority,
     note_type: 'general',
     raw: sourceText,
     source_text: sourceText
@@ -192,7 +284,7 @@ Regels:
 - title = kort
 - summary = 1 zin
 - date/time alleen als zeker
-- Gebruik bij voorkeur voor date al YYYY-MM-DD als je zeker bent
+- Gebruik bij voorkeur YYYY-MM-DD voor date en HH:MM voor time als het duidelijk is
 - elk item krijgt temp_id
 - source_text = exact stukje uit input
 
@@ -264,7 +356,7 @@ module.exports = async function handler(req, res) {
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {})
     const message = safeString(body.message)
-    const action = body.action
+    const action = safeString(body.action)
 
     if (!message && !action) {
       return res.status(400).json({ error: 'missing_input' })
