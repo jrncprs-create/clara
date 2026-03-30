@@ -23,6 +23,128 @@ function normalizeType(input) {
   return 'notitie'
 }
 
+function getAmsterdamNow() {
+  const now = new Date()
+  const local = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' }))
+  return local
+}
+
+function pad2(n) {
+  return String(n).padStart(2, '0')
+}
+
+function formatDateYMD(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+function addDays(date, days) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + days)
+  return d
+}
+
+function normalizeDutchRelativeDate(input) {
+  const raw = safeString(input).toLowerCase()
+  if (!raw) return ''
+
+  const today = getAmsterdamNow()
+
+  if (raw === 'vandaag') return formatDateYMD(today)
+  if (raw === 'morgen') return formatDateYMD(addDays(today, 1))
+  if (raw === 'overmorgen') return formatDateYMD(addDays(today, 2))
+
+  return ''
+}
+
+function normalizeDate(input) {
+  const raw = safeString(input)
+  if (!raw) return ''
+
+  const relative = normalizeDutchRelativeDate(raw)
+  if (relative) return relative
+
+  const trimmed = raw.trim()
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed
+  }
+
+  let match = trimmed.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/)
+  if (match) {
+    const day = pad2(match[1])
+    const month = pad2(match[2])
+    const year = match[3]
+    return `${year}-${month}-${day}`
+  }
+
+  match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (match) {
+    const day = pad2(match[1])
+    const month = pad2(match[2])
+    const year = match[3]
+    return `${year}-${month}-${day}`
+  }
+
+  match = trimmed.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  if (match) {
+    const day = pad2(match[1])
+    const month = pad2(match[2])
+    const year = match[3]
+    return `${year}-${month}-${day}`
+  }
+
+  const parsed = new Date(trimmed)
+  if (!Number.isNaN(parsed.getTime())) {
+    return `${parsed.getFullYear()}-${pad2(parsed.getMonth() + 1)}-${pad2(parsed.getDate())}`
+  }
+
+  return ''
+}
+
+function normalizeTime(input) {
+  const raw = safeString(input)
+  if (!raw) return ''
+
+  const trimmed = raw.trim().toLowerCase().replace('.', ':')
+
+  if (/^\d{1,2}$/.test(trimmed)) {
+    return `${pad2(trimmed)}:00`
+  }
+
+  const match = trimmed.match(/^(\d{1,2}):(\d{1,2})$/)
+  if (match) {
+    const hh = Number(match[1])
+    const mm = Number(match[2])
+
+    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+      return `${pad2(hh)}:${pad2(mm)}`
+    }
+  }
+
+  return ''
+}
+
+function sanitizeItemForSave(item) {
+  const normalizedDate = normalizeDate(item.date)
+  const normalizedEndDate = normalizeDate(item.end_date)
+  const normalizedTime = normalizeTime(item.time)
+
+  return {
+    type: normalizeType(item.type),
+    title: safeString(item.title, 'Zonder titel'),
+    summary: safeString(item.summary),
+    project: safeString(item.project),
+    status: safeString(item.status, 'nieuw'),
+    date: normalizedDate,
+    end_date: normalizedEndDate,
+    time: normalizedTime,
+    priority: safeString(item.priority, 'middel'),
+    note_type: 'general',
+    raw: safeString(item.source_text),
+    source_text: safeString(item.source_text)
+  }
+}
+
 async function parseWithOpenAI(text) {
   if (!process.env.OPENAI_API_KEY) {
     return {
@@ -61,6 +183,7 @@ Regels:
 - title = kort
 - summary = 1 zin
 - date/time alleen als zeker
+- Gebruik bij voorkeur voor date al YYYY-MM-DD als je zeker bent
 - elk item krijgt temp_id
 - source_text = exact stukje uit input
 
@@ -140,6 +263,26 @@ module.exports = async function handler(req, res) {
 
     if (!action) {
       const review = await parseWithOpenAI(message)
+
+      if (review?.review?.items && Array.isArray(review.review.items)) {
+        review.review.items = review.review.items.map(item => {
+          const cleaned = sanitizeItemForSave(item)
+          return {
+            ...item,
+            type: cleaned.type,
+            title: cleaned.title,
+            summary: cleaned.summary,
+            project: cleaned.project,
+            date: cleaned.date,
+            end_date: cleaned.end_date,
+            time: cleaned.time,
+            status: cleaned.status,
+            priority: cleaned.priority,
+            source_text: cleaned.source_text
+          }
+        })
+      }
+
       return res.status(200).json(review)
     }
 
@@ -152,22 +295,26 @@ module.exports = async function handler(req, res) {
 
       const now = new Date().toISOString()
 
-      const inserts = items.map(item => ({
-        type: normalizeType(item.type),
-        title: safeString(item.title, 'Zonder titel'),
-        summary: safeString(item.summary),
-        project: safeString(item.project),
-        status: safeString(item.status, 'nieuw'),
-        date: safeString(item.date),
-        end_date: safeString(item.end_date),
-        time: safeString(item.time),
-        priority: safeString(item.priority, 'middel'),
-        note_type: 'general',
-        raw: safeString(item.source_text),
-        source_text: safeString(item.source_text),
-        created_at: now,
-        updated_at: now
-      }))
+      const inserts = items.map(item => {
+        const cleaned = sanitizeItemForSave(item)
+
+        return {
+          type: cleaned.type,
+          title: cleaned.title,
+          summary: cleaned.summary,
+          project: cleaned.project,
+          status: cleaned.status,
+          date: cleaned.date,
+          end_date: cleaned.end_date,
+          time: cleaned.time,
+          priority: cleaned.priority,
+          note_type: cleaned.note_type,
+          raw: cleaned.raw,
+          source_text: cleaned.source_text,
+          created_at: now,
+          updated_at: now
+        }
+      })
 
       const { data, error } = await supabase
         .from('clara_items')
