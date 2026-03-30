@@ -11,8 +11,27 @@ function normalizeType(type) {
 
 function parseDate(value) {
   if (!value) return null
-  const date = new Date(value)
-  return isNaN(date.getTime()) ? null : date
+
+  const str = String(value).trim().toLowerCase()
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  if (str === 'vandaag') return today
+
+  if (str === 'morgen') {
+    const d = new Date(today)
+    d.setDate(d.getDate() + 1)
+    return d
+  }
+
+  if (str === 'overmorgen') {
+    const d = new Date(today)
+    d.setDate(d.getDate() + 2)
+    return d
+  }
+
+  const parsed = new Date(value)
+  return isNaN(parsed.getTime()) ? null : parsed
 }
 
 export default async function handler(req, res) {
@@ -32,11 +51,20 @@ export default async function handler(req, res) {
 
     const agenda = data
       .filter((item) => {
-        const itemDate = parseDate(item.datum)
+        const type = normalizeType(item.type)
+        const itemDate = parseDate(item.date)
         if (!itemDate) return false
-        return itemDate >= today && itemDate < weekEnd
+        return (
+          (type === 'afspraak' || type === 'agenda') &&
+          itemDate >= today &&
+          itemDate < weekEnd
+        )
       })
-      .sort((a, b) => new Date(a.datum) - new Date(b.datum))
+      .sort((a, b) => {
+        const dateA = parseDate(a.date)
+        const dateB = parseDate(b.date)
+        return dateA - dateB
+      })
 
     const tasks = data
       .filter((item) => normalizeType(item.type) === 'taak')
