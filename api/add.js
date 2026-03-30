@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 )
 
 function getAmsterdamDateParts(offsetDays = 0) {
@@ -28,7 +28,19 @@ function normalizeDate(input) {
   if (value === 'morgen') return getAmsterdamDateParts(1)
   if (value === 'overmorgen') return getAmsterdamDateParts(2)
 
-  return input
+  return String(input).trim()
+}
+
+function normalizeType(input) {
+  const rawType = String(input || '').trim().toLowerCase()
+
+  if (['task', 'taak', 'todo', 'to-do'].includes(rawType)) return 'taak'
+  if (['agenda', 'afspraak', 'event', 'appointment'].includes(rawType)) return 'afspraak'
+  if (['note', 'notitie', 'notes'].includes(rawType)) return 'notitie'
+  if (['idea', 'idee', 'ideen'].includes(rawType)) return 'idee'
+  if (['project', 'projects'].includes(rawType)) return 'project'
+
+  return 'notitie'
 }
 
 module.exports = async function handler(req, res) {
@@ -37,47 +49,45 @@ module.exports = async function handler(req, res) {
       return res.status(405).json({ error: 'method_not_allowed' })
     }
 
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-
-    const rawType = (body.type || '').toLowerCase()
-
-    let normalizedType = rawType
-    if (['task', 'taak'].includes(rawType)) normalizedType = 'taak'
-    if (['agenda', 'afspraak'].includes(rawType)) normalizedType = 'afspraak'
-    if (['note', 'notitie'].includes(rawType)) normalizedType = 'notitie'
-    if (['idea', 'idee'].includes(rawType)) normalizedType = 'idee'
-    if (['project'].includes(rawType)) normalizedType = 'project'
-
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {})
     const normalizedDate = normalizeDate(body.date || body.datum || '')
+    const normalizedEndDate = normalizeDate(body.end_date || body.eind_datum || body.einddatum || '')
 
     const item = {
-      type: normalizedType || 'notitie',
-      title: body.title || body.titel || body.name || 'Zonder titel',
-      summary: body.summary || body.samenvatting || body.raw || '',
-      project: body.project || '',
-      status: body.status || 'nieuw',
+      type: normalizeType(body.type),
+      title: String(body.title || body.titel || body.name || 'Zonder titel').trim(),
+      summary: String(body.summary || body.samenvatting || body.raw || '').trim(),
+      project: String(body.project || '').trim(),
+      status: String(body.status || 'nieuw').trim(),
+      priority: String(body.priority || body.prioriteit || '').trim(),
       date: normalizedDate,
-      time: body.time || '',
-      note_type: body.note_type || 'general',
-      raw: body.raw || ''
+      end_date: normalizedEndDate,
+      time: String(body.time || body.tijd || '').trim(),
+      note_type: String(body.note_type || 'general').trim(),
+      raw: String(body.raw || '').trim(),
+      source_text: String(body.source_text || '').trim(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('clara_items')
       .insert([item])
+      .select()
 
     if (error) {
       return res.status(500).json({
         error: 'supabase_error',
         details: error.message,
         hint: error.hint || null,
-        code: error.code || null
+        code: error.code || null,
+        item
       })
     }
 
     return res.status(200).json({
       success: true,
-      item: item
+      item: data?.[0] || item
     })
   } catch (e) {
     return res.status(500).json({
