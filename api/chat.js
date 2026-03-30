@@ -221,8 +221,21 @@ function sanitizeItemForSave(item) {
 
   const combinedText = [title, summary, sourceText].filter(Boolean).join(' | ')
 
-  let date = normalizeDate(item.date)
-  if (!date) date = normalizeDate(combinedText)
+  let dateFromAI = normalizeDate(item.date)
+const dateFromText = normalizeDate(combinedText)
+
+let date = ''
+
+if (dateFromText) {
+  date = dateFromText
+} else if (dateFromAI) {
+  const year = Number(dateFromAI.slice(0, 4))
+  const currentYear = new Date().getFullYear()
+
+  if (year >= currentYear) {
+    date = dateFromAI
+  }
+}
 
   let endDate = normalizeDate(item.end_date)
   if (!endDate) endDate = ''
