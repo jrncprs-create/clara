@@ -450,6 +450,41 @@
       color: #000;
     }
 
+    .chat-options {
+      align-self: flex-start;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 88%;
+      margin-top: -2px;
+    }
+
+    .chat-option-btn {
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 120ms ease, transform 120ms ease, background 120ms ease;
+    }
+
+    .chat-option-btn:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .chat-meta-line {
+      align-self: flex-start;
+      font-size: 11px;
+      color: rgba(255,255,255,0.34);
+      margin-top: -4px;
+      padding-left: 2px;
+    }
+
     .chat-inputbar {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -1480,7 +1515,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v3.4 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v3.5 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
     let currentEditTempId = null;
@@ -1498,6 +1533,15 @@
     let dashboardInlineEditKey = null;
     let dashboardInlineDraft = null;
     let dashboardInlineSaving = false;
+
+    function getSessionId() {
+      let id = localStorage.getItem('clara_session_id');
+      if (!id) {
+        id = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem('clara_session_id', id);
+      }
+      return id;
+    }
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -1855,7 +1899,17 @@
 
     function updateDashboardInlineField(field, value) {
       if (!dashboardInlineDraft) return;
+
       dashboardInlineDraft[field] = value;
+
+      const currentType = String(dashboardInlineDraft.type || '').toLowerCase();
+      if (field === 'type' && currentType === 'notitie') {
+        dashboardInlineDraft.status = '';
+        dashboardInlineDraft.priority = '';
+        dashboardInlineDraft.date = '';
+        dashboardInlineDraft.end_date = '';
+        dashboardInlineDraft.time = '';
+      }
     }
 
     async function saveDashboardInlineEdit() {
@@ -1873,6 +1927,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'update_item',
+            session_id: getSessionId(),
             id: originalItem.id,
             ...dashboardInlineDraft
           })
@@ -1881,17 +1936,16 @@
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          addChatBubble(`Bijwerken ging mis: ${result.details || 'unknown error'}`, 'clara');
+          handleChatApiError(result, 'Bijwerken ging mis.');
           dashboardInlineSaving = false;
           renderAllPanels();
           return;
         }
 
-        addChatBubble(result.reply || 'Item bijgewerkt.', 'clara');
+        handleApiResult(result, { reloadDashboard: true });
         dashboardInlineEditKey = null;
         dashboardInlineDraft = null;
         dashboardInlineSaving = false;
-        await loadDashboard();
       } catch (error) {
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
         dashboardInlineSaving = false;
@@ -2031,6 +2085,7 @@
                 <select class="flat-edit-select" ${disableAttr} onchange="updateDashboardInlineField('type', this.value)">
                   <option value="taak" ${draft.type === 'taak' ? 'selected' : ''}>taak</option>
                   <option value="afspraak" ${draft.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
+                  <option value="notitie" ${draft.type === 'notitie' ? 'selected' : ''}>notitie</option>
                 </select>
               </div>
             </div>
@@ -2455,12 +2510,102 @@
     }
 
     function addChatBubble(text, sender) {
+      if (!text) return;
       const chatMessages = document.getElementById('chatMessages');
       const bubble = document.createElement('div');
       bubble.className = `chat-bubble ${sender}`;
       bubble.textContent = text;
       chatMessages.appendChild(bubble);
       chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addChatOptions(options = []) {
+      if (!Array.isArray(options) || !options.length) return;
+
+      const chatMessages = document.getElementById('chatMessages');
+      const wrap = document.createElement('div');
+      wrap.className = 'chat-options';
+
+      options.forEach(option => {
+        const value = String(option?.value ?? '').trim();
+        const label = String(option?.label ?? value).trim();
+        if (!value || !label) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'chat-option-btn';
+        btn.type = 'button';
+        btn.textContent = label;
+        btn.addEventListener('click', () => sendChatWithText(value));
+        wrap.appendChild(btn);
+      });
+
+      if (wrap.childElementCount) {
+        chatMessages.appendChild(wrap);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+
+    function addChatMetaLine(text) {
+      if (!text) return;
+      const chatMessages = document.getElementById('chatMessages');
+      const meta = document.createElement('div');
+      meta.className = 'chat-meta-line';
+      meta.textContent = text;
+      chatMessages.appendChild(meta);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getReplyText(result, fallback = '') {
+      return (
+        result?.reply ||
+        result?.confirmation?.text ||
+        result?.question?.text ||
+        fallback
+      );
+    }
+
+    function handleChatApiError(result, fallback = 'Er ging iets mis.') {
+      addChatBubble(result?.reply || result?.details || fallback, 'clara');
+    }
+
+    function openQuestionInChat(question, meta = null) {
+      addChatBubble(question?.text || 'Kun je dit iets preciezer maken?', 'clara');
+
+      if (Array.isArray(question?.options) && question.options.length) {
+        addChatOptions(question.options);
+      }
+
+      if (meta?.blocked_by === 'missing_date') {
+        addChatMetaLine('Datum ontbreekt.');
+      } else if (meta?.blocked_by === 'missing_time') {
+        addChatMetaLine('Tijd ontbreekt.');
+      }
+    }
+
+    async function handleApiResult(result, { reloadDashboard = false } = {}) {
+      if (!result) return;
+
+      const mode = String(result.mode || '').toLowerCase();
+
+      if (mode === 'review' && result.review) {
+        openReviewModal(result);
+        addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
+        return;
+      }
+
+      if (mode === 'question') {
+        openQuestionInChat(result.question, result.meta || null);
+        return;
+      }
+
+      if (mode === 'confirmation') {
+        addChatBubble(getReplyText(result, 'Opgeslagen.'), 'clara');
+        if (reloadDashboard) await loadDashboard();
+        return;
+      }
+
+      addChatBubble(getReplyText(result, 'Klaar.'), 'clara');
+      if (reloadDashboard) await loadDashboard();
     }
 
     function getReviewItems() {
@@ -2500,6 +2645,15 @@
       document.getElementById('reviewFooterText').textContent = `${count} item(s). Nog niet opgeslagen.`;
     }
 
+    function applyNotitieRulesToReviewItem(item) {
+      if (String(item.type || '').toLowerCase() !== 'notitie') return;
+      item.date = '';
+      item.end_date = '';
+      item.time = '';
+      item.status = '';
+      item.priority = '';
+    }
+
     function renderReviewItemsCompact() {
       const wrap = document.getElementById('reviewItems');
       const items = getReviewItems();
@@ -2536,6 +2690,19 @@
       }).join('');
     }
 
+    function syncReviewEditFieldVisibility() {
+      const type = document.getElementById('editType').value;
+      const isNote = type === 'notitie';
+
+      const ids = ['editStatus', 'editPriority', 'editDate', 'editEndDate', 'editTime'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        const field = el.closest('.review-field');
+        if (!field) return;
+        field.style.display = isNote ? 'none' : '';
+      });
+    }
+
     function openEditItem(tempId) {
       const item = findReviewItem(tempId);
       if (!item) return;
@@ -2555,6 +2722,7 @@
       document.getElementById('editSourcePreview').textContent = item.source_text || '';
       document.getElementById('reviewEditFooterText').textContent = `Item: ${item.title || 'zonder titel'}`;
 
+      syncReviewEditFieldVisibility();
       document.getElementById('reviewEditOverlay').classList.add('open');
     }
 
@@ -2579,6 +2747,8 @@
       item.end_date = document.getElementById('editEndDate').value.trim();
       item.time = document.getElementById('editTime').value.trim();
       item.source_text = document.getElementById('editSourceText').value.trim();
+
+      applyNotitieRulesToReviewItem(item);
 
       renderReviewItemsCompact();
       updateReviewFooter();
@@ -2651,6 +2821,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'delete_item',
+            session_id: getSessionId(),
             id: item.id || '',
             item_id: item.id || '',
             type: item.type || '',
@@ -2664,11 +2835,9 @@
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          addChatBubble(`Verwijderen ging mis: ${result.details || 'unknown error'}`, 'clara');
+          handleChatApiError(result, 'Verwijderen ging mis.');
           return;
         }
-
-        addChatBubble(result.reply || 'Item verwijderd.', 'clara');
 
         if (dashboardInlineEditKey === item._editKey) {
           dashboardInlineEditKey = null;
@@ -2676,7 +2845,7 @@
           dashboardInlineSaving = false;
         }
 
-        await loadDashboard();
+        await handleApiResult(result, { reloadDashboard: true });
       } catch (error) {
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
       }
@@ -2701,22 +2870,28 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'confirm_review',
+            session_id: getSessionId(),
             items
           })
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
           footerText.textContent = `Opslaan ging mis: ${result.details || 'unknown error'}`;
-          addChatBubble(`Opslaan ging mis: ${result.details || 'unknown error'}`, 'clara');
+          handleChatApiError(result, 'Opslaan ging mis.');
+          return;
+        }
+
+        if (String(result.mode || '').toLowerCase() === 'question') {
+          footerText.textContent = 'Nog niet opgeslagen. Eerst ontbrekende info aanvullen.';
+          await handleApiResult(result, { reloadDashboard: false });
           return;
         }
 
         closeEditItem();
         closeReviewModal();
-        addChatBubble(result.reply || 'Opgeslagen.', 'clara');
-        await loadDashboard();
+        await handleApiResult(result, { reloadDashboard: true });
       } catch (error) {
         footerText.textContent = `Verbinding mislukt: ${error.message || 'unknown error'}`;
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
@@ -2726,44 +2901,52 @@
       }
     }
 
-    async function sendChat() {
-      const input = document.getElementById('chatInput');
+    async function sendChatInternal(text) {
       const button = document.getElementById('chatSend');
-      const text = input.value.trim();
-
-      if (!text) return;
-
-      addChatBubble(text, 'user');
-      input.value = '';
       button.disabled = true;
 
       try {
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text })
+          body: JSON.stringify({
+            message: text,
+            session_id: getSessionId()
+          })
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          addChatBubble(`Opslaan ging mis: ${result.details || 'unknown error'}`, 'clara');
+          handleChatApiError(result, 'Opslaan ging mis.');
           return;
         }
 
-        if (result.mode === 'review' && result.review) {
-          openReviewModal(result);
-          addChatBubble(result.reply || 'Controleer dit even.', 'clara');
-          return;
-        }
-
-        addChatBubble(result.reply || 'Opgeslagen.', 'clara');
-        await loadDashboard();
+        await handleApiResult(result, {
+          reloadDashboard: ['reply', 'confirmation'].includes(String(result.mode || '').toLowerCase())
+        });
       } catch (error) {
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
       } finally {
         button.disabled = false;
       }
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      addChatBubble(text, 'user');
+      input.value = '';
+      await sendChatInternal(text);
+    }
+
+    async function sendChatWithText(text) {
+      const value = String(text || '').trim();
+      if (!value) return;
+      addChatBubble(value, 'user');
+      await sendChatInternal(value);
     }
 
     function selectAgendaDay(dayKey) {
@@ -2794,6 +2977,10 @@
       document.getElementById('editSourcePreview').textContent = e.target.value;
     });
 
+    document.getElementById('editType').addEventListener('change', () => {
+      syncReviewEditFieldVisibility();
+    });
+
     document.getElementById('reviewOverlay').addEventListener('click', (e) => {
       if (e.target.id === 'reviewOverlay') closeReviewModal();
     });
@@ -2817,6 +3004,7 @@
     window.closeDashboardInlineEdit = closeDashboardInlineEdit;
     window.updateDashboardInlineField = updateDashboardInlineField;
     window.saveDashboardInlineEdit = saveDashboardInlineEdit;
+    window.sendChatWithText = sendChatWithText;
 
     async function loadDashboard() {
       try {
