@@ -1,127 +1,116 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Clara</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clara</title>
 
-  <style>
-    * { box-sizing: border-box; }
+<style>
+* { box-sizing: border-box; }
 
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
-      overflow: hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
 
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar {
-      width: 0;
-      height: 0;
-      display: none;
-    }
+body {
+  padding: 14px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05), transparent 30%),
+    #000;
+}
 
-    body {
-      padding: 14px;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05), transparent 30%),
-        #000;
-    }
+.version {
+  position: fixed;
+  top: 10px;
+  right: 14px;
+  font-size: 11px;
+  opacity: 0.45;
+}
 
-    .version {
-      position: fixed;
-      top: 10px;
-      right: 14px;
-      font-size: 11px;
-      opacity: 0.45;
-      letter-spacing: 0.04em;
-      z-index: 20;
-      pointer-events: none;
-    }
+.app {
+  width: 100%;
+  height: calc(100vh - 28px);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+}
 
-    .app {
-      width: 100%;
-      height: calc(100vh - 28px);
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 14px;
-    }
+.panel {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 22px;
+  background: rgba(255,255,255,0.02);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-    .panel {
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 22px;
-      background: rgba(255,255,255,0.02);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
+.panel-header {
+  height: 44px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
 
-    .panel-header {
-      height: 44px;
-      padding: 0 18px;
-      display: flex;
-      align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
+.panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
 
-    .panel-title {
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
+.panel-body {
+  flex: 1;
+  overflow: auto;
+  padding: 18px;
+}
 
-    .panel-body {
-      flex: 1;
-      overflow: auto;
-      padding: 14px;
-    }
+.agenda-panel { grid-column: 1; grid-row: 1 / 3; }
+.tasks-panel { grid-column: 2; grid-row: 1; }
+.appointments-panel { grid-column: 2; grid-row: 2; }
+.chat-panel { grid-column: 3; grid-row: 1; }
+.notes-panel { grid-column: 3; grid-row: 2; }
 
-    .agenda-panel { grid-column: 1; grid-row: 1 / 3; }
-    .tasks-panel { grid-column: 2; grid-row: 1; }
-    .appointments-panel { grid-column: 2; grid-row: 2; }
-    .chat-panel { grid-column: 3; grid-row: 1; }
-    .notes-panel { grid-column: 3; grid-row: 2; }
+.item { margin-bottom: 14px; }
+.title { font-weight: 600; }
+.meta { font-size: 13px; opacity: 0.6; }
 
-    .item { margin-bottom: 10px; }
-    .title { font-weight: 600; }
-    .meta { opacity: 0.6; font-size: 13px; }
+.chat-shell { display: flex; flex-direction: column; height: 100%; }
+.chat-messages { flex: 1; overflow: auto; padding: 10px; }
+.chat-bubble { margin-bottom: 10px; padding: 10px; border-radius: 12px; }
+.chat-bubble.user { background: #fff; color: #000; align-self: flex-end; }
+.chat-bubble.clara { background: rgba(255,255,255,0.08); }
 
-    .chat-shell { display: flex; flex-direction: column; height: 100%; }
-    .chat-messages { flex: 1; overflow: auto; }
-    .chat-bubble { margin-bottom: 8px; padding: 8px; border-radius: 10px; }
-    .chat-bubble.user { background: #fff; color: #000; }
-    .chat-bubble.clara { background: #222; }
+.chat-inputbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 10px;
+}
 
-    .chat-inputbar {
-      display: flex;
-      gap: 8px;
-    }
+.chat-input {
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+}
 
-    .chat-input {
-      flex: 1;
-      background: #111;
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    .chat-send {
-      background: #fff;
-      color: #000;
-      border: none;
-      padding: 10px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-  </style>
+.chat-send {
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+</style>
 </head>
 
 <body>
@@ -130,121 +119,115 @@
 
 <div class="app">
 
-  <div class="panel agenda-panel">
-    <div class="panel-header"><div class="panel-title">Agenda</div></div>
-    <div class="panel-body" id="agenda"></div>
-  </div>
+<div class="panel agenda-panel">
+  <div class="panel-header"><div class="panel-title">Agenda</div></div>
+  <div class="panel-body" id="agenda"></div>
+</div>
 
-  <div class="panel tasks-panel">
-    <div class="panel-header"><div class="panel-title">Taken</div></div>
-    <div class="panel-body" id="tasks"></div>
-  </div>
+<div class="panel tasks-panel">
+  <div class="panel-header"><div class="panel-title">Taken</div></div>
+  <div class="panel-body" id="tasks"></div>
+</div>
 
-  <div class="panel appointments-panel">
-    <div class="panel-header"><div class="panel-title">Afspraken</div></div>
-    <div class="panel-body" id="appointments"></div>
-  </div>
+<div class="panel appointments-panel">
+  <div class="panel-header"><div class="panel-title">Afspraken</div></div>
+  <div class="panel-body" id="appointments"></div>
+</div>
 
-  <div class="panel chat-panel">
-    <div class="panel-header"><div class="panel-title">Chat</div></div>
-    <div class="panel-body">
-      <div class="chat-shell">
-        <div id="chatMessages" class="chat-messages"></div>
-        <div class="chat-inputbar">
-          <input id="chatInput" class="chat-input"/>
-          <button id="chatSend" class="chat-send">OK</button>
-        </div>
+<div class="panel chat-panel">
+  <div class="panel-header"><div class="panel-title">Chat</div></div>
+  <div class="panel-body">
+    <div class="chat-shell">
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-inputbar">
+        <input id="chatInput" class="chat-input"/>
+        <button id="chatSend" class="chat-send">OK</button>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="panel notes-panel">
-    <div class="panel-header"><div class="panel-title">Notities</div></div>
-    <div class="panel-body" id="notes"></div>
-  </div>
+<div class="panel notes-panel">
+  <div class="panel-header"><div class="panel-title">Notities</div></div>
+  <div class="panel-body" id="notes"></div>
+</div>
 
 </div>
 
 <script>
-  const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-  document.getElementById('version').textContent = `live • ${AUTO_VERSION}`;
+const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
+document.getElementById('version').textContent = `live • ${AUTO_VERSION}`;
 
-  function renderAgenda(data) {
-    const el = document.getElementById('agenda');
+function renderAgenda(data) {
+  const el = document.getElementById('agenda');
 
-    const items = [
-      ...(data.agenda || []),
-      ...(data.tasks || [])
-    ];
+  const items = [
+    ...(data.agenda || []),
+    ...(data.tasks || [])
+  ];
 
-    el.innerHTML = items.map(i => `
-      <div class="item">
-        <div class="title">${i.title}</div>
-        <div class="meta">${i.date || ''} ${i.time || ''}</div>
-      </div>
-    `).join('');
-  }
+  el.innerHTML = items.map(i => `
+    <div class="item">
+      <div class="title">${i.title}</div>
+      <div class="meta">${i.date || ''} ${i.time || ''}</div>
+    </div>
+  `).join('');
+}
 
-  function renderTasks(data) {
-    const el = document.getElementById('tasks');
-    el.innerHTML = (data.tasks || []).map(i => `
-      <div class="item">${i.title}</div>
-    `).join('');
-  }
+function renderTasks(data) {
+  document.getElementById('tasks').innerHTML =
+    (data.tasks || []).map(i => `<div class="item">${i.title}</div>`).join('');
+}
 
-  function renderNotes(data) {
-    const el = document.getElementById('notes');
-    el.innerHTML = (data.notes || []).map(i => `
-      <div class="item">${i.title}</div>
-    `).join('');
-  }
+function renderNotes(data) {
+  document.getElementById('notes').innerHTML =
+    (data.notes || []).map(i => `<div class="item">${i.title}</div>`).join('');
+}
 
-  function renderAppointments(data) {
-    const el = document.getElementById('appointments');
-    el.innerHTML = (data.agenda || []).map(i => `
-      <div class="item">${i.title}</div>
-    `).join('');
-  }
+function renderAppointments(data) {
+  document.getElementById('appointments').innerHTML =
+    (data.agenda || []).map(i => `<div class="item">${i.title}</div>`).join('');
+}
 
-  function addChatBubble(text, type) {
-    const el = document.getElementById('chatMessages');
-    const div = document.createElement('div');
-    div.className = `chat-bubble ${type}`;
-    div.textContent = text;
-    el.appendChild(div);
-  }
+function addChatBubble(text, type) {
+  const el = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `chat-bubble ${type}`;
+  div.textContent = text;
+  el.appendChild(div);
+}
 
-  async function sendChat() {
-    const input = document.getElementById('chatInput');
-    const text = input.value;
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value;
 
-    addChatBubble(text, 'user');
+  addChatBubble(text, 'user');
 
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text })
-    });
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({message: text})
+  });
 
-    const data = await res.json();
-    addChatBubble(data.reply || 'ok', 'clara');
-
-    load();
-  }
-
-  document.getElementById('chatSend').onclick = sendChat;
-
-  async function load() {
-    const res = await fetch('/api/dashboard');
-    const data = await res.json();
-
-    renderAgenda(data);
-    renderTasks(data);
-    renderNotes(data);
-    renderAppointments(data);
-  }
+  const data = await res.json();
+  addChatBubble(data.reply || 'ok', 'clara');
 
   load();
+}
+
+document.getElementById('chatSend').onclick = sendChat;
+
+async function load() {
+  const res = await fetch('/api/dashboard');
+  const data = await res.json();
+
+  renderAgenda(data);
+  renderTasks(data);
+  renderNotes(data);
+  renderAppointments(data);
+}
+
+load();
 </script>
 
 </body>
