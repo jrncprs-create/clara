@@ -45,6 +45,8 @@
     .review-input,
     .review-select,
     .review-textarea,
+    .agenda-day-strip,
+    .timeline-scroll,
     * {
       scrollbar-width: none;
       -ms-overflow-style: none;
@@ -59,6 +61,8 @@
     .review-input::-webkit-scrollbar,
     .review-select::-webkit-scrollbar,
     .review-textarea::-webkit-scrollbar,
+    .agenda-day-strip::-webkit-scrollbar,
+    .timeline-scroll::-webkit-scrollbar,
     *::-webkit-scrollbar {
       width: 0 !important;
       height: 0 !important;
@@ -81,7 +85,7 @@
       width: 100%;
       height: calc(100vh - 28px);
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1.1fr 1fr 1fr;
       grid-template-rows: 1fr 1fr;
       gap: 14px;
     }
@@ -130,46 +134,35 @@
     .chat-panel { grid-column: 3; grid-row: 1; }
     .notes-panel { grid-column: 3; grid-row: 2; }
 
-    .agenda-list,
     .flat-list {
       display: flex;
       flex-direction: column;
     }
 
-    .agenda-day,
     .flat-item {
-      padding: 18px;
+      padding: 16px 18px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
-    .agenda-day:last-child,
     .flat-item:last-child {
       border-bottom: none;
     }
 
-    .agenda-date {
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.2;
-      color: rgba(255,255,255,0.96);
-      text-transform: capitalize;
-      margin-bottom: 12px;
-    }
-
-    .agenda-items {
+    .flat-row {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
     }
 
-    .agenda-item,
     .flat-content {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
     }
 
-    .agenda-item-title,
     .flat-main {
       font-size: 15px;
       font-weight: 600;
@@ -177,31 +170,43 @@
       color: #fff;
     }
 
-    .agenda-item-meta,
     .flat-meta,
     .flat-sub {
       font-size: 13px;
       line-height: 1.3;
     }
 
-    .agenda-item-meta,
     .flat-meta {
       color: rgba(255,255,255,0.55);
     }
 
     .flat-sub {
       color: rgba(255,255,255,0.40);
-      margin-top: 2px;
-    }
-
-    .agenda-empty,
-    .empty {
-      color: rgba(255,255,255,0.28);
-      font-size: 14px;
+      margin-top: 1px;
     }
 
     .empty {
       padding: 18px;
+      color: rgba(255,255,255,0.28);
+      font-size: 14px;
+    }
+
+    .item-edit-btn {
+      flex-shrink: 0;
+      margin-left: 10px;
+      border-radius: 12px;
+      padding: 9px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.92);
+      white-space: nowrap;
+    }
+
+    .item-edit-btn:hover {
+      background: rgba(255,255,255,0.08);
     }
 
     .chat-shell {
@@ -584,51 +589,167 @@
       color: rgba(255,255,255,0.80);
     }
 
-    .agenda-split {
-      display: grid;
-      grid-template-rows: 1fr 1fr;
+    .agenda-shell {
       height: 100%;
+      display: flex;
+      flex-direction: column;
       min-height: 0;
     }
 
-    .agenda-today-block,
-    .agenda-upcoming-block {
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .agenda-today-block {
-      padding: 14px 14px 10px 14px;
+    .agenda-day-strip {
+      padding: 12px 14px 12px 14px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .agenda-upcoming-block {
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .agenda-section-title {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.55);
-      margin-bottom: 12px;
+      gap: 8px;
+      overflow-x: auto;
       flex-shrink: 0;
     }
 
-    .today-timeline {
-      position: relative;
+    .agenda-day-btn {
+      min-width: 58px;
+      padding: 10px 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      color: rgba(255,255,255,0.70);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+
+    .agenda-day-btn:hover {
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.92);
+    }
+
+    .agenda-day-btn.active {
+      background: rgba(255,255,255,0.10);
+      border-color: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+
+    .agenda-day-dow {
+      font-size: 11px;
+      text-transform: lowercase;
+      letter-spacing: 0.04em;
+      opacity: 0.85;
+    }
+
+    .agenda-day-num {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .agenda-day-month {
+      font-size: 10px;
+      text-transform: lowercase;
+      opacity: 0.55;
+    }
+
+    .agenda-day-header {
+      padding: 14px 16px 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .agenda-day-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .agenda-day-title {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.1;
+      color: #fff;
+      text-transform: capitalize;
+    }
+
+    .agenda-day-subtitle {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .agenda-day-top-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .agenda-chip {
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.75);
+    }
+
+    .agenda-all-day {
+      padding: 0 16px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .agenda-mini-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .agenda-mini-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
       flex: 1;
-      min-height: 240px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      overflow: hidden;
+    }
+
+    .agenda-mini-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.25;
+    }
+
+    .agenda-mini-meta {
+      font-size: 12px;
+      color: rgba(255,255,255,0.48);
+    }
+
+    .timeline-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 0 10px 12px 10px;
+    }
+
+    .timeline {
+      position: relative;
+      min-height: 960px;
+      border-top: 1px solid rgba(255,255,255,0.06);
       background: rgba(255,255,255,0.01);
+      border-radius: 18px;
+      overflow: hidden;
     }
 
     .timeline-grid {
@@ -636,9 +757,9 @@
       inset: 0;
     }
 
-    .timeline-hour {
+    .timeline-hour-line {
       position: absolute;
-      left: 0;
+      left: 56px;
       right: 0;
       height: 1px;
       background: rgba(255,255,255,0.06);
@@ -646,7 +767,7 @@
 
     .timeline-hour-label {
       position: absolute;
-      left: 0;
+      left: 12px;
       transform: translateY(-50%);
       font-size: 10px;
       color: rgba(255,255,255,0.28);
@@ -657,43 +778,54 @@
     .timeline-events {
       position: absolute;
       inset: 0;
-      left: 42px;
-      right: 8px;
+      left: 62px;
+      right: 10px;
+      top: 0;
+      bottom: 0;
     }
 
     .timeline-event {
       position: absolute;
       left: 0;
       right: 0;
-      min-height: 22px;
-      padding: 6px 8px;
+      min-height: 58px;
+      padding: 10px 12px;
       border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      background: rgba(255,255,255,0.05);
-      overflow: hidden;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
       z-index: 3;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: flex-start;
+      overflow: hidden;
+    }
+
+    .timeline-event-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
     }
 
     .timeline-event-title {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       line-height: 1.2;
       color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .timeline-event-meta {
       font-size: 11px;
-      line-height: 1.2;
+      line-height: 1.3;
       color: rgba(255,255,255,0.55);
-      margin-top: 2px;
+      white-space: pre-wrap;
     }
 
     .timeline-now-line {
       position: absolute;
-      left: 36px;
+      left: 56px;
       right: 0;
       height: 1px;
       background: rgba(255,255,255,0.92);
@@ -706,7 +838,7 @@
       height: 6px;
       border-radius: 999px;
       background: rgba(255,255,255,0.92);
-      left: 33px;
+      left: 53px;
       transform: translate(-50%, -50%);
       z-index: 5;
     }
@@ -722,13 +854,20 @@
       z-index: 1;
     }
 
-    #upcomingAgenda {
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: minmax(420px, 1.1fr) 1fr 1fr;
+      }
+
+      .agenda-panel { grid-column: 1 / 3; grid-row: 1; }
+      .tasks-panel { grid-column: 1; grid-row: 2; }
+      .appointments-panel { grid-column: 2; grid-row: 2; }
+      .chat-panel { grid-column: 1; grid-row: 3; }
+      .notes-panel { grid-column: 2; grid-row: 3; }
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 860px) {
       html, body {
         overflow: auto;
       }
@@ -746,11 +885,9 @@
       .notes-panel {
         grid-column: auto;
         grid-row: auto;
-        min-height: 340px;
+        min-height: 360px;
       }
-    }
 
-    @media (max-width: 860px) {
       .review-list-item {
         grid-template-columns: 1fr;
         align-items: start;
@@ -766,6 +903,10 @@
 
       .review-field.span-2 {
         grid-column: span 1;
+      }
+
+      .timeline-event {
+        min-height: 64px;
       }
     }
 
@@ -809,16 +950,21 @@
         <div class="panel-title">Agenda</div>
       </div>
       <div class="panel-body">
-        <div class="agenda-split">
-          <section class="agenda-today-block">
-            <div class="agenda-section-title">Vandaag</div>
-            <div id="todayTimeline" class="today-timeline"></div>
-          </section>
-
-          <section class="agenda-upcoming-block">
-            <div class="agenda-section-title">Vanaf morgen</div>
-            <div id="upcomingAgenda"></div>
-          </section>
+        <div class="agenda-shell">
+          <div class="agenda-day-strip" id="agendaDayStrip"></div>
+          <div class="agenda-day-header">
+            <div class="agenda-day-title-wrap">
+              <div class="agenda-day-title" id="agendaSelectedDayTitle">Vandaag</div>
+              <div class="agenda-day-subtitle" id="agendaSelectedDaySubtitle">Geen items</div>
+            </div>
+            <div class="agenda-day-top-actions">
+              <div class="agenda-chip" id="agendaSelectedDayCount">0 items</div>
+            </div>
+          </div>
+          <div class="agenda-all-day" id="agendaAllDay"></div>
+          <div class="timeline-scroll" id="timelineScroll">
+            <div class="timeline" id="dayTimeline"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -983,10 +1129,19 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v2.8 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v2.9 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
     let currentEditTempId = null;
+
+    let dashboardRawData = {
+      agenda: [],
+      tasks: [],
+      notes: []
+    };
+
+    let dashboardEditIndex = new Map();
+    let selectedAgendaDayKey = null;
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -1069,6 +1224,18 @@
       }).format(date);
     }
 
+    function formatDayShort(date) {
+      return new Intl.DateTimeFormat('nl-NL', {
+        weekday: 'short'
+      }).format(date).replace('.', '').toLowerCase();
+    }
+
+    function formatMonthShort(date) {
+      return new Intl.DateTimeFormat('nl-NL', {
+        month: 'short'
+      }).format(date).replace('.', '').toLowerCase();
+    }
+
     function formatShortDate(dateStr, timeStr = '') {
       const date = parseDate(dateStr);
       if (!date) return 'nieuw';
@@ -1110,6 +1277,13 @@
       return null;
     }
 
+    function formatMinutesToTime(minutes) {
+      if (minutes === null || minutes === undefined) return '';
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
     function dedupeItems(items) {
       const seen = new Set();
       const result = [];
@@ -1134,25 +1308,35 @@
       return result;
     }
 
-    function normalizeDashboardItem(item, fallbackType = '') {
-      const type = String(item?.type || fallbackType || '').trim().toLowerCase();
+    function makeEditKey(item, sourceType) {
+      const base = item.id
+        ? `id:${item.id}`
+        : [
+            sourceType || '',
+            String(item.type || '').toLowerCase().trim(),
+            String(item.title || '').toLowerCase().trim(),
+            String(item.project || '').toLowerCase().trim(),
+            String(item.date || '').toLowerCase().trim(),
+            String(item.time || '').toLowerCase().trim(),
+            String(item.summary || '').toLowerCase().trim()
+          ].join('|');
+
+      return `${sourceType || 'item'}::${base}`;
+    }
+
+    function normalizeDashboardItem(item, sourceType = '') {
+      const type = String(item?.type || '').trim().toLowerCase();
       const parsedDate = parseDate(item?.date);
+      const editKey = makeEditKey(item, sourceType);
 
       return {
         ...item,
-        type,
-        title: item?.title || '',
-        summary: item?.summary || '',
-        project: item?.project || '',
-        status: item?.status || '',
-        priority: item?.priority || '',
-        date: item?.date || '',
-        time: item?.time || '',
-        end_date: item?.end_date || '',
-        source_text: item?.source_text || '',
+        _sourceType: sourceType,
+        _editKey: editKey,
         _date: parsedDate,
         _dayStart: parsedDate ? startOfDay(parsedDate) : null,
-        _timeMinutes: parseTimeToMinutes(item?.time)
+        _timeMinutes: parseTimeToMinutes(item?.time),
+        _sortType: type
       };
     }
 
@@ -1170,51 +1354,172 @@
       return aMinutes - bMinutes;
     }
 
-    function renderTodayTimeline(items) {
-      const el = document.getElementById('todayTimeline');
+    function buildDashboardEditIndex(data) {
+      dashboardEditIndex = new Map();
+
+      ['agenda', 'tasks', 'notes'].forEach(sourceType => {
+        const arr = Array.isArray(data[sourceType]) ? data[sourceType] : [];
+        arr.forEach(item => {
+          const normalized = normalizeDashboardItem(item, sourceType);
+          dashboardEditIndex.set(normalized._editKey, normalized);
+        });
+      });
+    }
+
+    function createReviewItemFromDashboardItem(item) {
+      return {
+        temp_id: `dashboard_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+        id: item.id || '',
+        type: item.type || 'notitie',
+        title: item.title || '',
+        project: item.project || '',
+        summary: item.summary || '',
+        status: item.status || '',
+        priority: item.priority || '',
+        date: item.date || '',
+        end_date: item.end_date || '',
+        time: item.time || '',
+        source_text: item.source_text || '',
+        raw: item.raw || ''
+      };
+    }
+
+    function openDashboardEdit(editKey) {
+      const item = dashboardEditIndex.get(editKey);
+      if (!item) return;
+
+      const reviewPayload = {
+        reply: 'Controleer en pas dit item aan.',
+        review: {
+          summary: item.title || 'Item aanpassen',
+          items: [createReviewItemFromDashboardItem(item)]
+        }
+      };
+
+      openReviewModal(reviewPayload);
+      openEditItem(reviewPayload.review.items[0].temp_id);
+    }
+
+    function renderFlatItem(item, metaHtml = '', subHtml = '') {
+      return `
+        <div class="flat-item">
+          <div class="flat-row">
+            <div class="flat-content">
+              <div class="flat-main">${escapeHtml(item.title || 'Zonder titel')}</div>
+              ${metaHtml}
+              ${subHtml}
+            </div>
+            <button class="item-edit-btn" type="button" onclick="openDashboardEdit('${escapeHtml(item._editKey)}')">Pas aan</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAgendaDayStrip(days) {
+      const strip = document.getElementById('agendaDayStrip');
+      if (!strip) return;
+
+      strip.innerHTML = days.map(day => {
+        const key = day.toISOString().slice(0, 10);
+        const active = key === selectedAgendaDayKey ? 'active' : '';
+
+        return `
+          <button class="agenda-day-btn ${active}" type="button" onclick="selectAgendaDay('${key}')">
+            <div class="agenda-day-dow">${escapeHtml(formatDayShort(day))}</div>
+            <div class="agenda-day-num">${escapeHtml(String(day.getDate()))}</div>
+            <div class="agenda-day-month">${escapeHtml(formatMonthShort(day))}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderAgendaSelectedDayInfo(date, items) {
+      const titleEl = document.getElementById('agendaSelectedDayTitle');
+      const subtitleEl = document.getElementById('agendaSelectedDaySubtitle');
+      const countEl = document.getElementById('agendaSelectedDayCount');
+
+      const today = getTodayStart();
+      let subtitle = formatDayLong(date);
+
+      if (sameDay(date, today)) subtitle = 'Vandaag';
+      else {
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        if (sameDay(date, tomorrow)) subtitle = 'Morgen';
+      }
+
+      titleEl.textContent = formatDayLong(date);
+      subtitleEl.textContent = subtitle;
+      countEl.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
+    }
+
+    function renderAgendaAllDay(items) {
+      const wrap = document.getElementById('agendaAllDay');
+      if (!wrap) return;
+
+      const allDayItems = items.filter(item => item._timeMinutes === null);
+
+      if (!allDayItems.length) {
+        wrap.innerHTML = '';
+        return;
+      }
+
+      wrap.innerHTML = allDayItems.map(item => {
+        const metaParts = [];
+        if (item.type) metaParts.push(item.type);
+        if (item.project) metaParts.push(item.project);
+
+        return `
+          <div class="agenda-mini-item">
+            <div class="agenda-mini-content">
+              <div class="agenda-mini-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              <div class="agenda-mini-meta">${escapeHtml(metaParts.join(' • ') || 'hele dag')}</div>
+            </div>
+            <button class="item-edit-btn" type="button" onclick="openDashboardEdit('${escapeHtml(item._editKey)}')">Pas aan</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDayTimeline(items, selectedDate) {
+      const el = document.getElementById('dayTimeline');
       if (!el) return;
 
-      const hourMarks = Array.from({ length: 25 }, (_, i) => i);
-      const now = new Date();
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
-      const nowTop = (nowMinutes / 1440) * 100;
-
-      const itemsWithTime = items
+      const timedItems = items
         .filter(item => item._timeMinutes !== null)
         .sort((a, b) => a._timeMinutes - b._timeMinutes);
 
-      const itemsWithoutTime = items
-        .filter(item => item._timeMinutes === null);
+      const hourMarks = Array.from({ length: 25 }, (_, i) => i);
 
-      const timelineEventsHtml = itemsWithTime.map(item => {
-        const top = (item._timeMinutes / 1440) * 100;
-        const blockHeight = Math.max((50 / 1440) * 100, 4.2);
-        const meta = item.time ? item.time : 'hele dag';
+      const timelineEventsHtml = timedItems.map(item => {
+        const start = item._timeMinutes;
+        const top = (start / 1440) * 100;
+        const minHeightPct = 6.4;
+        const metaParts = [];
+        metaParts.push(item.time || '');
+        if (item.project) metaParts.push(item.project);
+        if (item.type) metaParts.push(item.type);
 
         return `
-          <div class="timeline-event" style="top:${top}%; height:${blockHeight}%;">
-            <div class="timeline-event-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-            <div class="timeline-event-meta">${escapeHtml(meta)}</div>
+          <div class="timeline-event" style="top:${top}%; height:${minHeightPct}%;">
+            <div class="timeline-event-content">
+              <div class="timeline-event-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              <div class="timeline-event-meta">${escapeHtml(metaParts.filter(Boolean).join(' • '))}</div>
+            </div>
+            <button class="item-edit-btn" type="button" onclick="openDashboardEdit('${escapeHtml(item._editKey)}')">Pas aan</button>
           </div>
         `;
       }).join('');
 
-      const noTimeHtml = itemsWithoutTime.length
-        ? `
-          <div style="position:absolute; left:42px; right:8px; top:8px; z-index:6; display:flex; flex-direction:column; gap:6px;">
-            ${itemsWithoutTime.map(item => `
-              <div style="padding:6px 8px; border:1px solid rgba(255,255,255,0.10); border-radius:10px; background:rgba(255,255,255,0.03);">
-                <div style="font-size:12px; font-weight:600; line-height:1.2; color:#fff;">${escapeHtml(item.title || 'Zonder titel')}</div>
-                <div style="font-size:11px; line-height:1.2; color:rgba(255,255,255,0.50); margin-top:2px;">hele dag</div>
-              </div>
-            `).join('')}
-          </div>
-        `
+      const emptyHtml = !timedItems.length
+        ? `<div class="timeline-empty">geen tijdgebonden items op deze dag</div>`
         : '';
 
-      const emptyHtml = !items.length
-        ? `<div class="timeline-empty">geen items vandaag</div>`
-        : '';
+      const today = getTodayStart();
+      const isToday = sameDay(selectedDate, today);
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const nowTop = (nowMinutes / 1440) * 100;
 
       el.innerHTML = `
         <div class="timeline-grid">
@@ -1223,66 +1528,47 @@
             const label = hour === 24 ? '' : `${String(hour).padStart(2, '0')}:00`;
 
             return `
-              <div class="timeline-hour" style="top:${top}%"></div>
+              <div class="timeline-hour-line" style="top:${top}%"></div>
               ${label ? `<div class="timeline-hour-label" style="top:${top}%">${label}</div>` : ''}
             `;
           }).join('')}
 
           ${emptyHtml}
-          ${noTimeHtml}
 
           <div class="timeline-events">
             ${timelineEventsHtml}
           </div>
 
-          <div class="timeline-now-line" style="top:${nowTop}%"></div>
-          <div class="timeline-now-dot" style="top:${nowTop}%"></div>
+          ${isToday ? `<div class="timeline-now-line" style="top:${nowTop}%"></div><div class="timeline-now-dot" style="top:${nowTop}%"></div>` : ''}
         </div>
       `;
     }
 
-    function renderUpcomingAgenda(items) {
-      const upcomingAgendaEl = document.getElementById('upcomingAgenda');
-      if (!upcomingAgendaEl) return;
+    function ensureSelectedAgendaDay(items) {
+      const todayKey = getTodayStart().toISOString().slice(0, 10);
 
-      if (!items.length) {
-        upcomingAgendaEl.innerHTML = `<div class="empty">Geen geplande items vanaf morgen</div>`;
-        return;
+      if (!selectedAgendaDayKey) {
+        selectedAgendaDayKey = todayKey;
       }
 
-      const grouped = new Map();
+      const hasSelected = items.some(item => item._dayStart && item._dayStart.toISOString().slice(0, 10) === selectedAgendaDayKey);
 
-      items.forEach(item => {
-        if (!item._dayStart) return;
-        const key = item._dayStart.toISOString().slice(0, 10);
-        if (!grouped.has(key)) grouped.set(key, { date: item._dayStart, items: [] });
-        grouped.get(key).items.push(item);
-      });
+      if (!hasSelected) {
+        selectedAgendaDayKey = todayKey;
+      }
+    }
 
-      const groups = Array.from(grouped.values())
-        .sort((a, b) => a.date - b.date);
+    function getAgendaDaysWindow() {
+      const days = [];
+      const today = getTodayStart();
 
-      upcomingAgendaEl.innerHTML = `
-        <div class="agenda-list">
-          ${groups.map(group => {
-            const dayItems = group.items.sort(sortByDateTime);
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        days.push(d);
+      }
 
-            return `
-              <div class="agenda-day">
-                <div class="agenda-date">${escapeHtml(formatDayLong(group.date))}</div>
-                <div class="agenda-items">
-                  ${dayItems.map(item => `
-                    <div class="agenda-item">
-                      <div class="agenda-item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-                      <div class="agenda-item-meta">${escapeHtml(item.time || 'hele dag')}</div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
+      return days;
     }
 
     function renderAgenda(data = {}) {
@@ -1292,23 +1578,26 @@
       ]);
 
       const items = combined
-        .map(item => normalizeDashboardItem(item))
+        .map(item => normalizeDashboardItem(item, 'agenda'))
         .filter(item => item._dayStart)
         .sort(sortByDateTime);
 
-      const today = getTodayStart();
+      const days = getAgendaDaysWindow();
+      ensureSelectedAgendaDay(items);
+      renderAgendaDayStrip(days);
 
-      const todayItems = items.filter(item => sameDay(item._dayStart, today));
-      const futureItems = items.filter(item => item._dayStart > today);
+      const selectedDate = parseDate(selectedAgendaDayKey) || getTodayStart();
+      const selectedItems = items.filter(item => sameDay(item._dayStart, selectedDate));
 
-      renderTodayTimeline(todayItems);
-      renderUpcomingAgenda(futureItems);
+      renderAgendaSelectedDayInfo(selectedDate, selectedItems);
+      renderAgendaAllDay(selectedItems);
+      renderDayTimeline(selectedItems, selectedDate);
     }
 
     function renderTasks(data = {}) {
       const tasksEl = document.getElementById('tasks');
       const tasks = dedupeItems(Array.isArray(data.tasks) ? data.tasks : [])
-        .map(item => normalizeDashboardItem(item, 'taak'));
+        .map(item => normalizeDashboardItem(item, 'tasks'));
 
       if (!tasks.length) {
         tasksEl.innerHTML = `<div class="empty">Geen taken</div>`;
@@ -1317,15 +1606,11 @@
 
       tasksEl.innerHTML = `
         <div class="flat-list">
-          ${tasks.map(item => `
-            <div class="flat-item">
-              <div class="flat-content">
-                <div class="flat-main">${escapeHtml(item.title || 'Zonder titel')}</div>
-                ${item.project ? `<div class="flat-meta">${escapeHtml(item.project)}</div>` : ''}
-                <div class="flat-sub">${escapeHtml(formatShortDate(item.date, item.time))}</div>
-              </div>
-            </div>
-          `).join('')}
+          ${tasks.map(item => renderFlatItem(
+            item,
+            item.project ? `<div class="flat-meta">${escapeHtml(item.project)}</div>` : '',
+            `<div class="flat-sub">${escapeHtml(formatShortDate(item.date, item.time))}</div>`
+          )).join('')}
         </div>
       `;
     }
@@ -1333,7 +1618,7 @@
     function renderNotes(data = {}) {
       const notesEl = document.getElementById('notes');
       const notes = dedupeItems(Array.isArray(data.notes) ? data.notes : [])
-        .map(item => normalizeDashboardItem(item, 'notitie'));
+        .map(item => normalizeDashboardItem(item, 'notes'));
 
       if (!notes.length) {
         notesEl.innerHTML = `<div class="empty">Geen notities</div>`;
@@ -1342,15 +1627,11 @@
 
       notesEl.innerHTML = `
         <div class="flat-list">
-          ${notes.map(item => `
-            <div class="flat-item">
-              <div class="flat-content">
-                <div class="flat-main">${escapeHtml(item.title || 'Zonder titel')}</div>
-                ${item.project ? `<div class="flat-meta">${escapeHtml(item.project)}</div>` : ''}
-                <div class="flat-sub">${escapeHtml(item.summary || '')}</div>
-              </div>
-            </div>
-          `).join('')}
+          ${notes.map(item => renderFlatItem(
+            item,
+            item.project ? `<div class="flat-meta">${escapeHtml(item.project)}</div>` : '',
+            item.summary ? `<div class="flat-sub">${escapeHtml(item.summary)}</div>` : ''
+          )).join('')}
         </div>
       `;
     }
@@ -1358,7 +1639,7 @@
     function renderAppointments(data = {}) {
       const appointmentsEl = document.getElementById('appointments');
       const agenda = dedupeItems(Array.isArray(data.agenda) ? data.agenda : [])
-        .map(item => normalizeDashboardItem(item, 'afspraak'))
+        .map(item => normalizeDashboardItem(item, 'agenda'))
         .filter(item => ['afspraak', 'agenda'].includes((item.type || '').toLowerCase()))
         .sort(sortByDateTime);
 
@@ -1369,15 +1650,11 @@
 
       appointmentsEl.innerHTML = `
         <div class="flat-list">
-          ${agenda.map(item => `
-            <div class="flat-item">
-              <div class="flat-content">
-                <div class="flat-main">${escapeHtml(item.title || 'Zonder titel')}</div>
-                <div class="flat-meta">${escapeHtml(formatShortDate(item.date, item.time))}</div>
-                ${item.summary ? `<div class="flat-sub">${escapeHtml(item.summary)}</div>` : ''}
-              </div>
-            </div>
-          `).join('')}
+          ${agenda.map(item => renderFlatItem(
+            item,
+            `<div class="flat-meta">${escapeHtml(formatShortDate(item.date, item.time))}</div>`,
+            item.summary ? `<div class="flat-sub">${escapeHtml(item.summary)}</div>` : ''
+          )).join('')}
         </div>
       `;
     }
@@ -1608,6 +1885,11 @@
       }
     }
 
+    function selectAgendaDay(dayKey) {
+      selectedAgendaDayKey = dayKey;
+      renderAgenda(dashboardRawData);
+    }
+
     document.getElementById('chatSend').addEventListener('click', sendChat);
 
     document.getElementById('chatInput').addEventListener('keydown', (e) => {
@@ -1641,21 +1923,33 @@
 
     window.openEditItem = openEditItem;
     window.deleteReviewItem = deleteReviewItem;
+    window.openDashboardEdit = openDashboardEdit;
+    window.selectAgendaDay = selectAgendaDay;
 
     async function loadDashboard() {
       try {
         const response = await fetch('/api/dashboard', { cache: 'no-store' });
         const data = await response.json();
 
-        renderAgenda(data || {});
-        renderTasks(data || {});
-        renderNotes(data || {});
-        renderAppointments(data || {});
+        dashboardRawData = {
+          agenda: Array.isArray(data?.agenda) ? data.agenda : [],
+          tasks: Array.isArray(data?.tasks) ? data.tasks : [],
+          notes: Array.isArray(data?.notes) ? data.notes : []
+        };
+
+        buildDashboardEditIndex(dashboardRawData);
+
+        renderAgenda(dashboardRawData);
+        renderTasks(dashboardRawData);
+        renderNotes(dashboardRawData);
+        renderAppointments(dashboardRawData);
       } catch (error) {
-        renderAgenda({});
-        renderTasks({});
-        renderNotes({});
-        renderAppointments({});
+        dashboardRawData = { agenda: [], tasks: [], notes: [] };
+        buildDashboardEditIndex(dashboardRawData);
+        renderAgenda(dashboardRawData);
+        renderTasks(dashboardRawData);
+        renderNotes(dashboardRawData);
+        renderAppointments(dashboardRawData);
       }
     }
 
