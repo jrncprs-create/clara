@@ -305,7 +305,7 @@
     }
 
     .flat-item.is-open .flat-edit-wrap {
-      max-height: 900px;
+      max-height: 1200px;
       opacity: 1;
       transform: translateY(0);
       margin-top: 14px;
@@ -363,7 +363,8 @@
     }
 
     .flat-edit-input,
-    .flat-edit-select {
+    .flat-edit-select,
+    .flat-edit-textarea {
       width: 100%;
       background: transparent;
       border: none;
@@ -377,13 +378,19 @@
       -webkit-appearance: none;
     }
 
-    .flat-edit-input::placeholder {
+    .flat-edit-input::placeholder,
+    .flat-edit-textarea::placeholder {
       color: rgba(255,255,255,0.28);
     }
 
     .flat-edit-select {
       cursor: pointer;
       color: #fff;
+    }
+
+    .flat-edit-textarea {
+      resize: vertical;
+      min-height: 84px;
     }
 
     .flat-edit-actions {
@@ -1488,7 +1495,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v3.2 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v3.3 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
     let currentEditTempId = null;
@@ -1698,26 +1705,25 @@
       return result;
     }
 
-    function makeEditKey(item, sourceType) {
-      const base = item.id
-        ? `id:${item.id}`
-        : [
-            sourceType || '',
-            String(item.type || '').toLowerCase().trim(),
-            String(item.title || '').toLowerCase().trim(),
-            String(item.project || '').toLowerCase().trim(),
-            String(item.date || '').toLowerCase().trim(),
-            String(item.time || '').toLowerCase().trim(),
-            String(item.summary || '').toLowerCase().trim()
-          ].join('|');
+    function makeEditKey(item) {
+      if (item?.id) {
+        return `id:${item.id}`;
+      }
 
-      return `${sourceType || 'item'}::${base}`;
+      return [
+        String(item?.type || '').toLowerCase().trim(),
+        String(item?.title || '').toLowerCase().trim(),
+        String(item?.project || '').toLowerCase().trim(),
+        String(item?.date || '').toLowerCase().trim(),
+        String(item?.time || '').toLowerCase().trim(),
+        String(item?.summary || '').toLowerCase().trim()
+      ].join('|');
     }
 
     function normalizeDashboardItem(item, sourceType = '') {
       const type = String(item?.type || '').trim().toLowerCase();
       const parsedDate = parseDate(item?.date);
-      const editKey = makeEditKey(item, sourceType);
+      const editKey = makeEditKey(item);
 
       return {
         ...item,
@@ -1812,7 +1818,7 @@
 
     function supportsInlineEdit(item) {
       const type = String(item?.type || '').toLowerCase();
-      return type === 'taak' || type === 'afspraak';
+      return type === 'taak' || type === 'afspraak' || type === 'notitie';
     }
 
     function openDashboardEdit(editKey) {
@@ -1919,7 +1925,7 @@
       }
 
       setTimeout(() => {
-        const input = itemEl.querySelector('.flat-edit-input, .flat-edit-select');
+        const input = itemEl.querySelector('.flat-edit-input, .flat-edit-select, .flat-edit-textarea');
         if (input) input.focus();
       }, 220);
     }
@@ -1943,6 +1949,7 @@
 
       const draft = dashboardInlineDraft;
       const disableAttr = dashboardInlineSaving ? 'disabled' : '';
+      const isTaskOrAppointment = draft.type === 'taak' || draft.type === 'afspraak';
 
       return `
         <div class="flat-edit-wrap">
@@ -1951,6 +1958,13 @@
               <div class="flat-edit-field">
                 <div class="flat-edit-label">Titel</div>
                 <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.title || '')}" oninput="updateDashboardInlineField('title', this.value)" />
+              </div>
+            </div>
+
+            <div class="flat-edit-group single">
+              <div class="flat-edit-field">
+                <div class="flat-edit-label">Samenvatting</div>
+                <textarea class="flat-edit-textarea" ${disableAttr} oninput="updateDashboardInlineField('summary', this.value)">${escapeHtml(draft.summary || '')}</textarea>
               </div>
             </div>
 
@@ -1982,6 +1996,7 @@
                 <select class="flat-edit-select" ${disableAttr} onchange="updateDashboardInlineField('type', this.value)">
                   <option value="taak" ${draft.type === 'taak' ? 'selected' : ''}>taak</option>
                   <option value="afspraak" ${draft.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
+                  <option value="notitie" ${draft.type === 'notitie' ? 'selected' : ''}>notitie</option>
                 </select>
               </div>
             </div>
@@ -2113,11 +2128,26 @@
     }
 
     function getCombinedAgendaLikeItems(data = {}) {
+      const agendaItems = (Array.isArray(data.agenda) ? data.agenda : []).map(item => ({
+        ...item,
+        __sourceType: 'agenda'
+      }));
+
+      const taskItems = (Array.isArray(data.tasks) ? data.tasks : []).map(item => ({
+        ...item,
+        __sourceType: 'tasks'
+      }));
+
       return dedupeItems([
-        ...(Array.isArray(data.agenda) ? data.agenda : []),
-        ...(Array.isArray(data.tasks) ? data.tasks : [])
+        ...agendaItems,
+        ...taskItems
       ])
-      .map(item => normalizeDashboardItem(item, 'agenda'))
+      .map(item => {
+        const sourceType = item.__sourceType || 'agenda';
+        const cleanItem = { ...item };
+        delete cleanItem.__sourceType;
+        return normalizeDashboardItem(cleanItem, sourceType);
+      })
       .filter(item => item._dayStart)
       .sort(sortByDateTime);
     }
