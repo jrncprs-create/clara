@@ -10,6 +10,15 @@ function safeString(value, fallback = '') {
   return String(value).trim()
 }
 
+function safeNumber(value, fallback = 0) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n))
+}
+
 function normalizeType(input) {
   const raw = safeString(input).toLowerCase()
 
@@ -211,55 +220,19 @@ function extractTimeFromText(text) {
   return ''
 }
 
-function sanitizeItemForSave(item) {
-  const sourceText = safeString(item.source_text)
-  const title = safeString(item.title, 'Zonder titel')
-  const summary = safeString(item.summary)
-  const project = safeString(item.project)
-  const status = safeString(item.status, 'nieuw')
-  const priority = safeString(item.priority, 'middel')
-
-  const combinedText = [title, summary, sourceText].filter(Boolean).join(' | ')
-
-  let dateFromAI = normalizeDate(item.date)
-  const dateFromText = normalizeDate(combinedText)
-
-  let date = ''
-
-  if (dateFromText) {
-    date = dateFromText
-  } else if (dateFromAI) {
-    const year = Number(dateFromAI.slice(0, 4))
-    const currentYear = new Date().getFullYear()
-
-    if (year >= currentYear) {
-      date = dateFromAI
-    }
-  }
-
-  let endDate = normalizeDate(item.end_date)
-  if (!endDate) endDate = ''
-
-  let time = normalizeTime(item.time)
-  if (!time) time = extractTimeFromText(combinedText)
-
+function sanitizeNotitieFields(item) {
   return {
-    type: normalizeType(item.type),
-    title,
-    summary,
-    project,
-    status,
-    date,
-    end_date: endDate,
-    time,
-    priority,
-    note_type: 'general',
-    raw: sourceText,
-    source_text: sourceText
+    ...item,
+    date: '',
+    end_date: '',
+    time: '',
+    priority: '',
+    status: '',
+    note_type: 'general'
   }
 }
 
-function sanitizeItemForUpdate(item) {
+function sanitizeItemCore(item, mode = 'save') {
   const sourceText = safeString(item.source_text)
   const title = safeString(item.title, 'Zonder titel')
   const summary = safeString(item.summary)
@@ -268,22 +241,36 @@ function sanitizeItemForUpdate(item) {
   const priority = safeString(item.priority, 'middel')
 
   const combinedText = [title, summary, sourceText].filter(Boolean).join(' | ')
+  const type = normalizeType(item.type)
 
-  let date = normalizeDate(item.date)
-  if (!date) {
-    date = normalizeDate(combinedText)
+  let date = ''
+  let endDate = ''
+  let time = ''
+
+  if (mode === 'save') {
+    const dateFromAI = normalizeDate(item.date)
+    const dateFromText = normalizeDate(combinedText)
+
+    if (dateFromText) {
+      date = dateFromText
+    } else if (dateFromAI) {
+      const year = Number(dateFromAI.slice(0, 4))
+      const currentYear = getAmsterdamDateParts(new Date()).year
+      if (year >= currentYear) {
+        date = dateFromAI
+      }
+    }
+
+    endDate = normalizeDate(item.end_date) || ''
+    time = normalizeTime(item.time) || extractTimeFromText(combinedText)
+  } else {
+    date = normalizeDate(item.date) || normalizeDate(combinedText)
+    endDate = normalizeDate(item.end_date) || ''
+    time = normalizeTime(item.time) || extractTimeFromText(combinedText)
   }
 
-  let endDate = normalizeDate(item.end_date)
-  if (!endDate) endDate = ''
-
-  let time = normalizeTime(item.time)
-  if (!time) {
-    time = extractTimeFromText(combinedText)
-  }
-
-  return {
-    type: normalizeType(item.type),
+  let cleaned = {
+    type,
     title,
     summary,
     project,
@@ -295,6 +282,76 @@ function sanitizeItemForUpdate(item) {
     note_type: 'general',
     raw: sourceText,
     source_text: sourceText
+  }
+
+  if (type === 'notitie') {
+    cleaned = sanitizeNotitieFields(cleaned)
+  }
+
+  return cleaned
+}
+
+function sanitizeItemForSave(item) {
+  return sanitizeItemCore(item, 'save')
+}
+
+function sanitizeItemForUpdate(item) {
+  return sanitizeItemCore(item, 'update')
+}
+
+function validateItemForSave(item) {
+  const type = normalizeType(item.type)
+  const title = safeString(item.title)
+  const date = safeString(item.date)
+  const time = safeString(item.time)
+
+  if (!title) {
+    return { ok: false, blocked_by: 'missing_title', reason: 'Titel ontbreekt.' }
+  }
+
+  if (type === 'afspraak' && !date) {
+    return { ok: false, blocked_by: 'missing_date', reason: 'Afspraak mist datum.' }
+  }
+
+  if (type === 'afspraak' && !time) {
+    return { ok: false, blocked_by: 'missing_time', reason: 'Afspraak mist tijd.' }
+  }
+
+  return { ok: true, blocked_by: null, reason: '' }
+}
+
+function buildMeta(body = {}, overrides = {}) {
+  const baseConfidence = safeNumber(overrides.confidence, safeNumber(body.confidence, 0))
+  return {
+    session_id: safeString(overrides.session_id || body.session_id || body.sessionId),
+    needs_clarification: Boolean(overrides.needs_clarification),
+    confidence: clamp(baseConfidence, 0, 1),
+    can_save: Boolean(overrides.can_save),
+    blocked_by: overrides.blocked_by || null,
+    error_code: overrides.error_code || null
+  }
+}
+
+function buildResponse(body, {
+  ok = true,
+  mode = 'reply',
+  reply = null,
+  question = null,
+  confirmation = null,
+  review = null,
+  actions = [],
+  meta = {}
+} = {}) {
+  return {
+    ok,
+    success: ok,
+    mode,
+    reply,
+    question,
+    confirmation,
+    review,
+    actions,
+    meta: buildMeta(body, meta)
   }
 }
 
@@ -315,11 +372,16 @@ async function parseWithOpenAI(text) {
             date: '',
             end_date: '',
             time: '',
-            status: 'nieuw',
-            priority: 'middel',
+            status: '',
+            priority: '',
             source_text: text
           }
         ]
+      },
+      meta: {
+        needs_clarification: false,
+        confidence: 0.7,
+        can_save: true
       }
     }
   }
@@ -327,23 +389,65 @@ async function parseWithOpenAI(text) {
   const prompt = `
 Je bent Clara.
 
-Zet de input om naar een REVIEW JSON.
+Zet de input om naar geldige JSON.
+
+Doel:
+- begrijp de input
+- bepaal of iets direct review-klaar is of dat eerst een vraag nodig is
 
 Regels:
-- Splits input in meerdere items als nodig
 - Types: taak, afspraak, notitie, idee, project, beslissing
-- Geef GEEN uitleg, alleen JSON
+- notitie is tijdloos:
+  - geen date
+  - geen end_date
+  - geen time
+  - geen priority
+  - geen status
+- afspraak moet alleen als afspraak terugkomen als datum en tijd voldoende duidelijk zijn
+- bij onduidelijkheid geef mode="question"
+- bij voldoende duidelijkheid geef mode="review"
+- geef GEEN uitleg buiten JSON
 - title = kort
 - summary = 1 zin
-- date/time alleen als zeker
-- Gebruik bij voorkeur YYYY-MM-DD voor date en HH:MM voor time als het duidelijk is
-- elk item krijgt temp_id
+- date alleen YYYY-MM-DD als zeker
+- time alleen HH:MM als zeker
+- elk review-item krijgt temp_id
 - source_text = exact stukje uit input
+- voeg meta toe met:
+  - needs_clarification: true/false
+  - confidence: 0..1
+  - can_save: true/false
 
-Formaat:
+Toegestane formats:
+
+QUESTION:
+{
+  "mode": "question",
+  "reply": null,
+  "question": {
+    "text": "",
+    "field": "",
+    "options": [
+      { "value": "", "label": "" }
+    ],
+    "allow_free_input": true
+  },
+  "confirmation": null,
+  "review": null,
+  "actions": [],
+  "meta": {
+    "needs_clarification": true,
+    "confidence": 0.0,
+    "can_save": false
+  }
+}
+
+REVIEW:
 {
   "mode": "review",
   "reply": "",
+  "question": null,
+  "confirmation": null,
   "review": {
     "summary": "",
     "items": [
@@ -356,11 +460,21 @@ Formaat:
         "date": "",
         "end_date": "",
         "time": "",
-        "status": "nieuw",
-        "priority": "middel",
+        "status": "",
+        "priority": "",
         "source_text": ""
       }
     ]
+  },
+  "actions": [
+    { "type": "confirm_review", "label": "Opslaan" },
+    { "type": "edit_review_item", "label": "Aanpassen", "temp_id": "item_1" },
+    { "type": "cancel_review", "label": "Annuleren" }
+  ],
+  "meta": {
+    "needs_clarification": false,
+    "confidence": 0.0,
+    "can_save": true
   }
 }
 
@@ -377,6 +491,7 @@ ${text}
     body: JSON.stringify({
       model: 'gpt-4.1-mini',
       temperature: 0.2,
+      response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: 'Geef alleen geldige JSON terug, zonder codeblok.' },
         { role: 'user', content: prompt }
@@ -390,14 +505,124 @@ ${text}
   }
 
   const json = await response.json()
-  let content = json?.choices?.[0]?.message?.content || '{}'
-  content = content.trim()
+  const content = safeString(json?.choices?.[0]?.message?.content, '{}')
+  return JSON.parse(content)
+}
 
-  if (content.startsWith('```')) {
-    content = content.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
+function normalizeReviewPayload(aiResult) {
+  const mode = safeString(aiResult?.mode).toLowerCase()
+
+  if (mode === 'question') {
+    return {
+      mode: 'question',
+      reply: null,
+      question: {
+        text: safeString(aiResult?.question?.text, 'Kun je dit iets preciezer maken?'),
+        field: safeString(aiResult?.question?.field, 'input'),
+        options: Array.isArray(aiResult?.question?.options) ? aiResult.question.options : [],
+        allow_free_input: aiResult?.question?.allow_free_input !== false
+      },
+      confirmation: null,
+      review: null,
+      actions: Array.isArray(aiResult?.actions) ? aiResult.actions : [],
+      meta: {
+        needs_clarification: true,
+        confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.55), 0, 1),
+        can_save: false
+      }
+    }
   }
 
-  return JSON.parse(content)
+  const rawItems = Array.isArray(aiResult?.review?.items) ? aiResult.review.items : []
+  const cleanedItems = rawItems.map((item, index) => {
+    const cleaned = sanitizeItemForSave(item)
+    return {
+      temp_id: safeString(item?.temp_id, `item_${index + 1}`),
+      type: cleaned.type,
+      title: cleaned.title,
+      summary: cleaned.summary,
+      project: cleaned.project,
+      date: cleaned.date,
+      end_date: cleaned.end_date,
+      time: cleaned.time,
+      status: cleaned.status,
+      priority: cleaned.priority,
+      source_text: cleaned.source_text
+    }
+  })
+
+  let needsClarification = false
+  let blockedBy = null
+
+  for (const item of cleanedItems) {
+    const validation = validateItemForSave(item)
+    if (!validation.ok) {
+      needsClarification = true
+      blockedBy = validation.blocked_by
+      break
+    }
+  }
+
+  if (needsClarification && cleanedItems.length === 1) {
+    const first = cleanedItems[0]
+    const questionText =
+      blockedBy === 'missing_date'
+        ? 'Welke datum bedoel je precies?'
+        : blockedBy === 'missing_time'
+          ? 'Hoe laat is deze afspraak precies?'
+          : 'Kun je dit iets preciezer maken?'
+
+    return {
+      mode: 'question',
+      reply: null,
+      question: {
+        text: questionText,
+        field: blockedBy === 'missing_date' ? 'date' : blockedBy === 'missing_time' ? 'time' : 'input',
+        options: [],
+        allow_free_input: true
+      },
+      confirmation: null,
+      review: null,
+      actions: [],
+      meta: {
+        needs_clarification: true,
+        confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.6), 0, 1),
+        can_save: false,
+        blocked_by: blockedBy
+      }
+    }
+  }
+
+  const review = {
+    summary: safeString(aiResult?.review?.summary),
+    items: cleanedItems
+  }
+
+  const actions = cleanedItems.length
+    ? [
+        { type: 'confirm_review', label: 'Opslaan' },
+        ...cleanedItems.map(item => ({
+          type: 'edit_review_item',
+          label: 'Aanpassen',
+          temp_id: item.temp_id
+        })),
+        { type: 'cancel_review', label: 'Annuleren' }
+      ]
+    : []
+
+  return {
+    mode: 'review',
+    reply: safeString(aiResult?.reply, 'Controleer dit even.'),
+    question: null,
+    confirmation: null,
+    review,
+    actions,
+    meta: {
+      needs_clarification: false,
+      confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.9), 0, 1),
+      can_save: review.items.length > 0
+    }
+  }
 }
 
 async function deleteItem(body) {
@@ -408,7 +633,7 @@ async function deleteItem(body) {
       .from('clara_items')
       .delete()
       .eq('id', itemId)
-      .select('id, title')
+      .select('id, title, type')
 
     if (error) {
       throw new Error(`delete_failed: ${error.message}`)
@@ -440,7 +665,7 @@ async function deleteItem(body) {
   if (time) query = query.eq('time', time)
   if (project) query = query.eq('project', project)
 
-  const { data, error } = await query.select('id, title')
+  const { data, error } = await query.select('id, title, type')
 
   if (error) {
     throw new Error(`delete_failed: ${error.message}`)
@@ -459,6 +684,12 @@ async function updateItem(body) {
   }
 
   const cleaned = sanitizeItemForUpdate(body)
+  const validation = validateItemForSave(cleaned)
+
+  if (!validation.ok && cleaned.type === 'afspraak') {
+    throw new Error(`update_failed: ${validation.blocked_by}`)
+  }
+
   const now = new Date().toISOString()
 
   const updatePayload = {
@@ -494,7 +725,9 @@ async function updateItem(body) {
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'method_not_allowed' })
+      return res.status(405).json({
+        error: 'method_not_allowed'
+      })
     }
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {})
@@ -502,63 +735,96 @@ module.exports = async function handler(req, res) {
     const action = safeString(body.action)
 
     if (!message && !action) {
-      return res.status(400).json({ error: 'missing_input' })
+      return res.status(400).json({
+        error: 'missing_input'
+      })
     }
 
     if (!action) {
-      const review = await parseWithOpenAI(message)
+      const aiResult = await parseWithOpenAI(message)
+      const normalized = normalizeReviewPayload(aiResult)
 
-      if (review?.review?.items && Array.isArray(review.review.items)) {
-        review.review.items = review.review.items.map(item => {
-          const cleaned = sanitizeItemForSave(item)
-          return {
-            ...item,
-            type: cleaned.type,
-            title: cleaned.title,
-            summary: cleaned.summary,
-            project: cleaned.project,
-            date: cleaned.date,
-            end_date: cleaned.end_date,
-            time: cleaned.time,
-            status: cleaned.status,
-            priority: cleaned.priority,
-            source_text: cleaned.source_text
-          }
+      return res.status(200).json(
+        buildResponse(body, {
+          ok: true,
+          mode: normalized.mode,
+          reply: normalized.reply,
+          question: normalized.question,
+          confirmation: normalized.confirmation,
+          review: normalized.review,
+          actions: normalized.actions,
+          meta: normalized.meta
         })
-      }
-
-      return res.status(200).json(review)
+      )
     }
 
     if (action === 'confirm_review') {
       const items = Array.isArray(body.items) ? body.items : []
 
       if (!items.length) {
-        return res.status(400).json({ error: 'no_items_to_save' })
+        return res.status(400).json({
+          error: 'no_items_to_save'
+        })
+      }
+
+      const cleanedItems = items.map(sanitizeItemForSave)
+      const blocked = cleanedItems
+        .map(item => ({ item, validation: validateItemForSave(item) }))
+        .find(entry => !entry.validation.ok)
+
+      if (blocked) {
+        return res.status(200).json(
+          buildResponse(body, {
+            ok: true,
+            mode: 'question',
+            reply: null,
+            question: {
+              text:
+                blocked.validation.blocked_by === 'missing_date'
+                  ? 'Welke datum bedoel je precies?'
+                  : blocked.validation.blocked_by === 'missing_time'
+                    ? 'Hoe laat is deze afspraak precies?'
+                    : 'Kun je dit iets preciezer maken?',
+              field:
+                blocked.validation.blocked_by === 'missing_date'
+                  ? 'date'
+                  : blocked.validation.blocked_by === 'missing_time'
+                    ? 'time'
+                    : 'input',
+              options: [],
+              allow_free_input: true
+            },
+            confirmation: null,
+            review: null,
+            actions: [],
+            meta: {
+              needs_clarification: true,
+              confidence: 0.6,
+              can_save: false,
+              blocked_by: blocked.validation.blocked_by
+            }
+          })
+        )
       }
 
       const now = new Date().toISOString()
 
-      const inserts = items.map(item => {
-        const cleaned = sanitizeItemForSave(item)
-
-        return {
-          type: cleaned.type,
-          title: cleaned.title,
-          summary: cleaned.summary,
-          project: cleaned.project,
-          status: cleaned.status,
-          date: cleaned.date,
-          end_date: cleaned.end_date,
-          time: cleaned.time,
-          priority: cleaned.priority,
-          note_type: cleaned.note_type,
-          raw: cleaned.raw,
-          source_text: cleaned.source_text,
-          created_at: now,
-          updated_at: now
-        }
-      })
+      const inserts = cleanedItems.map(item => ({
+        type: item.type,
+        title: item.title,
+        summary: item.summary,
+        project: item.project,
+        status: item.status,
+        date: item.date,
+        end_date: item.end_date,
+        time: item.time,
+        priority: item.priority,
+        note_type: item.note_type,
+        raw: item.raw,
+        source_text: item.source_text,
+        created_at: now,
+        updated_at: now
+      }))
 
       const { data, error } = await supabase
         .from('clara_items')
@@ -566,29 +832,72 @@ module.exports = async function handler(req, res) {
         .select()
 
       if (error) {
-        return res.status(500).json({
-          error: 'supabase_error',
-          details: error.message,
-          hint: error.hint || null,
-          code: error.code || null
-        })
+        return res.status(500).json(
+          buildResponse(body, {
+            ok: false,
+            mode: 'reply',
+            reply: 'Er ging iets mis bij het opslaan.',
+            meta: {
+              needs_clarification: false,
+              confidence: 0,
+              can_save: false,
+              error_code: error.code || 'SUPABASE_ERROR'
+            }
+          })
+        )
       }
 
-      return res.status(200).json({
-        success: true,
-        reply: `Opgeslagen. ${data?.length || inserts.length} item(s).`,
-        saved: data?.length || inserts.length
-      })
+      return res.status(200).json(
+        buildResponse(body, {
+          ok: true,
+          mode: 'confirmation',
+          reply: null,
+          confirmation: {
+            text: 'Opgeslagen.',
+            saved: (data || []).map(item => ({
+              id: item.id,
+              type: item.type,
+              title: item.title
+            }))
+          },
+          review: null,
+          actions: [],
+          meta: {
+            needs_clarification: false,
+            confidence: 1,
+            can_save: false
+          }
+        })
+      )
     }
 
     if (action === 'update_item') {
       const updated = await updateItem(body)
 
-      return res.status(200).json({
-        success: true,
-        reply: 'Item bijgewerkt.',
-        item: updated
-      })
+      return res.status(200).json(
+        buildResponse(body, {
+          ok: true,
+          mode: 'confirmation',
+          reply: 'Item bijgewerkt.',
+          confirmation: {
+            text: 'Item bijgewerkt.',
+            saved: [
+              {
+                id: updated.id,
+                type: updated.type,
+                title: updated.title
+              }
+            ]
+          },
+          review: null,
+          actions: [],
+          meta: {
+            needs_clarification: false,
+            confidence: 1,
+            can_save: false
+          }
+        })
+      )
     }
 
     if (action === 'delete_item') {
@@ -601,19 +910,42 @@ module.exports = async function handler(req, res) {
         })
       }
 
-      return res.status(200).json({
-        success: true,
-        reply: `Verwijderd. ${result.deleted} item(s).`,
-        deleted: result.deleted,
-        item: result.item
-      })
+      return res.status(200).json(
+        buildResponse(body, {
+          ok: true,
+          mode: 'confirmation',
+          reply: `Verwijderd. ${result.deleted} item(s).`,
+          confirmation: {
+            text: `Verwijderd. ${result.deleted} item(s).`,
+            saved: []
+          },
+          review: null,
+          actions: [],
+          meta: {
+            needs_clarification: false,
+            confidence: 1,
+            can_save: false
+          }
+        })
+      )
     }
 
-    return res.status(400).json({ error: 'unknown_action' })
-  } catch (e) {
-    return res.status(500).json({
-      error: 'server_error',
-      details: e.message
+    return res.status(400).json({
+      error: 'unknown_action'
     })
+  } catch (e) {
+    return res.status(500).json(
+      buildResponse({}, {
+        ok: false,
+        mode: 'reply',
+        reply: 'Er ging iets mis bij het verwerken van je bericht.',
+        meta: {
+          needs_clarification: false,
+          confidence: 0,
+          can_save: false,
+          error_code: 'SERVER_ERROR'
+        }
+      })
+    )
   }
 }
