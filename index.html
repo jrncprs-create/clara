@@ -195,41 +195,52 @@
       font-size: 14px;
     }
 
+    .item-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+      margin-top: -2px;
+      margin-right: -4px;
+    }
+
     .icon-btn {
-      width: 42px;
-      height: 42px;
+      width: 26px;
+      height: 26px;
       flex-shrink: 0;
       border: none;
       background: transparent;
-      color: rgba(255,255,255,0.92);
+      color: rgba(255,255,255,0.78);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       padding: 0;
       opacity: 0.88;
-      transition: opacity 120ms ease, transform 120ms ease;
+      transition: opacity 120ms ease, transform 120ms ease, color 120ms ease;
     }
 
     .icon-btn:hover {
       opacity: 1;
-      transform: scale(1.04);
+      transform: scale(1.06);
+      color: rgba(255,255,255,1);
     }
 
     .icon-btn svg {
-      width: 28px;
-      height: 28px;
+      width: 14px;
+      height: 14px;
       display: block;
       stroke: currentColor;
       fill: none;
-      stroke-width: 2.35;
+      stroke-width: 1.9;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
 
     .icon-btn.delete svg {
-      width: 30px;
-      height: 30px;
+      width: 13px;
+      height: 13px;
+      stroke-width: 2.1;
     }
 
     .chat-shell {
@@ -313,7 +324,8 @@
     }
 
     .review-overlay,
-    .review-edit-overlay {
+    .review-edit-overlay,
+    .confirm-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.72);
@@ -329,9 +341,22 @@
       backdrop-filter: blur(16px);
     }
 
+    .confirm-overlay {
+      z-index: 1200;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(16px);
+      align-items: center;
+      justify-content: center;
+    }
+
     .review-overlay.open,
-    .review-edit-overlay.open {
+    .review-edit-overlay.open,
+    .confirm-overlay.open {
       display: block;
+    }
+
+    .confirm-overlay.open {
+      display: flex;
     }
 
     .review-modal {
@@ -360,6 +385,15 @@
       overflow: hidden;
     }
 
+    .confirm-modal {
+      width: min(420px, calc(100vw - 32px));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      background: rgba(10,10,10,0.98);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+
     .review-modal-header,
     .review-edit-modal-header {
       padding: 18px 20px;
@@ -371,18 +405,25 @@
       flex-shrink: 0;
     }
 
+    .confirm-header {
+      padding: 18px 20px 10px 20px;
+    }
+
     .review-modal-title,
-    .review-edit-modal-title {
+    .review-edit-modal-title,
+    .confirm-title {
       font-size: 16px;
       font-weight: 700;
       color: #fff;
     }
 
     .review-modal-subtitle,
-    .review-edit-modal-subtitle {
+    .review-edit-modal-subtitle,
+    .confirm-subtitle {
       font-size: 13px;
       color: rgba(255,255,255,0.50);
       margin-top: 4px;
+      line-height: 1.4;
     }
 
     .review-close,
@@ -394,6 +435,22 @@
       padding: 10px 14px;
       font-size: 13px;
       cursor: pointer;
+    }
+
+    .confirm-body {
+      padding: 0 20px 18px 20px;
+    }
+
+    .confirm-item {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 14px;
+      color: rgba(255,255,255,0.92);
+      line-height: 1.35;
+      word-break: break-word;
     }
 
     .review-modal-content,
@@ -485,7 +542,7 @@
     .review-list-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 2px;
       flex-shrink: 0;
     }
 
@@ -544,7 +601,8 @@
     }
 
     .review-modal-footer,
-    .review-edit-modal-footer {
+    .review-edit-modal-footer,
+    .confirm-footer {
       padding: 16px 18px;
       border-top: 1px solid rgba(255,255,255,0.08);
       display: flex;
@@ -561,7 +619,8 @@
     }
 
     .review-actions,
-    .review-edit-actions {
+    .review-edit-actions,
+    .confirm-actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -569,7 +628,8 @@
     }
 
     .review-btn,
-    .review-edit-btn {
+    .review-edit-btn,
+    .confirm-btn {
       border-radius: 12px;
       padding: 11px 14px;
       font-size: 13px;
@@ -579,14 +639,16 @@
     }
 
     .review-btn.primary,
-    .review-edit-btn.primary {
+    .review-edit-btn.primary,
+    .confirm-btn.primary {
       background: #fff;
       color: #000;
       border-color: #fff;
     }
 
     .review-btn.secondary,
-    .review-edit-btn.secondary {
+    .review-edit-btn.secondary,
+    .confirm-btn.secondary {
       background: rgba(255,255,255,0.06);
       color: #fff;
     }
@@ -598,33 +660,41 @@
     }
 
     .review-icon-btn {
-      width: 42px;
-      height: 42px;
+      width: 26px;
+      height: 26px;
       border: none;
       background: transparent;
-      color: rgba(255,255,255,0.88);
+      color: rgba(255,255,255,0.78);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       padding: 0;
       flex-shrink: 0;
+      transition: opacity 120ms ease, transform 120ms ease, color 120ms ease;
+    }
+
+    .review-icon-btn:hover {
+      opacity: 1;
+      transform: scale(1.06);
+      color: rgba(255,255,255,1);
     }
 
     .review-icon-btn svg {
-      width: 28px;
-      height: 28px;
+      width: 14px;
+      height: 14px;
       display: block;
       stroke: currentColor;
       fill: none;
-      stroke-width: 2.35;
+      stroke-width: 1.9;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
 
     .review-icon-btn.delete svg {
-      width: 30px;
-      height: 30px;
+      width: 13px;
+      height: 13px;
+      stroke-width: 2.1;
     }
 
     .agenda-shell {
@@ -813,6 +883,26 @@
       z-index: 2;
     }
 
+    .timeline-day-break-line {
+      position: absolute;
+      left: 56px;
+      right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.24);
+      z-index: 2;
+    }
+
+    .timeline-day-break-label {
+      position: absolute;
+      left: 12px;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: rgba(255,255,255,0.52);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      z-index: 3;
+    }
+
     .timeline-events {
       position: absolute;
       inset: 0;
@@ -950,7 +1040,8 @@
 
     @media (max-width: 760px) {
       .review-overlay,
-      .review-edit-overlay {
+      .review-edit-overlay,
+      .confirm-overlay {
         padding: 10px;
       }
 
@@ -961,18 +1052,21 @@
       }
 
       .review-modal-footer,
-      .review-edit-modal-footer {
+      .review-edit-modal-footer,
+      .confirm-footer {
         flex-direction: column;
         align-items: stretch;
       }
 
       .review-actions,
-      .review-edit-actions {
+      .review-edit-actions,
+      .confirm-actions {
         width: 100%;
       }
 
       .review-btn,
-      .review-edit-btn {
+      .review-edit-btn,
+      .confirm-btn {
         width: 100%;
       }
     }
@@ -1159,9 +1253,8 @@
         <div class="review-edit-actions">
           <button class="review-icon-btn delete" id="reviewEditDeleteBtn" type="button" aria-label="Verwijderen">
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M3 6.5h18"></path>
-              <path d="M8.5 6.5V4.9c0-.9.7-1.6 1.6-1.6h3.8c.9 0 1.6.7 1.6 1.6v1.6"></path>
-              <path d="M7.2 6.5l.8 12.2c.1 1 .9 1.8 1.9 1.8h4.2c1 0 1.8-.8 1.9-1.8l.8-12.2"></path>
+              <path d="M7 7l10 10"></path>
+              <path d="M17 7L7 17"></path>
             </svg>
           </button>
           <button class="review-edit-btn secondary" id="reviewEditCancelBtn">Terug</button>
@@ -1171,9 +1264,28 @@
     </div>
   </div>
 
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-modal">
+      <div class="confirm-header">
+        <div class="confirm-title">Weet je het zeker?</div>
+        <div class="confirm-subtitle" id="confirmSubtitle">Dit item wordt verwijderd.</div>
+      </div>
+      <div class="confirm-body">
+        <div class="confirm-item" id="confirmItemTitle">Item</div>
+      </div>
+      <div class="confirm-footer">
+        <div></div>
+        <div class="confirm-actions">
+          <button class="confirm-btn secondary" id="confirmCancelBtn">Annuleren</button>
+          <button class="confirm-btn primary" id="confirmOkBtn">Ja, verwijderen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v3.0 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v3.1 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
     let currentEditTempId = null;
@@ -1187,6 +1299,8 @@
     let dashboardEditIndex = new Map();
     let selectedAgendaDayKey = null;
 
+    let pendingConfirmAction = null;
+
     function escapeHtml(value) {
       return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -1199,9 +1313,9 @@
     function editIconSvg() {
       return `
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4.2 7.3v10.5c0 1 .8 1.8 1.8 1.8h10.5"></path>
-          <path d="M8.2 15.8l7.9-7.9 2.1 2.1-7.9 7.9-3.1 1z"></path>
-          <path d="M14.9 5.9l2.1-2.1c.6-.6 1.6-.6 2.2 0l1 1c.6.6.6 1.6 0 2.2l-2.1 2.1"></path>
+          <path d="M5 19l3.2-.7L17.8 8.7 15.3 6.2 5.7 15.8 5 19z"></path>
+          <path d="M13.9 7.6l2.5 2.5"></path>
+          <path d="M15.9 5.6l1-1c.6-.6 1.5-.6 2.1 0l.4.4c.6.6.6 1.5 0 2.1l-1 1"></path>
         </svg>
       `;
     }
@@ -1209,9 +1323,8 @@
     function deleteIconSvg() {
       return `
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 6.5h18"></path>
-          <path d="M8.5 6.5V4.9c0-.9.7-1.6 1.6-1.6h3.8c.9 0 1.6.7 1.6 1.6v1.6"></path>
-          <path d="M7.2 6.5l.8 12.2c.1 1 .9 1.8 1.9 1.8h4.2c1 0 1.8-.8 1.9-1.8l.8-12.2"></path>
+          <path d="M7 7l10 10"></path>
+          <path d="M17 7L7 17"></path>
         </svg>
       `;
     }
@@ -1348,6 +1461,13 @@
       return null;
     }
 
+    function formatMinutesAsTime(totalMinutes) {
+      const normalized = ((totalMinutes % 1440) + 1440) % 1440;
+      const hours = Math.floor(normalized / 60);
+      const minutes = normalized % 60;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
     function dedupeItems(items) {
       const seen = new Set();
       const result = [];
@@ -1464,6 +1584,19 @@
       openEditItem(reviewPayload.review.items[0].temp_id);
     }
 
+    function getActionButtonsHtml(editKey, label = 'Item') {
+      return `
+        <div class="item-actions">
+          <button class="icon-btn" type="button" onclick="openDashboardEdit('${escapeHtml(editKey)}')" aria-label="Pas aan">
+            ${editIconSvg()}
+          </button>
+          <button class="icon-btn delete" type="button" onclick="requestDashboardDelete('${escapeHtml(editKey)}', '${escapeHtml(label)}')" aria-label="Verwijderen">
+            ${deleteIconSvg()}
+          </button>
+        </div>
+      `;
+    }
+
     function renderFlatItem(item, metaHtml = '', subHtml = '') {
       return `
         <div class="flat-item">
@@ -1473,9 +1606,7 @@
               ${metaHtml}
               ${subHtml}
             </div>
-            <button class="icon-btn" type="button" onclick="openDashboardEdit('${escapeHtml(item._editKey)}')" aria-label="Pas aan">
-              ${editIconSvg()}
-            </button>
+            ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
           </div>
         </div>
       `;
@@ -1541,67 +1672,154 @@
               <div class="agenda-mini-title">${escapeHtml(item.title || 'Zonder titel')}</div>
               <div class="agenda-mini-meta">${escapeHtml(metaParts.join(' • ') || 'hele dag')}</div>
             </div>
-            <button class="icon-btn" type="button" onclick="openDashboardEdit('${escapeHtml(item._editKey)}')" aria-label="Pas aan">
-              ${editIconSvg()}
-            </button>
+            ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
           </div>
         `;
       }).join('');
     }
 
-    function renderDayTimeline(items, selectedDate) {
-      const el = document.getElementById('dayTimeline');
-      if (!el) return;
+    function getCombinedAgendaLikeItems(data = {}) {
+      return dedupeItems([
+        ...(Array.isArray(data.agenda) ? data.agenda : []),
+        ...(Array.isArray(data.tasks) ? data.tasks : [])
+      ])
+      .map(item => normalizeDashboardItem(item, 'agenda'))
+      .filter(item => item._dayStart)
+      .sort(sortByDateTime);
+    }
 
-      const timedItems = items
+    function getTimelineWindow(selectedDate) {
+      const today = getTodayStart();
+      const isToday = sameDay(selectedDate, today);
+
+      if (!isToday) {
+        return {
+          isToday: false,
+          totalMinutes: 1440,
+          startAbsMinutes: 0,
+          endAbsMinutes: 1440
+        };
+      }
+
+      const now = new Date();
+      const nowAbsMinutes = now.getHours() * 60 + now.getMinutes();
+      const beforeNow = 30;
+      const totalMinutes = 600;
+      let startAbsMinutes = Math.max(0, nowAbsMinutes - beforeNow);
+      let endAbsMinutes = startAbsMinutes + totalMinutes;
+
+      return {
+        isToday: true,
+        totalMinutes,
+        startAbsMinutes,
+        endAbsMinutes
+      };
+    }
+
+    function getTimelineItems(allItems, selectedDate, timelineWindow) {
+      const selectedKey = formatLocalDateKey(selectedDate);
+      const nextDate = new Date(selectedDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      const nextKey = formatLocalDateKey(nextDate);
+
+      return allItems
         .filter(item => item._timeMinutes !== null)
-        .sort((a, b) => a._timeMinutes - b._timeMinutes);
+        .map(item => {
+          const itemDayKey = formatLocalDateKey(item._dayStart);
+          let absMinutes = null;
 
-      const hourMarks = Array.from({ length: 25 }, (_, i) => i);
+          if (itemDayKey === selectedKey) {
+            absMinutes = item._timeMinutes;
+          } else if (timelineWindow.isToday && itemDayKey === nextKey) {
+            absMinutes = 1440 + item._timeMinutes;
+          }
+
+          if (absMinutes === null) return null;
+
+          return {
+            ...item,
+            _timelineAbsMinutes: absMinutes
+          };
+        })
+        .filter(Boolean)
+        .filter(item => item._timelineAbsMinutes >= timelineWindow.startAbsMinutes && item._timelineAbsMinutes <= timelineWindow.endAbsMinutes)
+        .sort((a, b) => a._timelineAbsMinutes - b._timelineAbsMinutes);
+    }
+
+    function renderDayTimeline(allItems, selectedDate) {
+      const el = document.getElementById('dayTimeline');
+      const scrollEl = document.getElementById('timelineScroll');
+      if (!el || !scrollEl) return;
+
+      const timelineWindow = getTimelineWindow(selectedDate);
+      const timedItems = getTimelineItems(allItems, selectedDate, timelineWindow);
+
+      const pixelsPerMinute = timelineWindow.isToday ? 1.6 : 0.75;
+      const timelineHeight = Math.max(760, Math.round(timelineWindow.totalMinutes * pixelsPerMinute));
+      const minCardHeightPx = 62;
+
+      el.style.minHeight = `${timelineHeight}px`;
+      el.style.height = `${timelineHeight}px`;
+
+      const hourStart = Math.floor(timelineWindow.startAbsMinutes / 60);
+      const hourEnd = Math.ceil(timelineWindow.endAbsMinutes / 60);
+
+      const hourMarks = [];
+      for (let hour = hourStart; hour <= hourEnd; hour++) {
+        hourMarks.push(hour);
+      }
 
       const timelineEventsHtml = timedItems.map(item => {
-        const start = item._timeMinutes;
-        const top = (start / 1440) * 100;
-        const minHeightPct = 6.4;
+        const topPx = (item._timelineAbsMinutes - timelineWindow.startAbsMinutes) * pixelsPerMinute;
         const metaParts = [];
-        metaParts.push(item.time || '');
+        metaParts.push(item.time || formatMinutesAsTime(item._timelineAbsMinutes));
         if (item.type) metaParts.push(item.type);
         if (item.project) metaParts.push(item.project);
 
         return `
-          <div class="timeline-event" style="top:${top}%; height:${minHeightPct}%;">
+          <div class="timeline-event" style="top:${topPx}px; height:${minCardHeightPx}px;">
             <div class="timeline-event-content">
               <div class="timeline-event-title">${escapeHtml(item.title || 'Zonder titel')}</div>
               <div class="timeline-event-meta">${escapeHtml(metaParts.filter(Boolean).join(' • '))}</div>
             </div>
-            <button class="icon-btn" type="button" onclick="openDashboardEdit('${escapeHtml(item._editKey)}')" aria-label="Pas aan">
-              ${editIconSvg()}
-            </button>
+            ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
           </div>
         `;
       }).join('');
 
       const emptyHtml = !timedItems.length
-        ? `<div class="timeline-empty">geen tijdgebonden items op deze dag</div>`
+        ? `<div class="timeline-empty">geen tijdgebonden items in dit venster</div>`
         : '';
 
-      const today = getTodayStart();
-      const isToday = sameDay(selectedDate, today);
+      const dayBreakAbs = 1440;
+      const showDayBreak = timelineWindow.isToday &&
+        timelineWindow.startAbsMinutes < dayBreakAbs &&
+        timelineWindow.endAbsMinutes > dayBreakAbs;
+
+      const dayBreakTopPx = (dayBreakAbs - timelineWindow.startAbsMinutes) * pixelsPerMinute;
+
       const now = new Date();
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
-      const nowTop = (nowMinutes / 1440) * 100;
+      const nowAbsMinutes = now.getHours() * 60 + now.getMinutes();
+      const isToday = timelineWindow.isToday;
+      const nowTopPx = (nowAbsMinutes - timelineWindow.startAbsMinutes) * pixelsPerMinute;
 
       el.innerHTML = `
         <div class="timeline-grid">
           ${hourMarks.map(hour => {
-            const top = (hour / 24) * 100;
-            const label = hour === 24 ? '' : `${String(hour).padStart(2, '0')}:00`;
+            const absMinutes = hour * 60;
+            const topPx = (absMinutes - timelineWindow.startAbsMinutes) * pixelsPerMinute;
+            const label = formatMinutesAsTime(absMinutes);
 
             return `
-              <div class="timeline-hour-line" style="top:${top}%"></div>
-              ${label ? `<div class="timeline-hour-label" style="top:${top}%">${label}</div>` : ''}
+              <div class="timeline-hour-line" style="top:${topPx}px"></div>
+              <div class="timeline-hour-label" style="top:${topPx}px">${label}</div>
             `;
           }).join('')}
+
+          ${showDayBreak ? `
+            <div class="timeline-day-break-line" style="top:${dayBreakTopPx}px"></div>
+            <div class="timeline-day-break-label" style="top:${dayBreakTopPx}px">volgende dag</div>
+          ` : ''}
 
           ${emptyHtml}
 
@@ -1609,9 +1827,16 @@
             ${timelineEventsHtml}
           </div>
 
-          ${isToday ? `<div class="timeline-now-line" style="top:${nowTop}%"></div><div class="timeline-now-dot" style="top:${nowTop}%"></div>` : ''}
+          ${isToday ? `
+            <div class="timeline-now-line" style="top:${nowTopPx}px"></div>
+            <div class="timeline-now-dot" style="top:${nowTopPx}px"></div>
+          ` : ''}
         </div>
       `;
+
+      requestAnimationFrame(() => {
+        scrollEl.scrollTop = 0;
+      });
     }
 
     function ensureSelectedAgendaDay(items) {
@@ -1642,15 +1867,7 @@
     }
 
     function renderAgenda(data = {}) {
-      const combined = dedupeItems([
-        ...(Array.isArray(data.agenda) ? data.agenda : []),
-        ...(Array.isArray(data.tasks) ? data.tasks : [])
-      ]);
-
-      const items = combined
-        .map(item => normalizeDashboardItem(item, 'agenda'))
-        .filter(item => item._dayStart)
-        .sort(sortByDateTime);
+      const items = getCombinedAgendaLikeItems(data);
 
       const days = getAgendaDaysWindow();
       ensureSelectedAgendaDay(items);
@@ -1661,7 +1878,7 @@
 
       renderAgendaSelectedDayInfo(selectedDate, selectedItems);
       renderAgendaAllDay(selectedItems);
-      renderDayTimeline(selectedItems, selectedDate);
+      renderDayTimeline(items, selectedDate);
     }
 
     function renderTasks(data = {}) {
@@ -1801,11 +2018,11 @@
             </div>
 
             <div class="review-list-actions">
-              <button class="review-icon-btn delete" type="button" onclick="deleteReviewItem('${escapeHtml(item.temp_id || '')}')" aria-label="Verwijderen">
-                ${deleteIconSvg()}
-              </button>
               <button class="review-icon-btn" type="button" onclick="openEditItem('${escapeHtml(item.temp_id || '')}')" aria-label="Aanpassen">
                 ${editIconSvg()}
+              </button>
+              <button class="review-icon-btn delete" type="button" onclick="requestReviewDelete('${escapeHtml(item.temp_id || '')}')" aria-label="Verwijderen">
+                ${deleteIconSvg()}
               </button>
             </div>
           </div>
@@ -1873,6 +2090,85 @@
 
       renderReviewItemsCompact();
       updateReviewFooter();
+    }
+
+    function openConfirmDialog({ title, subtitle, onConfirm }) {
+      pendingConfirmAction = onConfirm;
+      document.getElementById('confirmItemTitle').textContent = title || 'Item';
+      document.getElementById('confirmSubtitle').textContent = subtitle || 'Dit item wordt verwijderd.';
+      document.getElementById('confirmOverlay').classList.add('open');
+    }
+
+    function closeConfirmDialog() {
+      pendingConfirmAction = null;
+      document.getElementById('confirmOverlay').classList.remove('open');
+    }
+
+    async function runConfirmAction() {
+      if (typeof pendingConfirmAction === 'function') {
+        const action = pendingConfirmAction;
+        closeConfirmDialog();
+        await action();
+      } else {
+        closeConfirmDialog();
+      }
+    }
+
+    function requestReviewDelete(tempId) {
+      const item = findReviewItem(tempId);
+      if (!item) return;
+
+      openConfirmDialog({
+        title: item.title || 'Item',
+        subtitle: 'Dit item wordt uit deze review verwijderd.',
+        onConfirm: async () => {
+          deleteReviewItem(tempId);
+        }
+      });
+    }
+
+    function requestDashboardDelete(editKey, fallbackTitle = 'Item') {
+      const item = dashboardEditIndex.get(editKey);
+      if (!item) return;
+
+      openConfirmDialog({
+        title: item.title || fallbackTitle,
+        subtitle: 'Dit item wordt uit de database verwijderd.',
+        onConfirm: async () => {
+          await deleteDashboardItem(item);
+        }
+      });
+    }
+
+    async function deleteDashboardItem(item) {
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'delete_item',
+            id: item.id || '',
+            item_id: item.id || '',
+            type: item.type || '',
+            title: item.title || '',
+            date: item.date || '',
+            time: item.time || '',
+            project: item.project || ''
+          })
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          addChatBubble(`Verwijderen ging mis: ${result.details || 'unknown error'}`, 'clara');
+          return;
+        }
+
+        addChatBubble(result.reply || 'Item verwijderd.', 'clara');
+        await loadDashboard();
+      } catch (error) {
+        addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
+      }
     }
 
     async function saveReviewedItems() {
@@ -1980,7 +2276,7 @@
     document.getElementById('reviewEditSaveBtn').addEventListener('click', saveEditItem);
     document.getElementById('reviewEditDeleteBtn').addEventListener('click', () => {
       if (!currentEditTempId) return;
-      deleteReviewItem(currentEditTempId);
+      requestReviewDelete(currentEditTempId);
     });
 
     document.getElementById('editSourceText').addEventListener('input', (e) => {
@@ -1995,10 +2291,18 @@
       if (e.target.id === 'reviewEditOverlay') closeEditItem();
     });
 
+    document.getElementById('confirmOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'confirmOverlay') closeConfirmDialog();
+    });
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmDialog);
+    document.getElementById('confirmOkBtn').addEventListener('click', runConfirmAction);
+
     window.openEditItem = openEditItem;
-    window.deleteReviewItem = deleteReviewItem;
     window.openDashboardEdit = openDashboardEdit;
     window.selectAgendaDay = selectAgendaDay;
+    window.requestDashboardDelete = requestDashboardDelete;
+    window.requestReviewDelete = requestReviewDelete;
 
     async function loadDashboard() {
       try {
