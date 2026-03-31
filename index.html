@@ -2463,26 +2463,53 @@
     }
 
     async function handleApiResult(result, { reloadDashboard = false } = {}) {
-      if (!result) return;
+  if (!result) return;
 
-      const mode = String(result.mode || '').toLowerCase();
+  const mode = String(result.mode || '').toLowerCase();
 
-      if (mode === 'review' && result.review) {
-        openReviewModal(result);
-        addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
-        return;
+  if (mode === 'review' && result.review) {
+    openReviewModal(result);
+    addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
+    return;
+  }
+
+  if (mode === 'question') {
+    openQuestionInChat(result.question, result.meta || null);
+    return;
+  }
+
+  if (mode === 'confirmation') {
+    addChatBubble(getReplyText(result, 'Opgeslagen.'), 'clara');
+
+    const skippedDuplicates = Array.isArray(result?.confirmation?.skipped_duplicates)
+      ? result.confirmation.skipped_duplicates
+      : [];
+
+    if (skippedDuplicates.length) {
+      const labels = skippedDuplicates
+        .map(item => item?.title)
+        .filter(Boolean)
+        .slice(0, 3);
+
+      if (labels.length === 1) {
+        addChatMetaLine(`Dubbel overgeslagen: ${labels[0]}`);
+      } else if (labels.length > 1) {
+        const extraCount = skippedDuplicates.length - labels.length;
+        addChatMetaLine(
+          `Dubbel overgeslagen: ${labels.join(', ')}${extraCount > 0 ? ` +${extraCount}` : ''}`
+        );
+      } else {
+        addChatMetaLine(`Dubbel overgeslagen: ${skippedDuplicates.length} item(s)`);
       }
+    }
 
-      if (mode === 'question') {
-        openQuestionInChat(result.question, result.meta || null);
-        return;
-      }
+    if (reloadDashboard) await loadDashboard();
+    return;
+  }
 
-      if (mode === 'confirmation') {
-        addChatBubble(getReplyText(result, 'Opgeslagen.'), 'clara');
-        if (reloadDashboard) await loadDashboard();
-        return;
-      }
+  addChatBubble(getReplyText(result, 'Klaar.'), 'clara');
+  if (reloadDashboard) await loadDashboard();
+}
 
       addChatBubble(getReplyText(result, 'Klaar.'), 'clara');
       if (reloadDashboard) await loadDashboard();
