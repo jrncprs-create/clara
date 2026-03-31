@@ -22,6 +22,12 @@
       --radius-sm: 12px;
       --header-h: 46px;
       --shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      --warn-line: rgba(255,255,255,0.18);
+      --warn-bg: rgba(255,255,255,0.06);
+      --warn-text: rgba(255,255,255,0.92);
+      --error-line: rgba(255,255,255,0.28);
+      --error-bg: rgba(255,255,255,0.08);
+      --error-soft: rgba(255,255,255,0.72);
     }
 
     html, body {
@@ -258,6 +264,10 @@
       min-width: 0;
     }
 
+    .field.is-invalid .label {
+      color: #fff;
+    }
+
     .label {
       font-size: 11px;
       line-height: 1.2;
@@ -280,6 +290,15 @@
       padding: 11px 12px;
       font-size: 14px;
       line-height: 1.35;
+      transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+
+    .field.is-invalid .input,
+    .field.is-invalid .select,
+    .field.is-invalid .textarea {
+      border-color: var(--error-line);
+      background: var(--error-bg);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
     }
 
     .textarea {
@@ -290,6 +309,17 @@
     .input::placeholder,
     .textarea::placeholder {
       color: rgba(255,255,255,0.26);
+    }
+
+    .field-help {
+      margin-top: 7px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--soft);
+    }
+
+    .field-help.is-error {
+      color: var(--error-soft);
     }
 
     .edit-actions {
@@ -678,6 +708,10 @@
       opacity: 0.45;
     }
 
+    .review-card.has-invalid {
+      border-color: var(--warn-line);
+    }
+
     .review-card-head {
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -721,25 +755,43 @@
       word-break: break-word;
     }
 
-    .review-warning {
+    .review-warning,
+    .review-invalid {
       margin: 0 14px 12px;
       padding: 10px 12px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.04);
-      color: rgba(255,255,255,0.86);
       font-size: 12px;
       line-height: 1.45;
     }
 
-    .review-warning strong {
+    .review-warning {
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.86);
+    }
+
+    .review-invalid {
+      border: 1px solid var(--error-line);
+      background: var(--error-bg);
+      color: var(--warn-text);
+    }
+
+    .review-warning strong,
+    .review-invalid strong {
       display: block;
       margin-bottom: 4px;
       font-size: 11px;
       line-height: 1.2;
       text-transform: uppercase;
       letter-spacing: 0.04em;
+    }
+
+    .review-warning strong {
       color: rgba(255,255,255,0.58);
+    }
+
+    .review-invalid strong {
+      color: rgba(255,255,255,0.88);
     }
 
     .review-edit {
@@ -953,7 +1005,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v4.0 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v4.1 • ${AUTO_VERSION}`;
 
     let dashboardRawData = { agenda: [], tasks: [], notes: [] };
     let dashboardEditIndex = new Map();
@@ -983,7 +1035,7 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+        .replace(/\"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
 
@@ -1827,7 +1879,9 @@
         duplicate_warning: false,
         duplicate_match_id: '',
         duplicate_match_title: '',
-        duplicate_match_reason: ''
+        duplicate_match_reason: '',
+        invalid_fields: [],
+        validation_issues: []
       };
     }
 
@@ -1871,6 +1925,53 @@
       `;
     }
 
+    function getValidationIssues(item) {
+      return Array.isArray(item?.validation_issues) ? item.validation_issues : [];
+    }
+
+    function getInvalidFields(item) {
+      return Array.isArray(item?.invalid_fields) ? item.invalid_fields : [];
+    }
+
+    function isReviewFieldInvalid(item, field) {
+      return getInvalidFields(item).includes(field);
+    }
+
+    function getReviewFieldError(item, field) {
+      const issue = getValidationIssues(item).find(entry => entry?.field === field);
+      return issue?.reason || '';
+    }
+
+    function getValidationWarningHtml(item) {
+      const issues = getValidationIssues(item);
+      if (!issues.length) return '';
+
+      const reasons = issues
+        .map(issue => issue?.reason)
+        .filter(Boolean);
+
+      return `
+        <div class="review-invalid">
+          <strong>Ontbreekt nog</strong>
+          <div>${escapeHtml(reasons.join(' '))}</div>
+        </div>
+      `;
+    }
+
+    function renderReviewFieldHelp(item, field) {
+      const error = getReviewFieldError(item, field);
+      if (!error) return '';
+      return `<div class="field-help is-error">${escapeHtml(error)}</div>`;
+    }
+
+    function reviewFieldClass(item, field) {
+      return isReviewFieldInvalid(item, field) ? 'field is-invalid' : 'field';
+    }
+
+    function countReviewInvalidFields() {
+      return getReviewItems().reduce((sum, item) => sum + getInvalidFields(item).length, 0);
+    }
+
     function openReviewModal(reviewData) {
       currentReviewData = reviewData;
       currentReviewInlineEditTempId = null;
@@ -1888,6 +1989,18 @@
 
     function updateReviewFooter() {
       const count = getReviewItems().length;
+      const invalidCount = countReviewInvalidFields();
+
+      if (!count) {
+        document.getElementById('reviewFooterText').textContent = 'Geen items om op te slaan.';
+        return;
+      }
+
+      if (invalidCount > 0) {
+        document.getElementById('reviewFooterText').textContent = `${count} item(s). Nog ${invalidCount} verplicht veld${invalidCount === 1 ? '' : 'en'} aanvullen.`;
+        return;
+      }
+
       document.getElementById('reviewFooterText').textContent = `${count} item(s). Nog niet opgeslagen.`;
     }
 
@@ -1947,7 +2060,7 @@
         return `
           <div class="review-edit">
             <div class="edit-grid">
-              <div class="field">
+              <div class="${reviewFieldClass(item, 'type')}">
                 <div class="label">Type</div>
                 <select class="select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
                   <option value="taak" ${item.type === 'taak' ? 'selected' : ''}>taak</option>
@@ -1957,31 +2070,36 @@
                   <option value="project" ${item.type === 'project' ? 'selected' : ''}>project</option>
                   <option value="beslissing" ${item.type === 'beslissing' ? 'selected' : ''}>beslissing</option>
                 </select>
+                ${renderReviewFieldHelp(item, 'type')}
               </div>
-              <div class="field">
+              <div class="${reviewFieldClass(item, 'project')}">
                 <div class="label">Project</div>
                 <input class="input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
+                ${renderReviewFieldHelp(item, 'project')}
               </div>
             </div>
 
             <div class="edit-grid single" style="margin-top:12px;">
-              <div class="field">
+              <div class="${reviewFieldClass(item, 'title')}">
                 <div class="label">Titel</div>
                 <input class="input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
+                ${renderReviewFieldHelp(item, 'title')}
               </div>
             </div>
 
             <div class="edit-grid single" style="margin-top:12px;">
-              <div class="field">
+              <div class="${reviewFieldClass(item, 'summary')}">
                 <div class="label">Samenvatting</div>
                 <textarea class="textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
+                ${renderReviewFieldHelp(item, 'summary')}
               </div>
             </div>
 
             <div class="edit-grid single" style="margin-top:12px;">
-              <div class="field">
+              <div class="${reviewFieldClass(item, 'source_text')}">
                 <div class="label">Brontekst</div>
                 <input class="input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
+                ${renderReviewFieldHelp(item, 'source_text')}
               </div>
             </div>
 
@@ -1996,7 +2114,7 @@
       return `
         <div class="review-edit">
           <div class="edit-grid">
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'type')}">
               <div class="label">Type</div>
               <select class="select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
                 <option value="taak" ${item.type === 'taak' ? 'selected' : ''}>taak</option>
@@ -2006,44 +2124,51 @@
                 <option value="project" ${item.type === 'project' ? 'selected' : ''}>project</option>
                 <option value="beslissing" ${item.type === 'beslissing' ? 'selected' : ''}>beslissing</option>
               </select>
+              ${renderReviewFieldHelp(item, 'type')}
             </div>
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'project')}">
               <div class="label">Project</div>
               <input class="input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
+              ${renderReviewFieldHelp(item, 'project')}
             </div>
           </div>
 
           <div class="edit-grid single" style="margin-top:12px;">
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'title')}">
               <div class="label">Titel</div>
               <input class="input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
+              ${renderReviewFieldHelp(item, 'title')}
             </div>
           </div>
 
           <div class="edit-grid single" style="margin-top:12px;">
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'summary')}">
               <div class="label">Samenvatting</div>
               <textarea class="textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
+              ${renderReviewFieldHelp(item, 'summary')}
             </div>
           </div>
 
           <div class="edit-grid" style="margin-top:12px;">
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'date')}">
               <div class="label">Datum</div>
               <input class="input" value="${escapeHtml(item.date || '')}" placeholder="2026-04-01" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'date', this.value)" />
+              ${renderReviewFieldHelp(item, 'date')}
             </div>
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'time')}">
               <div class="label">Tijd</div>
               <input class="input" value="${escapeHtml(item.time || '')}" placeholder="14:00" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'time', this.value)" />
+              ${renderReviewFieldHelp(item, 'time')}
             </div>
           </div>
 
           <div class="edit-grid" style="margin-top:12px;">
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'status')}">
               <div class="label">Status</div>
               <input class="input" value="${escapeHtml(item.status || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'status', this.value)" />
+              ${renderReviewFieldHelp(item, 'status')}
             </div>
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'priority')}">
               <div class="label">Prioriteit</div>
               <select class="select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'priority', this.value)">
                 <option value="" ${!item.priority ? 'selected' : ''}>-</option>
@@ -2051,13 +2176,15 @@
                 <option value="middel" ${item.priority === 'middel' ? 'selected' : ''}>middel</option>
                 <option value="laag" ${item.priority === 'laag' ? 'selected' : ''}>laag</option>
               </select>
+              ${renderReviewFieldHelp(item, 'priority')}
             </div>
           </div>
 
           <div class="edit-grid single" style="margin-top:12px;">
-            <div class="field">
+            <div class="${reviewFieldClass(item, 'source_text')}">
               <div class="label">Brontekst</div>
               <input class="input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
+              ${renderReviewFieldHelp(item, 'source_text')}
             </div>
           </div>
 
@@ -2082,10 +2209,12 @@
         const metaParts = getMetaParts(item);
         const isOpen = currentReviewInlineEditTempId === item.temp_id;
         const hasOtherOpen = !!currentReviewInlineEditTempId && currentReviewInlineEditTempId !== item.temp_id;
+        const hasInvalid = getValidationIssues(item).length > 0;
         const classes = [
           'review-card',
           isOpen ? 'is-open' : '',
-          hasOtherOpen ? 'is-dimmed' : ''
+          hasOtherOpen ? 'is-dimmed' : '',
+          hasInvalid ? 'has-invalid' : ''
         ].filter(Boolean).join(' ');
 
         return `
@@ -2105,6 +2234,7 @@
                 </button>
               </div>
             </div>
+            ${getValidationWarningHtml(item)}
             ${getDuplicateWarningHtml(item)}
             ${renderReviewEditPanel(item)}
           </div>
@@ -2255,7 +2385,6 @@
           document.getElementById('reviewSummaryText').textContent = result?.review?.summary || '';
           renderReviewItemsCompact();
           updateReviewFooter();
-          footerText.textContent = 'Nog niet opgeslagen. Controleer de items.';
           return;
         }
 
