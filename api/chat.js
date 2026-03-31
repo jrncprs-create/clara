@@ -1215,20 +1215,22 @@ async function confirmReview(body) {
     newItems.push(item)
   }
 
-  if (!newItems.length) {
-    return {
-      blocked: false,
-      response: buildResponse(body, {
-        ok: true,
-        mode: 'confirmation',
-        reply: null,
-        confirmation: {
-          text: skippedDuplicates.length
-            ? 'Niets nieuws opgeslagen. Alles leek al te bestaan.'
-            : 'Niets nieuws opgeslagen.',
-          saved: [],
-          skipped_duplicates: skippedDuplicates
-        },
+ if (!newItems.length) {
+  return {
+    blocked: false,
+    response: buildResponse(body, {
+      ok: true,
+      mode: 'confirmation',
+      reply: skippedDuplicates.length
+        ? 'Dubbel herkend. Ik heb niets extra opgeslagen.'
+        : 'Niets nieuws opgeslagen.',
+      confirmation: {
+        text: skippedDuplicates.length
+          ? 'Dubbel herkend. Ik heb niets extra opgeslagen.'
+          : 'Niets nieuws opgeslagen.',
+        saved: [],
+        skipped_duplicates: skippedDuplicates
+      },
         review: null,
         actions: [],
         meta: {
