@@ -2,20 +2,34 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clara</title>
-
   <style>
-    * {
-      box-sizing: border-box;
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #000;
+      --panel: #0b0b0b;
+      --panel-2: #111;
+      --line: rgba(255,255,255,0.08);
+      --line-strong: rgba(255,255,255,0.14);
+      --text: #fff;
+      --muted: rgba(255,255,255,0.56);
+      --soft: rgba(255,255,255,0.34);
+      --ghost: rgba(255,255,255,0.04);
+      --ghost-2: rgba(255,255,255,0.06);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --header-h: 46px;
+      --shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
     html, body {
       margin: 0;
       width: 100%;
       height: 100%;
-      background: #000;
-      color: #fff;
+      background: var(--bg);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
       overflow: hidden;
       scrollbar-width: none;
@@ -23,7 +37,8 @@
     }
 
     html::-webkit-scrollbar,
-    body::-webkit-scrollbar {
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {
       width: 0;
       height: 0;
       display: none;
@@ -32,97 +47,82 @@
     body {
       padding: 14px;
       background:
-        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05), transparent 30%),
+        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.04), transparent 28%),
         #000;
-    }
-
-    .panel-body,
-    .chat-messages,
-    .chat-input,
-    .review-modal-content,
-    .review-items,
-    .agenda-day-strip,
-    .timeline-scroll,
-    * {
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    .panel-body::-webkit-scrollbar,
-    .chat-messages::-webkit-scrollbar,
-    .chat-input::-webkit-scrollbar,
-    .review-modal-content::-webkit-scrollbar,
-    .review-items::-webkit-scrollbar,
-    .agenda-day-strip::-webkit-scrollbar,
-    .timeline-scroll::-webkit-scrollbar,
-    *::-webkit-scrollbar {
-      width: 0 !important;
-      height: 0 !important;
-      display: none !important;
-      background: transparent !important;
     }
 
     body, button, input, textarea, select {
       -webkit-tap-highlight-color: transparent;
+      font: inherit;
+    }
+
+    button, input, textarea, select {
+      color: inherit;
     }
 
     .version {
       position: fixed;
       top: 10px;
       right: 14px;
+      z-index: 30;
       font-size: 11px;
-      opacity: 0.45;
       letter-spacing: 0.04em;
-      z-index: 20;
+      color: rgba(255,255,255,0.34);
       pointer-events: none;
+      user-select: none;
     }
 
     .app {
       width: 100%;
       height: calc(100vh - 28px);
       display: grid;
-      grid-template-columns: 1.1fr 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
+      grid-template-columns: 1.08fr 1fr 1fr;
+      grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
       gap: 14px;
+      min-height: 0;
     }
 
     .panel {
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 22px;
-      background: rgba(255,255,255,0.02);
-      overflow: hidden;
-      min-height: 0;
       min-width: 0;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-      backdrop-filter: blur(10px);
+      min-height: 0;
       display: flex;
       flex-direction: column;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
+      box-shadow: var(--shadow);
+      overflow: hidden;
     }
 
     .panel-header {
-      height: 44px;
-      padding: 0 18px;
+      height: var(--header-h);
+      min-height: var(--header-h);
+      padding: 0 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0;
+      border-bottom: 1px solid var(--line);
     }
 
     .panel-title {
       font-size: 13px;
+      line-height: 1;
       font-weight: 700;
-      text-transform: uppercase;
       letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: rgba(255,255,255,0.92);
     }
 
+    .panel-meta {
+      font-size: 11px;
+      color: var(--soft);
+    }
+
     .panel-body {
-      height: calc(100% - 44px);
-      overflow: auto;
+      flex: 1;
       min-height: 0;
+      overflow: auto;
       position: relative;
-      scroll-behavior: smooth;
     }
 
     .agenda-panel { grid-column: 1; grid-row: 1 / 3; }
@@ -131,93 +131,66 @@
     .chat-panel { grid-column: 3; grid-row: 1; }
     .notes-panel { grid-column: 3; grid-row: 2; }
 
-    .flat-list {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .flat-item {
-      position: relative;
-      padding: 16px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      transition:
-        background 220ms ease,
-        border-color 220ms ease,
-        padding 220ms ease,
-        opacity 220ms ease;
-    }
-
-    .flat-item:last-child {
-      border-bottom: none;
-    }
-
-    .flat-item.is-open {
-      background: rgba(255,255,255,0.02);
-      padding-top: 18px;
-      padding-bottom: 18px;
-    }
-
-    .flat-item.is-dimmed {
-      opacity: 0.42;
-    }
-
-    .flat-item-anchor {
-      position: relative;
-      top: -10px;
-      height: 1px;
-      pointer-events: none;
-    }
-
-    .flat-row {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-
-    .flat-topline {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .flat-title {
-      font-size: 16px;
-      font-weight: 650;
-      line-height: 1.28;
-      color: #fff;
-      min-width: 0;
-      word-break: break-word;
-    }
-
-    .flat-meta,
-    .flat-sub,
-    .flat-compact-meta {
-      font-size: 13px;
-      line-height: 1.3;
-    }
-
-    .flat-meta {
-      color: rgba(255,255,255,0.55);
-    }
-
-    .flat-sub {
-      color: rgba(255,255,255,0.40);
-      margin-top: 1px;
-    }
-
-    .flat-compact-meta {
-      color: rgba(255,255,255,0.50);
-      min-width: 0;
-      word-break: break-word;
-    }
-
     .empty {
       padding: 18px;
       color: rgba(255,255,255,0.28);
       font-size: 14px;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .item {
+      border-bottom: 1px solid var(--line);
+      transition: background 160ms ease, opacity 160ms ease;
+    }
+
+    .item:last-child {
+      border-bottom: none;
+    }
+
+    .item.is-dimmed {
+      opacity: 0.45;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 16px;
+    }
+
+    .item-main {
+      min-width: 0;
+    }
+
+    .item-title {
+      font-size: 15px;
+      line-height: 1.3;
+      font-weight: 650;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .item-meta {
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.35;
+      color: var(--muted);
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .item-sub {
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--soft);
+      word-break: break-word;
+      white-space: pre-wrap;
     }
 
     .item-actions {
@@ -225,30 +198,28 @@
       align-items: center;
       gap: 2px;
       flex-shrink: 0;
-      margin-top: -2px;
       margin-right: -4px;
     }
 
     .icon-btn {
-      width: 26px;
-      height: 26px;
-      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      padding: 0;
       border: none;
+      border-radius: 10px;
       background: transparent;
-      color: rgba(255,255,255,0.78);
+      color: rgba(255,255,255,0.72);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      padding: 0;
-      opacity: 0.88;
-      transition: opacity 120ms ease, transform 120ms ease, color 120ms ease;
+      transition: background 120ms ease, color 120ms ease, transform 120ms ease;
     }
 
     .icon-btn:hover {
-      opacity: 1;
-      transform: scale(1.06);
-      color: rgba(255,255,255,1);
+      background: var(--ghost);
+      color: #fff;
+      transform: scale(1.03);
     }
 
     .icon-btn svg {
@@ -262,205 +233,288 @@
       stroke-linejoin: round;
     }
 
-    .icon-btn.delete svg {
-      width: 13px;
-      height: 13px;
-      stroke-width: 2.1;
+    .edit-wrap {
+      display: none;
+      border-top: 1px solid var(--line);
+      padding: 14px 16px 16px;
+      background: rgba(255,255,255,0.015);
     }
 
-    .flat-edit-wrap,
-    .review-inline-edit-wrap {
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition:
-        max-height 320ms ease,
-        opacity 220ms ease,
-        transform 220ms ease,
-        margin-top 220ms ease;
-      margin-top: 0;
+    .item.is-open .edit-wrap {
+      display: block;
     }
 
-    .flat-item.is-open .flat-edit-wrap,
-    .review-list-item.is-open .review-inline-edit-wrap {
-      max-height: 1400px;
-      opacity: 1;
-      transform: translateY(0);
-      margin-top: 14px;
-    }
-
-    .flat-edit-panel,
-    .review-inline-edit-panel {
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding-top: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .flat-edit-group,
-    .review-inline-group {
+    .edit-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      gap: 12px;
     }
 
-    .flat-edit-group.single,
-    .review-inline-group.single {
+    .edit-grid.single {
       grid-template-columns: 1fr;
     }
 
-    .flat-edit-group:last-of-type,
-    .review-inline-group:last-of-type {
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .flat-edit-field,
-    .review-inline-field {
-      padding: 12px 0;
+    .field {
       min-width: 0;
     }
 
-    .flat-edit-group .flat-edit-field:first-child,
-    .review-inline-group .review-inline-field:first-child {
-      padding-right: 12px;
-    }
-
-    .flat-edit-group .flat-edit-field:last-child,
-    .review-inline-group .review-inline-field:last-child {
-      padding-left: 12px;
-    }
-
-    .flat-edit-group.single .flat-edit-field:first-child,
-    .flat-edit-group.single .flat-edit-field:last-child,
-    .review-inline-group.single .review-inline-field:first-child,
-    .review-inline-group.single .review-inline-field:last-child {
-      padding-left: 0;
-      padding-right: 0;
-    }
-
-    .flat-edit-label,
-    .review-inline-label {
+    .label {
       font-size: 11px;
+      line-height: 1.2;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.44);
+      color: var(--soft);
       font-weight: 700;
       margin-bottom: 8px;
     }
 
-    .flat-edit-input,
-    .flat-edit-select,
-    .flat-edit-textarea,
-    .review-inline-input,
-    .review-inline-select,
-    .review-inline-textarea {
+    .input,
+    .select,
+    .textarea {
       width: 100%;
-      background: transparent;
-      border: none;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: #fff;
+      border-radius: 12px;
       outline: none;
-      color: #fff;
-      font-size: 15px;
-      line-height: 1.3;
-      padding: 0;
-      font-family: inherit;
-      appearance: none;
-      -webkit-appearance: none;
+      padding: 11px 12px;
+      font-size: 14px;
+      line-height: 1.35;
     }
 
-    .flat-edit-input::placeholder,
-    .flat-edit-textarea::placeholder,
-    .review-inline-input::placeholder,
-    .review-inline-textarea::placeholder {
-      color: rgba(255,255,255,0.28);
-    }
-
-    .flat-edit-select,
-    .review-inline-select {
-      cursor: pointer;
-      color: #fff;
-    }
-
-    .flat-edit-textarea,
-    .review-inline-textarea {
+    .textarea {
+      min-height: 92px;
       resize: vertical;
-      min-height: 84px;
     }
 
-    .flat-edit-actions,
-    .review-inline-actions {
+    .input::placeholder,
+    .textarea::placeholder {
+      color: rgba(255,255,255,0.26);
+    }
+
+    .edit-actions {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      padding-top: 14px;
+      margin-top: 14px;
     }
 
-    .flat-edit-btn,
-    .review-inline-btn {
+    .btn {
+      border: 1px solid var(--line-strong);
+      background: var(--ghost);
+      color: #fff;
       border-radius: 12px;
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.10);
-      transition: opacity 120ms ease, transform 120ms ease, background 120ms ease, color 120ms ease;
+      transition: background 120ms ease, color 120ms ease, opacity 120ms ease, transform 120ms ease;
     }
 
-    .flat-edit-btn:hover,
-    .review-inline-btn:hover {
-      opacity: 1;
+    .btn:hover {
       transform: translateY(-1px);
     }
 
-    .flat-edit-btn.secondary,
-    .review-inline-btn.secondary {
-      background: rgba(255,255,255,0.04);
-      color: #fff;
-    }
-
-    .flat-edit-btn.primary,
-    .review-inline-btn.primary {
+    .btn.primary {
       background: #fff;
       color: #000;
       border-color: #fff;
     }
 
-    .chat-shell {
+    .btn.ghost {
+      background: transparent;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: default;
+      transform: none;
+    }
+
+    .agenda-shell {
+      height: 100%;
       display: flex;
       flex-direction: column;
+      min-height: 0;
+    }
+
+    .agenda-strip {
+      padding: 12px 14px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .day-btn {
+      min-width: 60px;
+      border: 1px solid var(--line);
+      background: var(--ghost);
+      color: rgba(255,255,255,0.74);
+      border-radius: 14px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+
+    .day-btn.active {
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .day-dow {
+      font-size: 11px;
+      text-transform: lowercase;
+      letter-spacing: 0.04em;
+    }
+
+    .day-num {
+      font-size: 17px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .day-month {
+      font-size: 10px;
+      text-transform: lowercase;
+      color: rgba(255,255,255,0.48);
+    }
+
+    .agenda-head {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .agenda-title {
+      font-size: 18px;
+      line-height: 1.15;
+      font-weight: 700;
+      color: #fff;
+      text-transform: capitalize;
+    }
+
+    .agenda-sub {
+      margin-top: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .agenda-content {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .agenda-section {
+      padding: 14px 16px 0;
+    }
+
+    .agenda-section:last-child {
+      padding-bottom: 16px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--soft);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .agenda-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .agenda-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--ghost);
+      overflow: hidden;
+    }
+
+    .agenda-card-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+    }
+
+    .agenda-time {
+      min-width: 52px;
+      font-size: 12px;
+      line-height: 1.2;
+      color: rgba(255,255,255,0.86);
+      font-weight: 700;
+      padding-top: 1px;
+    }
+
+    .agenda-main {
+      min-width: 0;
+    }
+
+    .agenda-card-title {
+      font-size: 14px;
+      line-height: 1.3;
+      font-weight: 650;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .agenda-card-meta {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .chat-shell {
       height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
 
     .chat-messages {
       flex: 1;
-      padding: 12px;
+      min-height: 0;
       overflow: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      min-height: 0;
-      position: relative;
+      padding: 12px;
     }
 
-    .chat-bubble {
+    .bubble {
       max-width: 88%;
-      padding: 11px 13px;
       border-radius: 14px;
+      padding: 11px 13px;
       font-size: 14px;
       line-height: 1.4;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
-    .chat-bubble.clara {
+    .bubble.clara {
       align-self: flex-start;
       background: rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.92);
+      color: rgba(255,255,255,0.94);
     }
 
-    .chat-bubble.user {
+    .bubble.user {
       align-self: flex-end;
       background: #fff;
       color: #000;
@@ -475,200 +529,128 @@
       margin-top: -2px;
     }
 
-    .chat-option-btn {
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.04);
+    .option-btn {
+      border: 1px solid var(--line);
+      background: var(--ghost);
       color: #fff;
       border-radius: 12px;
       padding: 9px 12px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      transition: opacity 120ms ease, transform 120ms ease, background 120ms ease;
     }
 
-    .chat-option-btn:hover {
-      opacity: 1;
-      transform: translateY(-1px);
-      background: rgba(255,255,255,0.08);
-    }
-
-    .chat-meta-line {
+    .chat-meta {
       align-self: flex-start;
       font-size: 11px;
-      color: rgba(255,255,255,0.34);
-      margin-top: -4px;
+      line-height: 1.3;
+      color: var(--soft);
       padding-left: 2px;
+      margin-top: -3px;
     }
 
-    .chat-inputbar {
+    .composer {
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 8px;
       padding: 12px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0;
-    }
-
-    .chat-input {
-      width: 100%;
-      height: 40px;
-      padding: 0 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: #111;
-      color: #fff;
-      outline: none;
-      font-size: 14px;
-    }
-
-    .chat-input::placeholder {
-      color: rgba(255,255,255,0.35);
-    }
-
-    .chat-send {
-      background: #fff;
-      color: #000;
-      border: none;
-      height: 40px;
-      padding: 0 14px;
-      border-radius: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .chat-send:disabled {
-      opacity: 0.5;
-      cursor: default;
+      border-top: 1px solid var(--line);
     }
 
     .review-overlay,
     .confirm-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.72);
-      backdrop-filter: blur(12px);
-      z-index: 1000;
       display: none;
-      padding: 22px;
-    }
-
-    .confirm-overlay {
-      z-index: 1200;
-      background: rgba(0,0,0,0.82);
-      backdrop-filter: blur(16px);
-      align-items: center;
-      justify-content: center;
+      z-index: 1000;
+      background: rgba(0,0,0,0.76);
+      backdrop-filter: blur(12px);
+      padding: 18px;
     }
 
     .review-overlay.open,
     .confirm-overlay.open {
-      display: block;
-    }
-
-    .confirm-overlay.open {
       display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .review-modal {
-      width: min(1120px, calc(100vw - 44px));
-      height: min(90vh, 960px);
-      margin: 0 auto;
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 24px;
-      background: rgba(10,10,10,0.96);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      width: min(760px, calc(100vw - 36px));
+      max-height: min(88vh, 980px);
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(10,10,10,0.98);
+      box-shadow: var(--shadow);
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
     .confirm-modal {
       width: min(420px, calc(100vw - 32px));
-      border: 1px solid rgba(255,255,255,0.10);
       border-radius: 22px;
+      border: 1px solid var(--line);
       background: rgba(10,10,10,0.98);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      box-shadow: var(--shadow);
       overflow: hidden;
     }
 
-    .review-modal-header {
-      padding: 18px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+    .modal-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      flex-shrink: 0;
+      gap: 12px;
     }
 
-    .confirm-header {
-      padding: 18px 20px 10px 20px;
-    }
-
-    .review-modal-title,
-    .confirm-title {
+    .modal-title {
       font-size: 16px;
+      line-height: 1.2;
       font-weight: 700;
       color: #fff;
     }
 
-    .review-modal-subtitle,
-    .confirm-subtitle {
-      font-size: 13px;
-      color: rgba(255,255,255,0.50);
+    .modal-subtitle {
       margin-top: 4px;
-      line-height: 1.4;
-    }
-
-    .review-close {
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.04);
-      color: #fff;
-      border-radius: 12px;
-      padding: 10px 14px;
       font-size: 13px;
-      cursor: pointer;
+      line-height: 1.4;
+      color: var(--muted);
     }
 
-    .confirm-body {
-      padding: 0 20px 18px 20px;
-    }
-
-    .confirm-item {
-      margin-top: 12px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      font-size: 14px;
-      color: rgba(255,255,255,0.92);
-      line-height: 1.35;
-      word-break: break-word;
-    }
-
-    .review-modal-content {
-      flex: 1;
+    .modal-body {
       overflow: auto;
-      padding: 18px;
       min-height: 0;
+      padding: 16px 18px;
     }
 
-    .review-summary-box {
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      background: rgba(255,255,255,0.02);
-      padding: 14px;
-      margin-bottom: 16px;
+    .modal-footer {
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .review-summary {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      background: var(--ghost);
+      border-radius: 16px;
+      margin-bottom: 14px;
     }
 
     .review-summary-label {
-      font-size: 12px;
+      font-size: 11px;
+      line-height: 1.2;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.50);
-      margin-bottom: 8px;
+      color: var(--soft);
       font-weight: 700;
+      margin-bottom: 8px;
     }
 
     .review-summary-text {
@@ -678,511 +660,141 @@
       white-space: pre-wrap;
     }
 
-    .review-items {
+    .review-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-    }
-
-    .review-list-item {
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      background: rgba(255,255,255,0.02);
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      transition: background 220ms ease, border-color 220ms ease, opacity 220ms ease;
-    }
-
-    .review-list-item.is-open {
-      background: rgba(255,255,255,0.03);
-      border-color: rgba(255,255,255,0.12);
-    }
-
-    .review-list-item.is-dimmed {
-      opacity: 0.42;
-    }
-
-    .review-list-head {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 14px;
-      align-items: center;
-    }
-
-    .review-list-badge {
-      min-width: 76px;
-      padding: 9px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: rgba(255,255,255,0.82);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      text-align: center;
-    }
-
-    .review-list-main {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .review-list-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-      line-height: 1.3;
-    }
-
-    .review-list-meta {
-      font-size: 13px;
-      color: rgba(255,255,255,0.50);
-      line-height: 1.3;
-      display: flex;
-      flex-wrap: wrap;
       gap: 10px;
     }
 
-    .review-list-actions {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      flex-shrink: 0;
+    .review-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--ghost);
+      overflow: hidden;
+      transition: opacity 160ms ease;
+    }
+
+    .review-card.is-dimmed {
+      opacity: 0.45;
+    }
+
+    .review-card-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 14px;
+    }
+
+    .review-badge {
+      min-width: 76px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.84);
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 10px 10px;
+      text-align: center;
+    }
+
+    .review-main {
+      min-width: 0;
+    }
+
+    .review-title {
+      font-size: 14px;
+      line-height: 1.3;
+      font-weight: 650;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .review-meta {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+      word-break: break-word;
     }
 
     .review-warning {
-      margin-top: 10px;
+      margin: 0 14px 12px;
       padding: 10px 12px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.86);
       font-size: 12px;
       line-height: 1.45;
     }
 
-    .review-warning-label {
+    .review-warning strong {
+      display: block;
+      margin-bottom: 4px;
       font-size: 11px;
+      line-height: 1.2;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.58);
-      font-weight: 700;
-      margin-bottom: 4px;
     }
 
-    .review-inline-source {
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.03);
-      color: rgba(255,255,255,0.54);
-      font-size: 12px;
-      line-height: 1.4;
-      white-space: pre-wrap;
+    .review-edit {
+      display: none;
+      border-top: 1px solid var(--line);
+      padding: 14px;
+      background: rgba(255,255,255,0.015);
     }
 
-    .review-modal-footer,
-    .confirm-footer {
-      padding: 16px 18px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-
-    .review-footer-left {
-      font-size: 13px;
-      color: rgba(255,255,255,0.48);
-    }
-
-    .review-actions,
-    .confirm-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .review-btn,
-    .confirm-btn {
-      border-radius: 12px;
-      padding: 11px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.10);
-    }
-
-    .review-btn.primary,
-    .confirm-btn.primary {
-      background: #fff;
-      color: #000;
-      border-color: #fff;
-    }
-
-    .review-btn.secondary,
-    .confirm-btn.secondary {
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-    }
-
-    .review-btn.ghost {
-      background: transparent;
-      color: rgba(255,255,255,0.80);
-    }
-
-    .review-icon-btn {
-      width: 26px;
-      height: 26px;
-      border: none;
-      background: transparent;
-      color: rgba(255,255,255,0.78);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding: 0;
-      flex-shrink: 0;
-      transition: opacity 120ms ease, transform 120ms ease, color 120ms ease;
-    }
-
-    .review-icon-btn:hover {
-      opacity: 1;
-      transform: scale(1.06);
-      color: rgba(255,255,255,1);
-    }
-
-    .review-icon-btn svg {
-      width: 14px;
-      height: 14px;
+    .review-card.is-open .review-edit {
       display: block;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.9;
-      stroke-linecap: round;
-      stroke-linejoin: round;
     }
 
-    .review-icon-btn.delete svg {
-      width: 13px;
-      height: 13px;
-      stroke-width: 2.1;
-    }
-
-    .agenda-shell {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .agenda-day-strip {
-      padding: 12px 14px 12px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      flex-shrink: 0;
-    }
-
-    .agenda-day-btn {
-      min-width: 58px;
-      padding: 10px 8px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.02);
-      color: rgba(255,255,255,0.70);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-    }
-
-    .agenda-day-btn:hover {
-      background: rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.92);
-    }
-
-    .agenda-day-btn.active {
-      background: rgba(255,255,255,0.10);
-      border-color: rgba(255,255,255,0.18);
-      color: #fff;
-    }
-
-    .agenda-day-dow {
-      font-size: 11px;
-      text-transform: lowercase;
-      letter-spacing: 0.04em;
-      opacity: 0.85;
-    }
-
-    .agenda-day-num {
-      font-size: 17px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .agenda-day-month {
-      font-size: 10px;
-      text-transform: lowercase;
-      opacity: 0.55;
-    }
-
-    .agenda-day-header {
-      padding: 14px 16px 10px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .agenda-day-title-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-
-    .agenda-day-title {
-      font-size: 20px;
-      font-weight: 700;
-      line-height: 1.1;
-      color: #fff;
-      text-transform: capitalize;
-    }
-
-    .agenda-day-subtitle {
+    .footer-note {
       font-size: 12px;
-      color: rgba(255,255,255,0.45);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+      color: var(--soft);
     }
 
-    .agenda-day-top-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
+    .confirm-content {
+      padding: 0 20px 18px;
     }
 
-    .agenda-chip {
-      border-radius: 12px;
-      padding: 8px 10px;
-      font-size: 12px;
-      font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: rgba(255,255,255,0.75);
-    }
-
-    .agenda-all-day {
-      padding: 0 16px 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .agenda-mini-item {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px;
+    .confirm-item {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      background: var(--ghost);
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-    }
-
-    .agenda-mini-content {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .agenda-mini-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-      line-height: 1.25;
-    }
-
-    .agenda-mini-meta {
-      font-size: 12px;
-      color: rgba(255,255,255,0.48);
-    }
-
-    .timeline-scroll {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 0 10px 12px 10px;
-    }
-
-    .timeline {
-      position: relative;
-      min-height: 960px;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.01);
-      border-radius: 18px;
-      overflow: hidden;
-    }
-
-    .timeline-grid {
-      position: absolute;
-      inset: 0;
-    }
-
-    .timeline-hour-line {
-      position: absolute;
-      left: 56px;
-      right: 0;
-      height: 1px;
-      background: rgba(255,255,255,0.06);
-    }
-
-    .timeline-hour-label {
-      position: absolute;
-      left: 12px;
-      transform: translateY(-50%);
-      font-size: 10px;
-      color: rgba(255,255,255,0.28);
-      letter-spacing: 0.04em;
-      z-index: 2;
-    }
-
-    .timeline-day-break-line {
-      position: absolute;
-      left: 56px;
-      right: 0;
-      height: 1px;
-      background: rgba(255,255,255,0.24);
-      z-index: 2;
-    }
-
-    .timeline-day-break-label {
-      position: absolute;
-      left: 12px;
-      transform: translateY(-50%);
-      font-size: 10px;
-      color: rgba(255,255,255,0.52);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      z-index: 3;
-    }
-
-    .timeline-events {
-      position: absolute;
-      inset: 0;
-      left: 62px;
-      right: 10px;
-      top: 0;
-      bottom: 0;
-    }
-
-    .timeline-event {
-      position: absolute;
-      left: 0;
-      right: 0;
-      min-height: 58px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 14px;
-      background: rgba(255,255,255,0.04);
-      z-index: 3;
-      display: flex;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: flex-start;
-      overflow: hidden;
-    }
-
-    .timeline-event-content {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-      flex: 1;
-    }
-
-    .timeline-event-title {
-      font-size: 13px;
-      font-weight: 600;
-      line-height: 1.2;
-      color: #fff;
-    }
-
-    .timeline-event-meta {
-      font-size: 11px;
-      line-height: 1.3;
-      color: rgba(255,255,255,0.55);
-      white-space: pre-wrap;
-    }
-
-    .timeline-now-line {
-      position: absolute;
-      left: 56px;
-      right: 0;
-      height: 1px;
-      background: rgba(255,255,255,0.92);
-      z-index: 4;
-    }
-
-    .timeline-now-dot {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.92);
-      left: 53px;
-      transform: translate(-50%, -50%);
-      z-index: 5;
-    }
-
-    .timeline-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(255,255,255,0.28);
       font-size: 14px;
-      z-index: 1;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.92);
+      word-break: break-word;
     }
 
     @media (max-width: 1180px) {
-      .app {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: minmax(420px, 1.1fr) 1fr 1fr;
-      }
-
-      .agenda-panel { grid-column: 1 / 3; grid-row: 1; }
-      .tasks-panel { grid-column: 1; grid-row: 2; }
-      .appointments-panel { grid-column: 2; grid-row: 2; }
-      .chat-panel { grid-column: 1; grid-row: 3; }
-      .notes-panel { grid-column: 2; grid-row: 3; }
-    }
-
-    @media (max-width: 860px) {
       html, body {
         overflow: auto;
       }
 
       .app {
         height: auto;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto;
+      }
+
+      .agenda-panel { grid-column: 1 / 3; grid-row: 1; min-height: 520px; }
+      .tasks-panel { grid-column: 1; grid-row: 2; min-height: 340px; }
+      .appointments-panel { grid-column: 2; grid-row: 2; min-height: 340px; }
+      .chat-panel { grid-column: 1; grid-row: 3; min-height: 360px; }
+      .notes-panel { grid-column: 2; grid-row: 3; min-height: 360px; }
+    }
+
+    @media (max-width: 860px) {
+      .app {
         grid-template-columns: 1fr;
-        grid-template-rows: auto;
       }
 
       .agenda-panel,
@@ -1192,179 +804,127 @@
       .notes-panel {
         grid-column: auto;
         grid-row: auto;
-        min-height: 360px;
       }
 
-      .review-list-head {
-        grid-template-columns: 1fr;
-        align-items: start;
-      }
-
-      .review-list-actions {
-        justify-content: flex-start;
-      }
-
-      .timeline-event {
-        min-height: 64px;
-      }
-
-      .flat-edit-group,
-      .review-inline-group {
+      .edit-grid,
+      .review-card-head {
         grid-template-columns: 1fr;
       }
 
-      .flat-edit-group .flat-edit-field:first-child,
-      .flat-edit-group .flat-edit-field:last-child,
-      .review-inline-group .review-inline-field:first-child,
-      .review-inline-group .review-inline-field:last-child {
-        padding-left: 0;
-        padding-right: 0;
+      .agenda-card-row {
+        grid-template-columns: 1fr;
       }
 
-      .flat-edit-group .flat-edit-field,
-      .review-inline-group .review-inline-field {
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+      .agenda-time {
+        min-width: 0;
       }
 
-      .flat-edit-group .flat-edit-field:last-child,
-      .review-inline-group .review-inline-field:last-child {
-        border-bottom: none;
-      }
-    }
-
-    @media (max-width: 760px) {
-      .review-overlay,
-      .confirm-overlay {
-        padding: 10px;
-      }
-
-      .review-modal {
-        width: 100%;
-        height: 92vh;
-      }
-
-      .review-modal-footer,
-      .confirm-footer {
+      .modal-footer {
         flex-direction: column;
         align-items: stretch;
       }
 
-      .review-actions,
-      .confirm-actions {
-        width: 100%;
-      }
-
-      .review-btn,
-      .confirm-btn {
-        width: 100%;
-      }
-
-      .flat-edit-actions,
-      .review-inline-actions {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .flat-edit-btn,
-      .review-inline-btn {
+      .modal-footer .btn {
         width: 100%;
       }
     }
   </style>
 </head>
-
 <body>
   <div class="version" id="version"></div>
 
   <div class="app">
-    <div class="panel agenda-panel">
+    <section class="panel agenda-panel">
       <div class="panel-header">
         <div class="panel-title">Agenda</div>
+        <div class="panel-meta" id="agendaMeta"></div>
       </div>
       <div class="panel-body">
         <div class="agenda-shell">
-          <div class="agenda-day-strip" id="agendaDayStrip"></div>
-          <div class="agenda-day-header">
-            <div class="agenda-day-title-wrap">
-              <div class="agenda-day-title" id="agendaSelectedDayTitle">Vandaag</div>
-              <div class="agenda-day-subtitle" id="agendaSelectedDaySubtitle">Geen items</div>
-            </div>
-            <div class="agenda-day-top-actions">
-              <div class="agenda-chip" id="agendaSelectedDayCount">0 items</div>
-            </div>
+          <div class="agenda-strip" id="agendaStrip"></div>
+          <div class="agenda-head">
+            <div class="agenda-title" id="agendaTitle">Vandaag</div>
+            <div class="agenda-sub" id="agendaSubtitle">Geen items</div>
           </div>
-          <div class="agenda-all-day" id="agendaAllDay"></div>
-          <div class="timeline-scroll" id="timelineScroll">
-            <div class="timeline" id="dayTimeline"></div>
+          <div class="agenda-content">
+            <div class="agenda-section">
+              <div class="section-label">Hele dag</div>
+              <div class="agenda-list" id="agendaAllDay"></div>
+            </div>
+            <div class="agenda-section">
+              <div class="section-label">Met tijd</div>
+              <div class="agenda-list" id="agendaTimed"></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="panel tasks-panel">
+    <section class="panel tasks-panel">
       <div class="panel-header">
         <div class="panel-title">Taken</div>
+        <div class="panel-meta" id="tasksMeta"></div>
       </div>
       <div class="panel-body" id="tasks"></div>
-    </div>
+    </section>
 
-    <div class="panel appointments-panel">
+    <section class="panel appointments-panel">
       <div class="panel-header">
         <div class="panel-title">Afspraken</div>
+        <div class="panel-meta" id="appointmentsMeta"></div>
       </div>
       <div class="panel-body" id="appointments"></div>
-    </div>
+    </section>
 
-    <div class="panel chat-panel">
+    <section class="panel chat-panel">
       <div class="panel-header">
         <div class="panel-title">Chat</div>
       </div>
       <div class="panel-body">
         <div class="chat-shell">
           <div id="chatMessages" class="chat-messages">
-            <div class="chat-bubble clara">Zeg iets als: morgen werkplaats opruimen, call met Sam morgen 14:00, of notitie voor LaLampe.</div>
+            <div class="bubble clara">Zeg iets als: morgen werkplaats opruimen, call met Sam morgen 14:00, of notitie voor LaLampe.</div>
           </div>
-          <div class="chat-inputbar">
-            <input id="chatInput" class="chat-input" placeholder="Typ of spreek in..." />
-            <button id="chatSend" class="chat-send">OK</button>
+          <div class="composer">
+            <input id="chatInput" class="input" placeholder="Typ hier..." />
+            <button id="chatSend" class="btn primary">OK</button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="panel notes-panel">
+    <section class="panel notes-panel">
       <div class="panel-header">
         <div class="panel-title">Notities</div>
+        <div class="panel-meta" id="notesMeta"></div>
       </div>
       <div class="panel-body" id="notes"></div>
-    </div>
+    </section>
   </div>
 
   <div class="review-overlay" id="reviewOverlay">
     <div class="review-modal">
-      <div class="review-modal-header">
+      <div class="modal-header">
         <div>
-          <div class="review-modal-title">Controleer voor opslaan</div>
-          <div class="review-modal-subtitle" id="reviewSubtitle">Controleer en pas aan waar nodig.</div>
+          <div class="modal-title">Controleer voor opslaan</div>
+          <div class="modal-subtitle" id="reviewSubtitle">Controleer en pas aan waar nodig.</div>
         </div>
-        <button class="review-close" id="reviewClose">Sluiten</button>
+        <button class="btn ghost" id="reviewClose">Sluiten</button>
       </div>
 
-      <div class="review-modal-content">
-        <div class="review-summary-box">
+      <div class="modal-body">
+        <div class="review-summary">
           <div class="review-summary-label">Samenvatting</div>
           <div class="review-summary-text" id="reviewSummaryText"></div>
         </div>
-
-        <div class="review-items" id="reviewItems"></div>
+        <div class="review-list" id="reviewItems"></div>
       </div>
 
-      <div class="review-modal-footer">
-        <div class="review-footer-left" id="reviewFooterText">Nog niet opgeslagen.</div>
-        <div class="review-actions">
-          <button class="review-btn ghost" id="reviewCancelBtn">Annuleren</button>
-          <button class="review-btn secondary" id="reviewOnlyCloseBtn">Alleen sluiten</button>
-          <button class="review-btn primary" id="reviewSaveBtn">Klopt, opslaan</button>
+      <div class="modal-footer">
+        <div class="footer-note" id="reviewFooterText">Nog niet opgeslagen.</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn ghost" id="reviewCancelBtn">Annuleren</button>
+          <button class="btn primary" id="reviewSaveBtn">Klopt, opslaan</button>
         </div>
       </div>
     </div>
@@ -1372,18 +932,20 @@
 
   <div class="confirm-overlay" id="confirmOverlay">
     <div class="confirm-modal">
-      <div class="confirm-header">
-        <div class="confirm-title">Weet je het zeker?</div>
-        <div class="confirm-subtitle" id="confirmSubtitle">Dit item wordt verwijderd.</div>
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Weet je het zeker?</div>
+          <div class="modal-subtitle" id="confirmSubtitle">Dit item wordt verwijderd.</div>
+        </div>
       </div>
-      <div class="confirm-body">
+      <div class="confirm-content">
         <div class="confirm-item" id="confirmItemTitle">Item</div>
       </div>
-      <div class="confirm-footer">
+      <div class="modal-footer">
         <div></div>
-        <div class="confirm-actions">
-          <button class="confirm-btn secondary" id="confirmCancelBtn">Annuleren</button>
-          <button class="confirm-btn primary" id="confirmOkBtn">Ja, verwijderen</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn ghost" id="confirmCancelBtn">Annuleren</button>
+          <button class="btn primary" id="confirmOkBtn">Ja, verwijderen</button>
         </div>
       </div>
     </div>
@@ -1391,24 +953,21 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v3.7 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v4.0 • ${AUTO_VERSION}`;
 
-    let currentReviewData = null;
-    let currentReviewInlineEditTempId = null;
-
-    let dashboardRawData = {
-      agenda: [],
-      tasks: [],
-      notes: []
-    };
-
+    let dashboardRawData = { agenda: [], tasks: [], notes: [] };
     let dashboardEditIndex = new Map();
+
     let selectedAgendaDayKey = null;
-    let pendingConfirmAction = null;
 
     let dashboardInlineEditKey = null;
     let dashboardInlineDraft = null;
     let dashboardInlineSaving = false;
+
+    let currentReviewData = null;
+    let currentReviewInlineEditTempId = null;
+
+    let pendingConfirmAction = null;
 
     function getSessionId() {
       let id = localStorage.getItem('clara_session_id');
@@ -1424,7 +983,7 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/\"/g, '&quot;')
+        .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
 
@@ -1469,7 +1028,6 @@
 
       const raw = String(value).trim();
       if (!raw) return null;
-
       const str = raw.toLowerCase();
 
       if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
@@ -1483,21 +1041,19 @@
         return new Date(y, m - 1, d);
       }
 
-      if (/^\d{2}[\\/.-]\d{2}[\\/.-]\d{4}$/.test(raw)) {
-        const parts = raw.split(/[\\/.-]/).map(Number);
+      if (/^\d{2}[\/.-]\d{2}[\/.-]\d{4}$/.test(raw)) {
+        const parts = raw.split(/[\/.-]/).map(Number);
         return new Date(parts[2], parts[1] - 1, parts[0]);
       }
 
       const today = getTodayStart();
 
       if (str === 'vandaag') return today;
-
       if (str === 'morgen') {
         const d = new Date(today);
         d.setDate(d.getDate() + 1);
         return d;
       }
-
       if (str === 'overmorgen') {
         const d = new Date(today);
         d.setDate(d.getDate() + 2);
@@ -1506,7 +1062,6 @@
 
       const parsed = new Date(raw);
       if (Number.isNaN(parsed.getTime())) return null;
-
       return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
     }
 
@@ -1612,7 +1167,6 @@
 
     function makeEditKey(item) {
       if (item?.id) return `id:${item.id}`;
-
       return [
         String(item?.type || '').toLowerCase().trim(),
         String(item?.title || '').toLowerCase().trim(),
@@ -1624,18 +1178,14 @@
     }
 
     function normalizeDashboardItem(item, sourceType = '') {
-      const type = String(item?.type || '').trim().toLowerCase();
       const parsedDate = parseDate(item?.date);
-      const editKey = makeEditKey(item);
-
       return {
         ...item,
         _sourceType: sourceType,
-        _editKey: editKey,
+        _editKey: makeEditKey(item),
         _date: parsedDate,
         _dayStart: parsedDate ? startOfDay(parsedDate) : null,
-        _timeMinutes: parseTimeToMinutes(item?.time),
-        _sortType: type
+        _timeMinutes: parseTimeToMinutes(item?.time)
       };
     }
 
@@ -1665,44 +1215,15 @@
       });
     }
 
-    function createReviewItemFromDashboardItem(item) {
-      return {
-        temp_id: `dashboard_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
-        id: item.id || '',
-        type: item.type || 'notitie',
-        title: item.title || '',
-        project: item.project || '',
-        summary: item.summary || '',
-        status: item.status || '',
-        priority: item.priority || '',
-        date: item.date || '',
-        end_date: item.end_date || '',
-        time: item.time || '',
-        source_text: item.source_text || '',
-        raw: item.raw || '',
-        duplicate_warning: false,
-        duplicate_match_id: '',
-        duplicate_match_title: '',
-        duplicate_match_reason: ''
-      };
-    }
-
     function formatCompactMeta(item, fallbackSub = '') {
       const parts = [];
 
-      if (item.date || item.time) {
-        parts.push(formatShortDate(item.date, item.time));
-      } else if (fallbackSub) {
-        parts.push(fallbackSub);
-      }
+      if (item.date || item.time) parts.push(formatShortDate(item.date, item.time));
+      else if (fallbackSub) parts.push(fallbackSub);
 
-      if (item.project) {
-        parts.push(item.project);
-      }
-
-      if (item.summary && !item.project) {
-        parts.push(item.summary);
-      }
+      if (item.project) parts.push(item.project);
+      if (item.priority) parts.push(`prio ${item.priority}`);
+      if (item.status && String(item.type || '').toLowerCase() !== 'notitie') parts.push(item.status);
 
       return parts.filter(Boolean).join(' • ');
     }
@@ -1710,13 +1231,7 @@
     function supportsInlineEdit(item) {
       const type = String(item?.type || '').toLowerCase();
       const sourceType = String(item?._sourceType || '').toLowerCase();
-
-      return (
-        type === 'taak' ||
-        type === 'afspraak' ||
-        type === 'notitie' ||
-        sourceType === 'notes'
-      );
+      return type === 'taak' || type === 'afspraak' || type === 'notitie' || sourceType === 'notes';
     }
 
     function cloneInlineDraftFromItem(item) {
@@ -1726,7 +1241,7 @@
 
       return {
         id: item.id || '',
-        type: isNote ? 'notitie' : (item.type || 'notitie'),
+        type: isNote ? 'notitie' : (item.type || 'taak'),
         title: item.title || '',
         project: item.project || '',
         summary: item.summary || '',
@@ -1739,35 +1254,28 @@
       };
     }
 
+    function isDraftNote(draft) {
+      return String(draft?.type || '').toLowerCase() === 'notitie';
+    }
+
     function openDashboardEdit(editKey) {
       const item = dashboardEditIndex.get(editKey);
       if (!item) return;
 
-      if (supportsInlineEdit(item)) {
-        dashboardInlineEditKey = editKey;
-        dashboardInlineDraft = cloneInlineDraftFromItem(item);
-        dashboardInlineSaving = false;
-        renderAllPanels();
+      dashboardInlineEditKey = editKey;
+      dashboardInlineDraft = cloneInlineDraftFromItem(item);
+      dashboardInlineSaving = false;
+      renderAllPanels();
 
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            focusInlineEdit(editKey);
-          });
-        });
-
-        return;
-      }
-
-      const reviewPayload = {
-        reply: 'Controleer en pas dit item aan.',
-        review: {
-          summary: item.title || 'Item aanpassen',
-          items: [createReviewItemFromDashboardItem(item)]
-        }
-      };
-
-      openReviewModal(reviewPayload);
-      openReviewInlineEdit(reviewPayload.review.items[0].temp_id);
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`[data-edit-key="${CSS.escape(editKey)}"]`);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setTimeout(() => {
+          const input = el.querySelector('.input, .select, .textarea');
+          if (input) input.focus();
+        }, 220);
+      });
     }
 
     function closeDashboardInlineEdit() {
@@ -1779,11 +1287,9 @@
 
     function updateDashboardInlineField(field, value) {
       if (!dashboardInlineDraft) return;
-
       dashboardInlineDraft[field] = value;
 
-      const currentType = String(dashboardInlineDraft.type || '').toLowerCase();
-      if (field === 'type' && currentType === 'notitie') {
+      if (field === 'type' && String(value).toLowerCase() === 'notitie') {
         dashboardInlineDraft.status = '';
         dashboardInlineDraft.priority = '';
         dashboardInlineDraft.date = '';
@@ -1802,15 +1308,17 @@
       renderAllPanels();
 
       try {
+        const payload = {
+          action: 'update_item',
+          session_id: getSessionId(),
+          id: originalItem.id,
+          ...dashboardInlineDraft
+        };
+
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'update_item',
-            session_id: getSessionId(),
-            id: originalItem.id,
-            ...dashboardInlineDraft
-          })
+          body: JSON.stringify(payload)
         });
 
         const result = await response.json().catch(() => ({}));
@@ -1822,40 +1330,15 @@
           return;
         }
 
-        handleApiResult(result, { reloadDashboard: true });
         dashboardInlineEditKey = null;
         dashboardInlineDraft = null;
         dashboardInlineSaving = false;
+        await handleApiResult(result, { reloadDashboard: true });
       } catch (error) {
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
         dashboardInlineSaving = false;
         renderAllPanels();
       }
-    }
-
-    function focusInlineEdit(editKey) {
-      const itemEl = document.querySelector(`[data-edit-key="${CSS.escape(editKey)}"]`);
-      if (!itemEl) return;
-
-      const panelBody = itemEl.closest('.panel-body');
-      const anchor = itemEl.querySelector('.flat-item-anchor') || itemEl;
-
-      if (panelBody) {
-        const panelRect = panelBody.getBoundingClientRect();
-        const anchorRect = anchor.getBoundingClientRect();
-        const currentScroll = panelBody.scrollTop;
-        const targetScroll = currentScroll + (anchorRect.top - panelRect.top) - 10;
-
-        panelBody.scrollTo({
-          top: Math.max(0, targetScroll),
-          behavior: 'smooth'
-        });
-      }
-
-      setTimeout(() => {
-        const input = itemEl.querySelector('.flat-edit-input, .flat-edit-select, .flat-edit-textarea');
-        if (input) input.focus();
-      }, 220);
     }
 
     function getActionButtonsHtml(editKey, label = 'Item') {
@@ -1864,7 +1347,7 @@
           <button class="icon-btn" type="button" onclick="openDashboardEdit('${escapeHtml(editKey)}')" aria-label="Pas aan">
             ${editIconSvg()}
           </button>
-          <button class="icon-btn delete" type="button" onclick="requestDashboardDelete('${escapeHtml(editKey)}', '${escapeHtml(label)}')" aria-label="Verwijderen">
+          <button class="icon-btn" type="button" onclick="requestDashboardDelete('${escapeHtml(editKey)}', '${escapeHtml(label)}')" aria-label="Verwijderen">
             ${deleteIconSvg()}
           </button>
         </div>
@@ -1877,151 +1360,136 @@
 
       const draft = dashboardInlineDraft;
       const disableAttr = dashboardInlineSaving ? 'disabled' : '';
-      const isNote = String(item?._sourceType || '').toLowerCase() === 'notes' || String(draft.type || '').toLowerCase() === 'notitie';
+      const note = isDraftNote(draft);
 
-      if (isNote) {
+      if (note) {
         return `
-          <div class="flat-edit-wrap">
-            <div class="flat-edit-panel">
-              <div class="flat-edit-group single">
-                <div class="flat-edit-field">
-                  <div class="flat-edit-label">Titel</div>
-                  <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.title || '')}" oninput="updateDashboardInlineField('title', this.value)" />
-                </div>
+          <div class="edit-wrap">
+            <div class="edit-grid single">
+              <div class="field">
+                <div class="label">Titel</div>
+                <input class="input" ${disableAttr} value="${escapeHtml(draft.title || '')}" oninput="updateDashboardInlineField('title', this.value)" />
               </div>
+            </div>
 
-              <div class="flat-edit-group single">
-                <div class="flat-edit-field">
-                  <div class="flat-edit-label">Samenvatting</div>
-                  <textarea class="flat-edit-textarea" ${disableAttr} oninput="updateDashboardInlineField('summary', this.value)">${escapeHtml(draft.summary || '')}</textarea>
-                </div>
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="field">
+                <div class="label">Samenvatting</div>
+                <textarea class="textarea" ${disableAttr} oninput="updateDashboardInlineField('summary', this.value)">${escapeHtml(draft.summary || '')}</textarea>
               </div>
+            </div>
 
-              <div class="flat-edit-group single">
-                <div class="flat-edit-field">
-                  <div class="flat-edit-label">Project</div>
-                  <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.project || '')}" oninput="updateDashboardInlineField('project', this.value)" />
-                </div>
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="field">
+                <div class="label">Project</div>
+                <input class="input" ${disableAttr} value="${escapeHtml(draft.project || '')}" oninput="updateDashboardInlineField('project', this.value)" />
               </div>
+            </div>
 
-              <div class="flat-edit-group single">
-                <div class="flat-edit-field">
-                  <div class="flat-edit-label">Brontekst</div>
-                  <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.source_text || '')}" oninput="updateDashboardInlineField('source_text', this.value)" />
-                </div>
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="field">
+                <div class="label">Brontekst</div>
+                <input class="input" ${disableAttr} value="${escapeHtml(draft.source_text || '')}" oninput="updateDashboardInlineField('source_text', this.value)" />
               </div>
+            </div>
 
-              <div class="flat-edit-actions">
-                <button class="flat-edit-btn secondary" ${disableAttr} type="button" onclick="closeDashboardInlineEdit()">Annuleren</button>
-                <button class="flat-edit-btn primary" ${disableAttr} type="button" onclick="saveDashboardInlineEdit()">${dashboardInlineSaving ? 'Opslaan...' : 'Opslaan'}</button>
-              </div>
+            <div class="edit-actions">
+              <button class="btn ghost" ${disableAttr} type="button" onclick="closeDashboardInlineEdit()">Annuleren</button>
+              <button class="btn primary" ${disableAttr} type="button" onclick="saveDashboardInlineEdit()">${dashboardInlineSaving ? 'Opslaan...' : 'Opslaan'}</button>
             </div>
           </div>
         `;
       }
 
       return `
-        <div class="flat-edit-wrap">
-          <div class="flat-edit-panel">
-            <div class="flat-edit-group single">
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Titel</div>
-                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.title || '')}" oninput="updateDashboardInlineField('title', this.value)" />
-              </div>
+        <div class="edit-wrap">
+          <div class="edit-grid single">
+            <div class="field">
+              <div class="label">Titel</div>
+              <input class="input" ${disableAttr} value="${escapeHtml(draft.title || '')}" oninput="updateDashboardInlineField('title', this.value)" />
             </div>
+          </div>
 
-            <div class="flat-edit-group single">
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Samenvatting</div>
-                <textarea class="flat-edit-textarea" ${disableAttr} oninput="updateDashboardInlineField('summary', this.value)">${escapeHtml(draft.summary || '')}</textarea>
-              </div>
+          <div class="edit-grid single" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Samenvatting</div>
+              <textarea class="textarea" ${disableAttr} oninput="updateDashboardInlineField('summary', this.value)">${escapeHtml(draft.summary || '')}</textarea>
             </div>
+          </div>
 
-            <div class="flat-edit-group single">
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Project</div>
-                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.project || '')}" oninput="updateDashboardInlineField('project', this.value)" />
-              </div>
+          <div class="edit-grid single" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Project</div>
+              <input class="input" ${disableAttr} value="${escapeHtml(draft.project || '')}" oninput="updateDashboardInlineField('project', this.value)" />
             </div>
+          </div>
 
-            <div class="flat-edit-group">
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Datum</div>
-                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.date || '')}" oninput="updateDashboardInlineField('date', this.value)" placeholder="2026-03-31" />
-              </div>
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Einddatum</div>
-                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.end_date || '')}" oninput="updateDashboardInlineField('end_date', this.value)" placeholder="2026-03-31" />
-              </div>
+          <div class="edit-grid" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Datum</div>
+              <input class="input" ${disableAttr} value="${escapeHtml(draft.date || '')}" oninput="updateDashboardInlineField('date', this.value)" placeholder="2026-04-01" />
             </div>
+            <div class="field">
+              <div class="label">Tijd</div>
+              <input class="input" ${disableAttr} value="${escapeHtml(draft.time || '')}" oninput="updateDashboardInlineField('time', this.value)" placeholder="14:00" />
+            </div>
+          </div>
 
-            <div class="flat-edit-group">
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Tijd</div>
-                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.time || '')}" oninput="updateDashboardInlineField('time', this.value)" placeholder="14:00" />
-              </div>
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Type</div>
-                <select class="flat-edit-select" ${disableAttr} onchange="updateDashboardInlineField('type', this.value)">
-                  <option value="taak" ${draft.type === 'taak' ? 'selected' : ''}>taak</option>
-                  <option value="afspraak" ${draft.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
-                  <option value="notitie" ${draft.type === 'notitie' ? 'selected' : ''}>notitie</option>
-                </select>
-              </div>
+          <div class="edit-grid" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Type</div>
+              <select class="select" ${disableAttr} onchange="updateDashboardInlineField('type', this.value)">
+                <option value="taak" ${draft.type === 'taak' ? 'selected' : ''}>taak</option>
+                <option value="afspraak" ${draft.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
+                <option value="notitie" ${draft.type === 'notitie' ? 'selected' : ''}>notitie</option>
+              </select>
             </div>
+            <div class="field">
+              <div class="label">Prioriteit</div>
+              <select class="select" ${disableAttr} onchange="updateDashboardInlineField('priority', this.value)">
+                <option value="" ${!draft.priority ? 'selected' : ''}>-</option>
+                <option value="hoog" ${draft.priority === 'hoog' ? 'selected' : ''}>hoog</option>
+                <option value="middel" ${draft.priority === 'middel' ? 'selected' : ''}>middel</option>
+                <option value="laag" ${draft.priority === 'laag' ? 'selected' : ''}>laag</option>
+              </select>
+            </div>
+          </div>
 
-            <div class="flat-edit-group">
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Prioriteit</div>
-                <select class="flat-edit-select" ${disableAttr} onchange="updateDashboardInlineField('priority', this.value)">
-                  <option value="">-</option>
-                  <option value="hoog" ${draft.priority === 'hoog' ? 'selected' : ''}>hoog</option>
-                  <option value="middel" ${draft.priority === 'middel' ? 'selected' : ''}>middel</option>
-                  <option value="laag" ${draft.priority === 'laag' ? 'selected' : ''}>laag</option>
-                </select>
-              </div>
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Status</div>
-                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.status || '')}" oninput="updateDashboardInlineField('status', this.value)" />
-              </div>
+          <div class="edit-grid" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Status</div>
+              <input class="input" ${disableAttr} value="${escapeHtml(draft.status || '')}" oninput="updateDashboardInlineField('status', this.value)" />
             </div>
+            <div class="field">
+              <div class="label">Brontekst</div>
+              <input class="input" ${disableAttr} value="${escapeHtml(draft.source_text || '')}" oninput="updateDashboardInlineField('source_text', this.value)" />
+            </div>
+          </div>
 
-            <div class="flat-edit-group single">
-              <div class="flat-edit-field">
-                <div class="flat-edit-label">Brontekst</div>
-                <input class="flat-edit-input" ${disableAttr} value="${escapeHtml(draft.source_text || '')}" oninput="updateDashboardInlineField('source_text', this.value)" />
-              </div>
-            </div>
-
-            <div class="flat-edit-actions">
-              <button class="flat-edit-btn secondary" ${disableAttr} type="button" onclick="closeDashboardInlineEdit()">Annuleren</button>
-              <button class="flat-edit-btn primary" ${disableAttr} type="button" onclick="saveDashboardInlineEdit()">${dashboardInlineSaving ? 'Opslaan...' : 'Opslaan'}</button>
-            </div>
+          <div class="edit-actions">
+            <button class="btn ghost" ${disableAttr} type="button" onclick="closeDashboardInlineEdit()">Annuleren</button>
+            <button class="btn primary" ${disableAttr} type="button" onclick="saveDashboardInlineEdit()">${dashboardInlineSaving ? 'Opslaan...' : 'Opslaan'}</button>
           </div>
         </div>
       `;
     }
 
-    function renderFlatItem(item, metaHtml = '', subHtml = '', compactMeta = '') {
+    function renderListItem(item, meta = '', sub = '') {
       const isOpen = dashboardInlineEditKey === item._editKey;
       const hasOtherOpen = !!dashboardInlineEditKey && dashboardInlineEditKey !== item._editKey;
       const classes = [
-        'flat-item',
+        'item',
         isOpen ? 'is-open' : '',
         hasOtherOpen ? 'is-dimmed' : ''
       ].filter(Boolean).join(' ');
 
-      const compact = compactMeta || formatCompactMeta(item);
-
       return `
         <div class="${classes}" data-edit-key="${escapeHtml(item._editKey)}">
-          <div class="flat-item-anchor"></div>
-          <div class="flat-row">
-            <div class="flat-topline">
-              <div class="flat-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              ${compact ? `<div class="flat-compact-meta">${escapeHtml(compact)}</div>` : ''}
-              ${metaHtml}
-              ${subHtml}
+          <div class="item-row">
+            <div class="item-main">
+              <div class="item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+              ${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}
+              ${sub ? `<div class="item-sub">${escapeHtml(sub)}</div>` : ''}
             </div>
             ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
           </div>
@@ -2030,70 +1498,15 @@
       `;
     }
 
-    function renderAgendaDayStrip(days) {
-      const strip = document.getElementById('agendaDayStrip');
-      if (!strip) return;
-
-      strip.innerHTML = days.map(day => {
-        const key = formatLocalDateKey(day);
-        const active = key === selectedAgendaDayKey ? 'active' : '';
-
-        return `
-          <button class="agenda-day-btn ${active}" type="button" onclick="selectAgendaDay('${key}')">
-            <div class="agenda-day-dow">${escapeHtml(formatDayShort(day))}</div>
-            <div class="agenda-day-num">${escapeHtml(String(day.getDate()))}</div>
-            <div class="agenda-day-month">${escapeHtml(formatMonthShort(day))}</div>
-          </button>
-        `;
-      }).join('');
-    }
-
-    function renderAgendaSelectedDayInfo(date, items) {
-      const titleEl = document.getElementById('agendaSelectedDayTitle');
-      const subtitleEl = document.getElementById('agendaSelectedDaySubtitle');
-      const countEl = document.getElementById('agendaSelectedDayCount');
-
+    function getAgendaDaysWindow() {
+      const days = [];
       const today = getTodayStart();
-      let subtitle = formatDayLong(date);
-
-      if (sameDay(date, today)) subtitle = 'Vandaag';
-      else {
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        if (sameDay(date, tomorrow)) subtitle = 'Morgen';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        days.push(d);
       }
-
-      titleEl.textContent = formatDayLong(date);
-      subtitleEl.textContent = subtitle;
-      countEl.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
-    }
-
-    function renderAgendaAllDay(items) {
-      const wrap = document.getElementById('agendaAllDay');
-      if (!wrap) return;
-
-      const allDayItems = items.filter(item => item._timeMinutes === null);
-
-      if (!allDayItems.length) {
-        wrap.innerHTML = '';
-        return;
-      }
-
-      wrap.innerHTML = allDayItems.map(item => {
-        const metaParts = [];
-        if (item.type) metaParts.push(item.type);
-        if (item.project) metaParts.push(item.project);
-
-        return `
-          <div class="agenda-mini-item">
-            <div class="agenda-mini-content">
-              <div class="agenda-mini-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              <div class="agenda-mini-meta">${escapeHtml(metaParts.join(' • ') || 'hele dag')}</div>
-            </div>
-            ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
-          </div>
-        `;
-      }).join('');
+      return days;
     }
 
     function getCombinedAgendaLikeItems(data = {}) {
@@ -2107,276 +1520,166 @@
         __sourceType: 'tasks'
       }));
 
-      return dedupeItems([
-        ...agendaItems,
-        ...taskItems
-      ])
-      .map(item => {
-        const sourceType = item.__sourceType || 'agenda';
-        const cleanItem = { ...item };
-        delete cleanItem.__sourceType;
-        return normalizeDashboardItem(cleanItem, sourceType);
-      })
-      .filter(item => item._dayStart)
-      .sort(sortByDateTime);
-    }
-
-    function getTimelineWindow(selectedDate) {
-      const today = getTodayStart();
-      const isToday = sameDay(selectedDate, today);
-
-      if (!isToday) {
-        return {
-          isToday: false,
-          totalMinutes: 1440,
-          startAbsMinutes: 0,
-          endAbsMinutes: 1440
-        };
-      }
-
-      const now = new Date();
-      const nowAbsMinutes = now.getHours() * 60 + now.getMinutes();
-      const beforeNow = 30;
-      const totalMinutes = 600;
-      let startAbsMinutes = Math.max(0, nowAbsMinutes - beforeNow);
-      let endAbsMinutes = startAbsMinutes + totalMinutes;
-
-      return {
-        isToday: true,
-        totalMinutes,
-        startAbsMinutes,
-        endAbsMinutes
-      };
-    }
-
-    function getTimelineItems(allItems, selectedDate, timelineWindow) {
-      const selectedKey = formatLocalDateKey(selectedDate);
-      const nextDate = new Date(selectedDate);
-      nextDate.setDate(nextDate.getDate() + 1);
-      const nextKey = formatLocalDateKey(nextDate);
-
-      return allItems
-        .filter(item => item._timeMinutes !== null)
+      return dedupeItems([...agendaItems, ...taskItems])
         .map(item => {
-          const itemDayKey = formatLocalDateKey(item._dayStart);
-          let absMinutes = null;
-
-          if (itemDayKey === selectedKey) {
-            absMinutes = item._timeMinutes;
-          } else if (timelineWindow.isToday && itemDayKey === nextKey) {
-            absMinutes = 1440 + item._timeMinutes;
-          }
-
-          if (absMinutes === null) return null;
-
-          return {
-            ...item,
-            _timelineAbsMinutes: absMinutes
-          };
+          const sourceType = item.__sourceType || 'agenda';
+          const clean = { ...item };
+          delete clean.__sourceType;
+          return normalizeDashboardItem(clean, sourceType);
         })
-        .filter(Boolean)
-        .filter(item => item._timelineAbsMinutes >= timelineWindow.startAbsMinutes && item._timelineAbsMinutes <= timelineWindow.endAbsMinutes)
-        .sort((a, b) => a._timelineAbsMinutes - b._timelineAbsMinutes);
-    }
-
-    function renderDayTimeline(allItems, selectedDate) {
-      const el = document.getElementById('dayTimeline');
-      const scrollEl = document.getElementById('timelineScroll');
-      if (!el || !scrollEl) return;
-
-      const timelineWindow = getTimelineWindow(selectedDate);
-      const timedItems = getTimelineItems(allItems, selectedDate, timelineWindow);
-
-      const pixelsPerMinute = timelineWindow.isToday ? 1.6 : 0.75;
-      const timelineHeight = Math.max(760, Math.round(timelineWindow.totalMinutes * pixelsPerMinute));
-      const minCardHeightPx = 62;
-
-      el.style.minHeight = `${timelineHeight}px`;
-      el.style.height = `${timelineHeight}px`;
-
-      const hourStart = Math.floor(timelineWindow.startAbsMinutes / 60);
-      const hourEnd = Math.ceil(timelineWindow.endAbsMinutes / 60);
-
-      const hourMarks = [];
-      for (let hour = hourStart; hour <= hourEnd; hour++) {
-        hourMarks.push(hour);
-      }
-
-      const timelineEventsHtml = timedItems.map(item => {
-        const topPx = (item._timelineAbsMinutes - timelineWindow.startAbsMinutes) * pixelsPerMinute;
-        const metaParts = [];
-        metaParts.push(item.time || formatMinutesAsTime(item._timelineAbsMinutes));
-        if (item.type) metaParts.push(item.type);
-        if (item.project) metaParts.push(item.project);
-
-        return `
-          <div class="timeline-event" style="top:${topPx}px; height:${minCardHeightPx}px;">
-            <div class="timeline-event-content">
-              <div class="timeline-event-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              <div class="timeline-event-meta">${escapeHtml(metaParts.filter(Boolean).join(' • '))}</div>
-            </div>
-            ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
-          </div>
-        `;
-      }).join('');
-
-      const emptyHtml = !timedItems.length
-        ? `<div class="timeline-empty">geen tijdgebonden items in dit venster</div>`
-        : '';
-
-      const dayBreakAbs = 1440;
-      const showDayBreak = timelineWindow.isToday &&
-        timelineWindow.startAbsMinutes < dayBreakAbs &&
-        timelineWindow.endAbsMinutes > dayBreakAbs;
-
-      const dayBreakTopPx = (dayBreakAbs - timelineWindow.startAbsMinutes) * pixelsPerMinute;
-
-      const now = new Date();
-      const nowAbsMinutes = now.getHours() * 60 + now.getMinutes();
-      const isToday = timelineWindow.isToday;
-      const nowTopPx = (nowAbsMinutes - timelineWindow.startAbsMinutes) * pixelsPerMinute;
-
-      el.innerHTML = `
-        <div class="timeline-grid">
-          ${hourMarks.map(hour => {
-            const absMinutes = hour * 60;
-            const topPx = (absMinutes - timelineWindow.startAbsMinutes) * pixelsPerMinute;
-            const label = formatMinutesAsTime(absMinutes);
-
-            return `
-              <div class="timeline-hour-line" style="top:${topPx}px"></div>
-              <div class="timeline-hour-label" style="top:${topPx}px">${label}</div>
-            `;
-          }).join('')}
-
-          ${showDayBreak ? `
-            <div class="timeline-day-break-line" style="top:${dayBreakTopPx}px"></div>
-            <div class="timeline-day-break-label" style="top:${dayBreakTopPx}px">volgende dag</div>
-          ` : ''}
-
-          ${emptyHtml}
-
-          <div class="timeline-events">
-            ${timelineEventsHtml}
-          </div>
-
-          ${isToday ? `
-            <div class="timeline-now-line" style="top:${nowTopPx}px"></div>
-            <div class="timeline-now-dot" style="top:${nowTopPx}px"></div>
-          ` : ''}
-        </div>
-      `;
-
-      requestAnimationFrame(() => {
-        scrollEl.scrollTop = 0;
-      });
+        .filter(item => item._dayStart)
+        .sort(sortByDateTime);
     }
 
     function ensureSelectedAgendaDay(items) {
       const todayKey = formatLocalDateKey(getTodayStart());
+      if (!selectedAgendaDayKey) selectedAgendaDayKey = todayKey;
 
-      if (!selectedAgendaDayKey) {
-        selectedAgendaDayKey = todayKey;
-      }
+      const validKeys = new Set(getAgendaDaysWindow().map(formatLocalDateKey));
+      if (!validKeys.has(selectedAgendaDayKey)) selectedAgendaDayKey = todayKey;
 
-      const hasSelected = items.some(item => item._dayStart && formatLocalDateKey(item._dayStart) === selectedAgendaDayKey);
-
-      if (!hasSelected) {
-        selectedAgendaDayKey = todayKey;
-      }
+      const selectedDate = parseDate(selectedAgendaDayKey);
+      if (!selectedDate) selectedAgendaDayKey = todayKey;
     }
 
-    function getAgendaDaysWindow() {
-      const days = [];
-      const today = getTodayStart();
+    function renderAgendaStrip() {
+      const strip = document.getElementById('agendaStrip');
+      const days = getAgendaDaysWindow();
 
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        days.push(d);
-      }
-
-      return days;
+      strip.innerHTML = days.map(day => {
+        const key = formatLocalDateKey(day);
+        const active = key === selectedAgendaDayKey ? 'active' : '';
+        return `
+          <button class="day-btn ${active}" type="button" onclick="selectAgendaDay('${key}')">
+            <div class="day-dow">${escapeHtml(formatDayShort(day))}</div>
+            <div class="day-num">${escapeHtml(String(day.getDate()))}</div>
+            <div class="day-month">${escapeHtml(formatMonthShort(day))}</div>
+          </button>
+        `;
+      }).join('');
     }
 
     function renderAgenda(data = {}) {
       const items = getCombinedAgendaLikeItems(data);
-
-      const days = getAgendaDaysWindow();
       ensureSelectedAgendaDay(items);
-      renderAgendaDayStrip(days);
+      renderAgendaStrip();
 
       const selectedDate = parseDate(selectedAgendaDayKey) || getTodayStart();
       const selectedItems = items.filter(item => sameDay(item._dayStart, selectedDate));
+      const allDayItems = selectedItems.filter(item => item._timeMinutes === null);
+      const timedItems = selectedItems.filter(item => item._timeMinutes !== null).sort((a, b) => a._timeMinutes - b._timeMinutes);
 
-      renderAgendaSelectedDayInfo(selectedDate, selectedItems);
-      renderAgendaAllDay(selectedItems);
-      renderDayTimeline(items, selectedDate);
+      document.getElementById('agendaTitle').textContent = formatDayLong(selectedDate);
+      document.getElementById('agendaSubtitle').textContent = `${selectedItems.length} item${selectedItems.length === 1 ? '' : 's'}`;
+      document.getElementById('agendaMeta').textContent = `${selectedItems.length} item${selectedItems.length === 1 ? '' : 's'}`;
+
+      const allDayEl = document.getElementById('agendaAllDay');
+      const timedEl = document.getElementById('agendaTimed');
+
+      if (!allDayItems.length) {
+        allDayEl.innerHTML = `<div class="empty" style="padding:0; color:rgba(255,255,255,0.22);">Geen hele-dag items</div>`;
+      } else {
+        allDayEl.innerHTML = allDayItems.map(item => `
+          <div class="agenda-card">
+            <div class="agenda-card-row">
+              <div class="agenda-time">hele dag</div>
+              <div class="agenda-main">
+                <div class="agenda-card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                <div class="agenda-card-meta">${escapeHtml(formatCompactMeta(item, item.summary || item.type || 'item'))}</div>
+              </div>
+              ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
+            </div>
+            ${dashboardInlineEditKey === item._editKey ? renderInlineEditPanel(item) : ''}
+          </div>
+        `).join('');
+      }
+
+      if (!timedItems.length) {
+        timedEl.innerHTML = `<div class="empty" style="padding:0; color:rgba(255,255,255,0.22);">Geen tijdgebonden items</div>`;
+      } else {
+        timedEl.innerHTML = timedItems.map(item => `
+          <div class="agenda-card">
+            <div class="agenda-card-row">
+              <div class="agenda-time">${escapeHtml(item.time || formatMinutesAsTime(item._timeMinutes || 0))}</div>
+              <div class="agenda-main">
+                <div class="agenda-card-title">${escapeHtml(item.title || 'Zonder titel')}</div>
+                <div class="agenda-card-meta">${escapeHtml(formatCompactMeta(item, item.summary || item.type || 'item'))}</div>
+              </div>
+              ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
+            </div>
+            ${dashboardInlineEditKey === item._editKey ? renderInlineEditPanel(item) : ''}
+          </div>
+        `).join('');
+      }
     }
 
     function renderTasks(data = {}) {
-      const tasksEl = document.getElementById('tasks');
-      const tasks = dedupeItems(Array.isArray(data.tasks) ? data.tasks : [])
-        .map(item => normalizeDashboardItem(item, 'tasks'));
+      const el = document.getElementById('tasks');
+      const items = dedupeItems(Array.isArray(data.tasks) ? data.tasks : [])
+        .map(item => normalizeDashboardItem(item, 'tasks'))
+        .sort(sortByDateTime);
 
-      if (!tasks.length) {
-        tasksEl.innerHTML = `<div class="empty">Geen taken</div>`;
+      document.getElementById('tasksMeta').textContent = `${items.length}`;
+
+      if (!items.length) {
+        el.innerHTML = `<div class="empty">Geen taken</div>`;
         return;
       }
 
-      tasksEl.innerHTML = `
-        <div class="flat-list">
-          ${tasks.map(item => renderFlatItem(
+      el.innerHTML = `
+        <div class="list">
+          ${items.map(item => renderListItem(
             item,
-            '',
-            '',
-            formatCompactMeta(item, formatShortDate(item.date, item.time))
-          )).join('')}
-        </div>
-      `;
-    }
-
-    function renderNotes(data = {}) {
-      const notesEl = document.getElementById('notes');
-      const notes = dedupeItems(Array.isArray(data.notes) ? data.notes : [])
-        .map(item => normalizeDashboardItem(item, 'notes'));
-
-      if (!notes.length) {
-        notesEl.innerHTML = `<div class="empty">Geen notities</div>`;
-        return;
-      }
-
-      notesEl.innerHTML = `
-        <div class="flat-list">
-          ${notes.map(item => renderFlatItem(
-            item,
-            '',
-            '',
-            formatCompactMeta(item, item.summary || '')
+            formatCompactMeta(item, formatShortDate(item.date, item.time)),
+            item.summary || ''
           )).join('')}
         </div>
       `;
     }
 
     function renderAppointments(data = {}) {
-      const appointmentsEl = document.getElementById('appointments');
-      const agenda = dedupeItems(Array.isArray(data.agenda) ? data.agenda : [])
+      const el = document.getElementById('appointments');
+      const items = dedupeItems(Array.isArray(data.agenda) ? data.agenda : [])
         .map(item => normalizeDashboardItem(item, 'agenda'))
-        .filter(item => ['afspraak', 'agenda'].includes((item.type || '').toLowerCase()))
+        .filter(item => ['afspraak', 'agenda'].includes(String(item.type || '').toLowerCase()))
         .sort(sortByDateTime);
 
-      if (!agenda.length) {
-        appointmentsEl.innerHTML = `<div class="empty">Geen afspraken</div>`;
+      document.getElementById('appointmentsMeta').textContent = `${items.length}`;
+
+      if (!items.length) {
+        el.innerHTML = `<div class="empty">Geen afspraken</div>`;
         return;
       }
 
-      appointmentsEl.innerHTML = `
-        <div class="flat-list">
-          ${agenda.map(item => renderFlatItem(
+      el.innerHTML = `
+        <div class="list">
+          ${items.map(item => renderListItem(
             item,
-            '',
-            '',
-            formatCompactMeta(item, formatShortDate(item.date, item.time))
+            formatCompactMeta(item, formatShortDate(item.date, item.time)),
+            item.summary || ''
+          )).join('')}
+        </div>
+      `;
+    }
+
+    function renderNotes(data = {}) {
+      const el = document.getElementById('notes');
+      const items = dedupeItems(Array.isArray(data.notes) ? data.notes : [])
+        .map(item => normalizeDashboardItem(item, 'notes'));
+
+      document.getElementById('notesMeta').textContent = `${items.length}`;
+
+      if (!items.length) {
+        el.innerHTML = `<div class="empty">Geen notities</div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="list">
+          ${items.map(item => renderListItem(
+            item,
+            item.project || '',
+            item.summary || ''
           )).join('')}
         </div>
       `;
@@ -2385,15 +1688,15 @@
     function renderAllPanels() {
       renderAgenda(dashboardRawData);
       renderTasks(dashboardRawData);
-      renderNotes(dashboardRawData);
       renderAppointments(dashboardRawData);
+      renderNotes(dashboardRawData);
     }
 
     function addChatBubble(text, sender) {
       if (!text) return;
       const chatMessages = document.getElementById('chatMessages');
       const bubble = document.createElement('div');
-      bubble.className = `chat-bubble ${sender}`;
+      bubble.className = `bubble ${sender}`;
       bubble.textContent = text;
       chatMessages.appendChild(bubble);
       chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -2412,7 +1715,7 @@
         if (!value || !label) return;
 
         const btn = document.createElement('button');
-        btn.className = 'chat-option-btn';
+        btn.className = 'option-btn';
         btn.type = 'button';
         btn.textContent = label;
         btn.addEventListener('click', () => sendChatWithText(value));
@@ -2429,7 +1732,7 @@
       if (!text) return;
       const chatMessages = document.getElementById('chatMessages');
       const meta = document.createElement('div');
-      meta.className = 'chat-meta-line';
+      meta.className = 'chat-meta';
       meta.textContent = text;
       chatMessages.appendChild(meta);
       chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -2455,61 +1758,79 @@
         addChatOptions(question.options);
       }
 
-      if (meta?.blocked_by === 'missing_date') {
-        addChatMetaLine('Datum ontbreekt.');
-      } else if (meta?.blocked_by === 'missing_time') {
-        addChatMetaLine('Tijd ontbreekt.');
-      }
+      if (meta?.blocked_by === 'missing_date') addChatMetaLine('Datum ontbreekt.');
+      if (meta?.blocked_by === 'missing_time') addChatMetaLine('Tijd ontbreekt.');
     }
 
     async function handleApiResult(result, { reloadDashboard = false } = {}) {
-  if (!result) return;
+      if (!result) return;
 
-  const mode = String(result.mode || '').toLowerCase();
+      const mode = String(result.mode || '').toLowerCase();
 
-  if (mode === 'review' && result.review) {
-    openReviewModal(result);
-    addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
-    return;
-  }
-
-  if (mode === 'question') {
-    openQuestionInChat(result.question, result.meta || null);
-    return;
-  }
-
-  if (mode === 'confirmation') {
-    addChatBubble(getReplyText(result, 'Opgeslagen.'), 'clara');
-
-    const skippedDuplicates = Array.isArray(result?.confirmation?.skipped_duplicates)
-      ? result.confirmation.skipped_duplicates
-      : [];
-
-    if (skippedDuplicates.length) {
-      const labels = skippedDuplicates
-        .map(item => item?.title)
-        .filter(Boolean)
-        .slice(0, 3);
-
-      if (labels.length === 1) {
-        addChatMetaLine(`Dubbel overgeslagen: ${labels[0]}`);
-      } else if (labels.length > 1) {
-        const extraCount = skippedDuplicates.length - labels.length;
-        addChatMetaLine(
-          `Dubbel overgeslagen: ${labels.join(', ')}${extraCount > 0 ? ` +${extraCount}` : ''}`
-        );
-      } else {
-        addChatMetaLine(`Dubbel overgeslagen: ${skippedDuplicates.length} item(s)`);
+      if (mode === 'review' && result.review) {
+        openReviewModal(result);
+        addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
+        return;
       }
+
+      if (mode === 'question') {
+        openQuestionInChat(result.question, result.meta || null);
+        return;
+      }
+
+      if (mode === 'confirmation') {
+        addChatBubble(getReplyText(result, 'Opgeslagen.'), 'clara');
+
+        const skippedDuplicates = Array.isArray(result?.confirmation?.skipped_duplicates)
+          ? result.confirmation.skipped_duplicates
+          : [];
+
+        if (skippedDuplicates.length) {
+          const labels = skippedDuplicates
+            .map(item => item?.title)
+            .filter(Boolean)
+            .slice(0, 3);
+
+          if (labels.length === 1) {
+            addChatMetaLine(`Dubbel overgeslagen: ${labels[0]}`);
+          } else if (labels.length > 1) {
+            const extraCount = skippedDuplicates.length - labels.length;
+            addChatMetaLine(`Dubbel overgeslagen: ${labels.join(', ')}${extraCount > 0 ? ` +${extraCount}` : ''}`);
+          } else {
+            addChatMetaLine(`Dubbel overgeslagen: ${skippedDuplicates.length} item(s)`);
+          }
+        }
+
+        if (reloadDashboard) await loadDashboard();
+        return;
+      }
+
+      addChatBubble(getReplyText(result, 'Klaar.'), 'clara');
+      if (reloadDashboard) await loadDashboard();
     }
 
-    if (reloadDashboard) await loadDashboard();
-    return;
-  }
+    function createReviewItemFromDashboardItem(item) {
+      return {
+        temp_id: `dashboard_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+        id: item.id || '',
+        type: item.type || 'notitie',
+        title: item.title || '',
+        project: item.project || '',
+        summary: item.summary || '',
+        status: item.status || '',
+        priority: item.priority || '',
+        date: item.date || '',
+        end_date: item.end_date || '',
+        time: item.time || '',
+        source_text: item.source_text || '',
+        raw: item.raw || '',
+        duplicate_warning: false,
+        duplicate_match_id: '',
+        duplicate_match_title: '',
+        duplicate_match_reason: ''
+      };
+    }
 
-  addChatBubble(getReplyText(result, 'Klaar.'), 'clara');
-  if (reloadDashboard) await loadDashboard();
-}
     function getReviewItems() {
       return currentReviewData?.review?.items || [];
     }
@@ -2527,15 +1848,23 @@
       return parts;
     }
 
+    function applyNotitieRulesToReviewItem(item) {
+      if (String(item.type || '').toLowerCase() !== 'notitie') return;
+      item.date = '';
+      item.end_date = '';
+      item.time = '';
+      item.status = '';
+      item.priority = '';
+    }
+
     function getDuplicateWarningHtml(item) {
       if (!item?.duplicate_warning) return '';
-
       const reason = item.duplicate_match_reason || 'lijkt sterk op een bestaand item';
       const matchTitle = item.duplicate_match_title || '';
 
       return `
         <div class="review-warning">
-          <div class="review-warning-label">Waarschijnlijk dubbel</div>
+          <strong>Waarschijnlijk dubbel</strong>
           <div>${escapeHtml(reason)}</div>
           ${matchTitle ? `<div style="margin-top:4px; color: rgba(255,255,255,0.62);">Bestaand item: ${escapeHtml(matchTitle)}</div>` : ''}
         </div>
@@ -2548,8 +1877,8 @@
 
       document.getElementById('reviewSummaryText').textContent = reviewData?.review?.summary || '';
       document.getElementById('reviewSubtitle').textContent = reviewData?.reply || 'Controleer en pas aan waar nodig.';
-      updateReviewFooter();
       renderReviewItemsCompact();
+      updateReviewFooter();
       document.getElementById('reviewOverlay').classList.add('open');
     }
 
@@ -2562,15 +1891,6 @@
       document.getElementById('reviewFooterText').textContent = `${count} item(s). Nog niet opgeslagen.`;
     }
 
-    function applyNotitieRulesToReviewItem(item) {
-      if (String(item.type || '').toLowerCase() !== 'notitie') return;
-      item.date = '';
-      item.end_date = '';
-      item.time = '';
-      item.status = '';
-      item.priority = '';
-    }
-
     function openReviewInlineEdit(tempId) {
       const item = findReviewItem(tempId);
       if (!item) return;
@@ -2581,9 +1901,8 @@
         const el = document.querySelector(`[data-review-temp-id="${CSS.escape(tempId)}"]`);
         if (!el) return;
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
         setTimeout(() => {
-          const input = el.querySelector('.review-inline-input, .review-inline-select, .review-inline-textarea');
+          const input = el.querySelector('.input, .select, .textarea');
           if (input) input.focus();
         }, 220);
       });
@@ -2600,8 +1919,7 @@
 
       item[field] = value;
 
-      const currentType = String(item.type || '').toLowerCase();
-      if (field === 'type' && currentType === 'notitie') {
+      if (field === 'type' && String(value).toLowerCase() === 'notitie') {
         item.status = '';
         item.priority = '';
         item.date = '';
@@ -2613,14 +1931,13 @@
     function saveReviewInlineEdit(tempId) {
       const item = findReviewItem(tempId);
       if (!item) return;
-
       applyNotitieRulesToReviewItem(item);
       currentReviewInlineEditTempId = null;
       renderReviewItemsCompact();
       updateReviewFooter();
     }
 
-    function renderReviewInlineEditPanel(item) {
+    function renderReviewEditPanel(item) {
       const isOpen = currentReviewInlineEditTempId === item.temp_id;
       if (!isOpen) return '';
 
@@ -2628,65 +1945,11 @@
 
       if (isNote) {
         return `
-          <div class="review-inline-edit-wrap">
-            <div class="review-inline-edit-panel">
-              <div class="review-inline-group">
-                <div class="review-inline-field">
-                  <div class="review-inline-label">Type</div>
-                  <select class="review-inline-select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
-                    <option value="taak" ${item.type === 'taak' ? 'selected' : ''}>taak</option>
-                    <option value="afspraak" ${item.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
-                    <option value="notitie" ${item.type === 'notitie' ? 'selected' : ''}>notitie</option>
-                    <option value="idee" ${item.type === 'idee' ? 'selected' : ''}>idee</option>
-                    <option value="project" ${item.type === 'project' ? 'selected' : ''}>project</option>
-                    <option value="beslissing" ${item.type === 'beslissing' ? 'selected' : ''}>beslissing</option>
-                  </select>
-                </div>
-                <div class="review-inline-field">
-                  <div class="review-inline-label">Project</div>
-                  <input class="review-inline-input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
-                </div>
-              </div>
-
-              <div class="review-inline-group single">
-                <div class="review-inline-field">
-                  <div class="review-inline-label">Titel</div>
-                  <input class="review-inline-input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
-                </div>
-              </div>
-
-              <div class="review-inline-group single">
-                <div class="review-inline-field">
-                  <div class="review-inline-label">Samenvatting</div>
-                  <textarea class="review-inline-textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
-                </div>
-              </div>
-
-              <div class="review-inline-group single">
-                <div class="review-inline-field">
-                  <div class="review-inline-label">Brontekst</div>
-                  <input class="review-inline-input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
-                </div>
-              </div>
-
-              <div class="review-inline-source">${escapeHtml(item.source_text || '')}</div>
-
-              <div class="review-inline-actions">
-                <button class="review-inline-btn secondary" type="button" onclick="closeReviewInlineEdit()">Terug</button>
-                <button class="review-inline-btn primary" type="button" onclick="saveReviewInlineEdit('${escapeHtml(item.temp_id || '')}')">Wijziging bewaren</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      return `
-        <div class="review-inline-edit-wrap">
-          <div class="review-inline-edit-panel">
-            <div class="review-inline-group">
-              <div class="review-inline-field">
-                <div class="review-inline-label">Type</div>
-                <select class="review-inline-select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
+          <div class="review-edit">
+            <div class="edit-grid">
+              <div class="field">
+                <div class="label">Type</div>
+                <select class="select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
                   <option value="taak" ${item.type === 'taak' ? 'selected' : ''}>taak</option>
                   <option value="afspraak" ${item.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
                   <option value="notitie" ${item.type === 'notitie' ? 'selected' : ''}>notitie</option>
@@ -2695,70 +1958,112 @@
                   <option value="beslissing" ${item.type === 'beslissing' ? 'selected' : ''}>beslissing</option>
                 </select>
               </div>
-              <div class="review-inline-field">
-                <div class="review-inline-label">Project</div>
-                <input class="review-inline-input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
+              <div class="field">
+                <div class="label">Project</div>
+                <input class="input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
               </div>
             </div>
 
-            <div class="review-inline-group single">
-              <div class="review-inline-field">
-                <div class="review-inline-label">Titel</div>
-                <input class="review-inline-input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="field">
+                <div class="label">Titel</div>
+                <input class="input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
               </div>
             </div>
 
-            <div class="review-inline-group single">
-              <div class="review-inline-field">
-                <div class="review-inline-label">Samenvatting</div>
-                <textarea class="review-inline-textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="field">
+                <div class="label">Samenvatting</div>
+                <textarea class="textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
               </div>
             </div>
 
-            <div class="review-inline-group">
-              <div class="review-inline-field">
-                <div class="review-inline-label">Status</div>
-                <input class="review-inline-input" value="${escapeHtml(item.status || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'status', this.value)" />
-              </div>
-              <div class="review-inline-field">
-                <div class="review-inline-label">Prioriteit</div>
-                <select class="review-inline-select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'priority', this.value)">
-                  <option value="" ${!item.priority ? 'selected' : ''}>-</option>
-                  <option value="hoog" ${item.priority === 'hoog' ? 'selected' : ''}>hoog</option>
-                  <option value="middel" ${item.priority === 'middel' ? 'selected' : ''}>middel</option>
-                  <option value="laag" ${item.priority === 'laag' ? 'selected' : ''}>laag</option>
-                </select>
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="field">
+                <div class="label">Brontekst</div>
+                <input class="input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
               </div>
             </div>
 
-            <div class="review-inline-group">
-              <div class="review-inline-field">
-                <div class="review-inline-label">Datum</div>
-                <input class="review-inline-input" value="${escapeHtml(item.date || '')}" placeholder="2026-03-31" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'date', this.value)" />
-              </div>
-              <div class="review-inline-field">
-                <div class="review-inline-label">Einddatum</div>
-                <input class="review-inline-input" value="${escapeHtml(item.end_date || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'end_date', this.value)" />
-              </div>
+            <div class="edit-actions">
+              <button class="btn ghost" type="button" onclick="closeReviewInlineEdit()">Terug</button>
+              <button class="btn primary" type="button" onclick="saveReviewInlineEdit('${escapeHtml(item.temp_id || '')}')">Bewaren</button>
             </div>
+          </div>
+        `;
+      }
 
-            <div class="review-inline-group">
-              <div class="review-inline-field">
-                <div class="review-inline-label">Tijd</div>
-                <input class="review-inline-input" value="${escapeHtml(item.time || '')}" placeholder="14:00" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'time', this.value)" />
-              </div>
-              <div class="review-inline-field">
-                <div class="review-inline-label">Brontekst</div>
-                <input class="review-inline-input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
-              </div>
+      return `
+        <div class="review-edit">
+          <div class="edit-grid">
+            <div class="field">
+              <div class="label">Type</div>
+              <select class="select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
+                <option value="taak" ${item.type === 'taak' ? 'selected' : ''}>taak</option>
+                <option value="afspraak" ${item.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
+                <option value="notitie" ${item.type === 'notitie' ? 'selected' : ''}>notitie</option>
+                <option value="idee" ${item.type === 'idee' ? 'selected' : ''}>idee</option>
+                <option value="project" ${item.type === 'project' ? 'selected' : ''}>project</option>
+                <option value="beslissing" ${item.type === 'beslissing' ? 'selected' : ''}>beslissing</option>
+              </select>
             </div>
-
-            <div class="review-inline-source">${escapeHtml(item.source_text || '')}</div>
-
-            <div class="review-inline-actions">
-              <button class="review-inline-btn secondary" type="button" onclick="closeReviewInlineEdit()">Terug</button>
-              <button class="review-inline-btn primary" type="button" onclick="saveReviewInlineEdit('${escapeHtml(item.temp_id || '')}')">Wijziging bewaren</button>
+            <div class="field">
+              <div class="label">Project</div>
+              <input class="input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
             </div>
+          </div>
+
+          <div class="edit-grid single" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Titel</div>
+              <input class="input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
+            </div>
+          </div>
+
+          <div class="edit-grid single" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Samenvatting</div>
+              <textarea class="textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
+            </div>
+          </div>
+
+          <div class="edit-grid" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Datum</div>
+              <input class="input" value="${escapeHtml(item.date || '')}" placeholder="2026-04-01" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'date', this.value)" />
+            </div>
+            <div class="field">
+              <div class="label">Tijd</div>
+              <input class="input" value="${escapeHtml(item.time || '')}" placeholder="14:00" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'time', this.value)" />
+            </div>
+          </div>
+
+          <div class="edit-grid" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Status</div>
+              <input class="input" value="${escapeHtml(item.status || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'status', this.value)" />
+            </div>
+            <div class="field">
+              <div class="label">Prioriteit</div>
+              <select class="select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'priority', this.value)">
+                <option value="" ${!item.priority ? 'selected' : ''}>-</option>
+                <option value="hoog" ${item.priority === 'hoog' ? 'selected' : ''}>hoog</option>
+                <option value="middel" ${item.priority === 'middel' ? 'selected' : ''}>middel</option>
+                <option value="laag" ${item.priority === 'laag' ? 'selected' : ''}>laag</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="edit-grid single" style="margin-top:12px;">
+            <div class="field">
+              <div class="label">Brontekst</div>
+              <input class="input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
+            </div>
+          </div>
+
+          <div class="edit-actions">
+            <button class="btn ghost" type="button" onclick="closeReviewInlineEdit()">Terug</button>
+            <button class="btn primary" type="button" onclick="saveReviewInlineEdit('${escapeHtml(item.temp_id || '')}')">Bewaren</button>
           </div>
         </div>
       `;
@@ -2778,35 +2083,30 @@
         const isOpen = currentReviewInlineEditTempId === item.temp_id;
         const hasOtherOpen = !!currentReviewInlineEditTempId && currentReviewInlineEditTempId !== item.temp_id;
         const classes = [
-          'review-list-item',
+          'review-card',
           isOpen ? 'is-open' : '',
           hasOtherOpen ? 'is-dimmed' : ''
         ].filter(Boolean).join(' ');
 
         return `
           <div class="${classes}" data-review-temp-id="${escapeHtml(item.temp_id || '')}">
-            <div class="review-list-head">
-              <div class="review-list-badge">${escapeHtml(item.type || 'notitie')}</div>
-
-              <div class="review-list-main">
-                <div class="review-list-title">${escapeHtml(item.title || `Item ${index + 1}`)}</div>
-                <div class="review-list-meta">
-                  ${metaParts.length ? metaParts.map(part => `<span>${escapeHtml(part)}</span>`).join('') : '<span>geen extra info</span>'}
-                </div>
+            <div class="review-card-head">
+              <div class="review-badge">${escapeHtml(item.type || 'notitie')}</div>
+              <div class="review-main">
+                <div class="review-title">${escapeHtml(item.title || `Item ${index + 1}`)}</div>
+                <div class="review-meta">${escapeHtml(metaParts.length ? metaParts.join(' • ') : 'geen extra info')}</div>
               </div>
-
-              <div class="review-list-actions">
-                <button class="review-icon-btn" type="button" onclick="openReviewInlineEdit('${escapeHtml(item.temp_id || '')}')" aria-label="Aanpassen">
+              <div class="item-actions">
+                <button class="icon-btn" type="button" onclick="openReviewInlineEdit('${escapeHtml(item.temp_id || '')}')" aria-label="Aanpassen">
                   ${editIconSvg()}
                 </button>
-                <button class="review-icon-btn delete" type="button" onclick="requestReviewDelete('${escapeHtml(item.temp_id || '')}')" aria-label="Verwijderen">
+                <button class="icon-btn" type="button" onclick="requestReviewDelete('${escapeHtml(item.temp_id || '')}')" aria-label="Verwijderen">
                   ${deleteIconSvg()}
                 </button>
               </div>
             </div>
-
             ${getDuplicateWarningHtml(item)}
-            ${renderReviewInlineEditPanel(item)}
+            ${renderReviewEditPanel(item)}
           </div>
         `;
       }).join('');
@@ -3023,41 +2323,6 @@
       renderAgenda(dashboardRawData);
     }
 
-    document.getElementById('chatSend').addEventListener('click', sendChat);
-
-    document.getElementById('chatInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendChat();
-    });
-
-    document.getElementById('reviewClose').addEventListener('click', closeReviewModal);
-    document.getElementById('reviewCancelBtn').addEventListener('click', closeReviewModal);
-    document.getElementById('reviewOnlyCloseBtn').addEventListener('click', closeReviewModal);
-    document.getElementById('reviewSaveBtn').addEventListener('click', saveReviewedItems);
-
-    document.getElementById('reviewOverlay').addEventListener('click', (e) => {
-      if (e.target.id === 'reviewOverlay') closeReviewModal();
-    });
-
-    document.getElementById('confirmOverlay').addEventListener('click', (e) => {
-      if (e.target.id === 'confirmOverlay') closeConfirmDialog();
-    });
-
-    document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmDialog);
-    document.getElementById('confirmOkBtn').addEventListener('click', runConfirmAction);
-
-    window.openReviewInlineEdit = openReviewInlineEdit;
-    window.closeReviewInlineEdit = closeReviewInlineEdit;
-    window.updateReviewInlineField = updateReviewInlineField;
-    window.saveReviewInlineEdit = saveReviewInlineEdit;
-    window.openDashboardEdit = openDashboardEdit;
-    window.selectAgendaDay = selectAgendaDay;
-    window.requestDashboardDelete = requestDashboardDelete;
-    window.requestReviewDelete = requestReviewDelete;
-    window.closeDashboardInlineEdit = closeDashboardInlineEdit;
-    window.updateDashboardInlineField = updateDashboardInlineField;
-    window.saveDashboardInlineEdit = saveDashboardInlineEdit;
-    window.sendChatWithText = sendChatWithText;
-
     async function loadDashboard() {
       try {
         const response = await fetch('/api/dashboard', { cache: 'no-store' });
@@ -3084,6 +2349,40 @@
         renderAllPanels();
       }
     }
+
+    document.getElementById('chatSend').addEventListener('click', sendChat);
+
+    document.getElementById('chatInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendChat();
+    });
+
+    document.getElementById('reviewClose').addEventListener('click', closeReviewModal);
+    document.getElementById('reviewCancelBtn').addEventListener('click', closeReviewModal);
+    document.getElementById('reviewSaveBtn').addEventListener('click', saveReviewedItems);
+
+    document.getElementById('reviewOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'reviewOverlay') closeReviewModal();
+    });
+
+    document.getElementById('confirmOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'confirmOverlay') closeConfirmDialog();
+    });
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmDialog);
+    document.getElementById('confirmOkBtn').addEventListener('click', runConfirmAction);
+
+    window.openDashboardEdit = openDashboardEdit;
+    window.closeDashboardInlineEdit = closeDashboardInlineEdit;
+    window.updateDashboardInlineField = updateDashboardInlineField;
+    window.saveDashboardInlineEdit = saveDashboardInlineEdit;
+    window.requestDashboardDelete = requestDashboardDelete;
+    window.openReviewInlineEdit = openReviewInlineEdit;
+    window.closeReviewInlineEdit = closeReviewInlineEdit;
+    window.updateReviewInlineField = updateReviewInlineField;
+    window.saveReviewInlineEdit = saveReviewInlineEdit;
+    window.requestReviewDelete = requestReviewDelete;
+    window.selectAgendaDay = selectAgendaDay;
+    window.sendChatWithText = sendChatWithText;
 
     setInterval(() => {
       loadDashboard();
