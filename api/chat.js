@@ -498,6 +498,14 @@ function summariesLookSimilar(a, b) {
   return overlapScore(normA, normB) >= 0.7
 }
 
+function projectLooksSimilar(a, b) {
+  const normA = makeComparableText(a)
+  const normB = makeComparableText(b)
+  if (!normA && !normB) return true
+  if (!normA || !normB) return false
+  return normA === normB
+}
+
 function buildDedupeKey(item) {
   return [
     normalizeType(item?.type),
@@ -796,13 +804,11 @@ async function findReviewDuplicateCandidates(items) {
   const candidates = []
 
   for (const item of items) {
-    const baseQuery = supabase
+    let query = supabase
       .from(TABLE_NAME)
       .select('id, type, title, summary, project, date, time')
       .eq('type', item.type)
-      .limit(25)
-
-    let query = baseQuery
+      .limit(50)
 
     if (item.date) {
       query = query.eq('date', item.date)
@@ -831,8 +837,7 @@ function detectDuplicateMatch(item, candidates) {
 
     const sameDate = safeString(candidate.date) === safeString(item.date)
     const sameTime = safeString(candidate.time) === safeString(item.time)
-    const sameProject =
-      makeComparableText(candidate.project) === makeComparableText(item.project)
+    const sameProject = projectLooksSimilar(candidate.project, item.project)
 
     const titleSimilar = titlesLookSimilar(candidate.title, item.title)
     const summarySimilar = summariesLookSimilar(candidate.summary, item.summary)
@@ -846,15 +851,6 @@ function detectDuplicateMatch(item, candidates) {
       }
     }
 
-    if (titleSimilar && sameDate) {
-      return {
-        duplicate_warning: true,
-        duplicate_match_id: candidate.id,
-        duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'vergelijkbare titel op dezelfde datum'
-      }
-    }
-
     if (titleSimilar && sameDate && sameProject) {
       return {
         duplicate_warning: true,
@@ -864,12 +860,39 @@ function detectDuplicateMatch(item, candidates) {
       }
     }
 
+    if (titleSimilar && sameDate) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare titel op dezelfde datum'
+      }
+    }
+
     if (summarySimilar && sameDate && sameTime) {
       return {
         duplicate_warning: true,
         duplicate_match_id: candidate.id,
         duplicate_match_title: candidate.title,
         duplicate_match_reason: 'vergelijkbare inhoud op dezelfde datum en tijd'
+      }
+    }
+
+    if (!item.date && !candidate.date && titleSimilar && sameProject) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare titel zonder datum'
+      }
+    }
+
+    if (!item.date && !candidate.date && titleSimilar && summarySimilar) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare titel en inhoud zonder datum'
       }
     }
   }
@@ -1057,13 +1080,13 @@ async function updateItem(body) {
   return data
 }
 
-async function findExistingMatches(items) {
+async function findExactExistingMatches(items) {
   const matchMap = new Map()
 
   for (const item of items) {
     const query = supabase
       .from(TABLE_NAME)
-      .select('id, type, title, project, date, time')
+      .select('id, type, title, summary, project, date, time')
       .eq('type', item.type)
       .eq('title', item.title)
       .eq('date', item.date)
@@ -1079,6 +1102,20 @@ async function findExistingMatches(items) {
 
     if (data?.length) {
       matchMap.set(buildDedupeKey(item), data[0])
+    }
+  }
+
+  return matchMap
+}
+
+async function findSmartDuplicateMatches(items) {
+  const candidates = await findReviewDuplicateCandidates(items)
+  const matchMap = new Map()
+
+  for (const item of items) {
+    const match = detectDuplicateMatch(item, candidates)
+    if (match.duplicate_warning && match.duplicate_match_id) {
+      matchMap.set(buildDedupeKey(item), match)
     }
   }
 
@@ -1142,12 +1179,41 @@ async function confirmReview(body) {
   }
 
   const uniqueItems = Array.from(uniqueMap.values())
-  const existingMatches = await findExistingMatches(uniqueItems)
+  const exactExistingMatches = await findExactExistingMatches(uniqueItems)
+  const smartDuplicateMatches = await findSmartDuplicateMatches(uniqueItems)
 
-  const newItems = uniqueItems.filter(item => {
+  const skippedDuplicates = []
+  const newItems = []
+
+  for (const item of uniqueItems) {
     const key = buildDedupeKey(item)
-    return !existingMatches.has(key)
-  })
+
+    if (exactExistingMatches.has(key)) {
+      const match = exactExistingMatches.get(key)
+      skippedDuplicates.push({
+        type: item.type,
+        title: item.title,
+        duplicate_match_id: match?.id || '',
+        duplicate_match_title: match?.title || '',
+        duplicate_match_reason: 'exacte match'
+      })
+      continue
+    }
+
+    if (smartDuplicateMatches.has(key)) {
+      const match = smartDuplicateMatches.get(key)
+      skippedDuplicates.push({
+        type: item.type,
+        title: item.title,
+        duplicate_match_id: match?.duplicate_match_id || '',
+        duplicate_match_title: match?.duplicate_match_title || '',
+        duplicate_match_reason: match?.duplicate_match_reason || 'waarschijnlijk dubbel'
+      })
+      continue
+    }
+
+    newItems.push(item)
+  }
 
   if (!newItems.length) {
     return {
@@ -1157,8 +1223,11 @@ async function confirmReview(body) {
         mode: 'confirmation',
         reply: null,
         confirmation: {
-          text: 'Niets nieuws opgeslagen.',
-          saved: []
+          text: skippedDuplicates.length
+            ? 'Niets nieuws opgeslagen. Alles leek al te bestaan.'
+            : 'Niets nieuws opgeslagen.',
+          saved: [],
+          skipped_duplicates: skippedDuplicates
         },
         review: null,
         actions: [],
@@ -1199,6 +1268,14 @@ async function confirmReview(body) {
     throw new Error(`save_failed: ${error.message}`)
   }
 
+  const savedCount = Array.isArray(data) ? data.length : 0
+  const skippedCount = skippedDuplicates.length
+
+  let confirmationText = 'Opgeslagen.'
+  if (savedCount && skippedCount) {
+    confirmationText = `Opgeslagen. ${savedCount} nieuw, ${skippedCount} dubbel overgeslagen.`
+  }
+
   return {
     blocked: false,
     response: buildResponse(body, {
@@ -1206,12 +1283,13 @@ async function confirmReview(body) {
       mode: 'confirmation',
       reply: null,
       confirmation: {
-        text: 'Opgeslagen.',
+        text: confirmationText,
         saved: (data || []).map(item => ({
           id: item.id,
           type: item.type,
           title: item.title
-        }))
+        })),
+        skipped_duplicates: skippedDuplicates
       },
       review: null,
       actions: [],
