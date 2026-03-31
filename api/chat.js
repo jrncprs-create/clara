@@ -6,6 +6,8 @@ const supabase = createClient(
 )
 
 const AMSTERDAM_TZ = 'Europe/Amsterdam'
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini'
+const TABLE_NAME = 'clara_items'
 
 const DUTCH_MONTHS = {
   januari: 1,
@@ -32,68 +34,75 @@ const DUTCH_WEEKDAYS = {
   zaterdag: 6
 }
 
+const EMPTY_ITEM = Object.freeze({
+  type: '',
+  title: '',
+  summary: '',
+  project: '',
+  status: '',
+  priority: '',
+  date: '',
+  end_date: '',
+  time: '',
+  source_text: ''
+})
+
+const ALLOWED_TYPES = new Set(['taak', 'afspraak', 'notitie', 'idee', 'project', 'beslissing'])
+const TASK_STATUSES = new Set(['nieuw', 'open', 'bezig', 'wacht', 'klaar'])
+const TASK_PRIORITIES = new Set(['laag', 'middel', 'hoog'])
+
 const CLARA_MASTER_PROMPT = `
 Je bent Clara, een compacte en scherpe assistent voor werkstructuur.
 
-Taak:
-Zet rommelige menselijke invoer om naar 1 of meer schone review-items.
+Doel:
+Zet rommelige menselijke invoer om naar een strakke JSON-response voor review.
 
-Belangrijk:
-- Begrijp de echte bedoeling van de gebruiker
-- Negeer ruis, twijfels, herhalingen, correctievragen en meta-gesprek
-- Gebruik alleen de feitelijke instructie als basis
-- Maak nooit dubbele zinnen in de samenvatting
-- Maak nooit een titel van losse stopwoorden of datumfragmenten
-- Als tekst rommelig is, herstel hem stilzwijgend naar logisch Nederlands
-- Verbeter duidelijke typfouten stilzwijgend
-- Als er een duidelijke taak in de tekst zit, geef die taak prioriteit boven alle losse vraag/antwoord-fragmenten
-- Behandel tekst als één logische invoer, niet als losse chatregels
-
-Soorten:
-- taak
-- afspraak
-- notitie
-- idee
-- project
-- beslissing
-
-Regels:
-- notitie is altijd tijdloos:
-  - geen date
-  - geen end_date
-  - geen time
-  - geen priority
-  - geen status
-- afspraak alleen als datum én tijd voldoende duidelijk zijn
-- taak mag wel met datum en zonder tijd
-- verzin geen tijd
-- verzin geen datum als die echt niet afleidbaar is
-- als datum relatief is of als weekdag genoemd wordt (zoals morgen, overmorgen, vrijdag a.s.), laat dat als menselijke datum-intentie terugkomen in het item; de backend normaliseert daarna verder
-- title:
+Belangrijke regels:
+- Begrijp de echte bedoeling van de gebruiker.
+- Negeer ruis, herhalingen, twijfelzinnen en meta-praat.
+- Maak nooit dubbele of halve zinnen.
+- Verbeter duidelijke typfouten stilzwijgend.
+- Gebruik alleen deze types:
+  - taak
+  - afspraak
+  - notitie
+  - idee
+  - project
+  - beslissing
+- Gebruik altijd exact deze keys per item:
+  - type
+  - title
+  - summary
+  - project
+  - status
+  - priority
+  - date
+  - end_date
+  - time
+  - source_text
+- Geef ontbrekende waarden als lege string.
+- Verzin geen datum of tijd als die niet duidelijk is.
+- Een afspraak mag alleen als datum EN tijd voldoende duidelijk zijn.
+- Een taak mag wel met datum en zonder tijd.
+- Een notitie is altijd tijdloos:
+  - status = ""
+  - priority = ""
+  - date = ""
+  - end_date = ""
+  - time = ""
+- Title:
   - kort
   - concreet
   - geen datum vooraan
-  - geen losse woorden zoals "a", "ja", "vrijdag a.s."
-  - kies de werkelijke kern van de taak
-- summary:
-  - 1 korte, schone zin
+  - geen losse woorden zoals "a", "ja", "morgen"
+- Summary:
+  - 1 korte schone zin
+  - zonder meta
   - zonder duplicatie
-  - zonder meta-zinnen
-  - met de echte inhoud/instructie
-- source_text:
+- Source_text:
   - alleen het relevante opgeschoonde bronstuk
-  - niet het hele vraaggesprek terugplakken
-- project leeg laten tenzij echt duidelijk
-- status voor taak meestal "nieuw"
-- priority voor taak meestal "middel" tenzij echt duidelijk anders
 
-Als iets voldoende duidelijk is:
-- geef mode="review"
-
-Alleen als echt noodzakelijk:
-- geef mode="question"
-
-Geef alleen geldige JSON terug, zonder uitleg.
+Antwoord altijd als geldige JSON in exact een van deze vormen.
 
 QUESTION:
 {
@@ -132,11 +141,11 @@ REVIEW:
         "title": "",
         "summary": "",
         "project": "",
+        "status": "",
+        "priority": "",
         "date": "",
         "end_date": "",
         "time": "",
-        "status": "",
-        "priority": "",
         "source_text": ""
       }
     ]
@@ -152,6 +161,8 @@ REVIEW:
     "can_save": true
   }
 }
+
+Geef alleen JSON terug, zonder uitleg of codeblok.
 `.trim()
 
 function safeString(value, fallback = '') {
@@ -191,7 +202,23 @@ function normalizeType(input) {
   if (['project', 'projects'].includes(raw)) return 'project'
   if (['beslissing', 'decision'].includes(raw)) return 'beslissing'
 
-  return 'notitie'
+  return ALLOWED_TYPES.has(raw) ? raw : 'notitie'
+}
+
+function normalizeStatus(type, input) {
+  if (type !== 'taak') return ''
+  const raw = safeString(input).toLowerCase()
+  if (!raw) return 'nieuw'
+  if (TASK_STATUSES.has(raw)) return raw
+  return 'nieuw'
+}
+
+function normalizePriority(type, input) {
+  if (type !== 'taak') return ''
+  const raw = safeString(input).toLowerCase()
+  if (!raw) return 'middel'
+  if (TASK_PRIORITIES.has(raw)) return raw
+  return 'middel'
 }
 
 function getAmsterdamDateParts(baseDate = new Date()) {
@@ -242,7 +269,7 @@ function getNextWeekdayYMD(targetWeekday, includeToday = false, baseDate = new D
 }
 
 function normalizeExplicitDateString(raw) {
-  const value = safeString(raw)
+  const value = safeString(raw).toLowerCase()
   if (!value) return ''
 
   let match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
@@ -255,7 +282,7 @@ function normalizeExplicitDateString(raw) {
     }
   }
 
-  match = value.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/)
+  match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/)
   if (match) {
     const day = Number(match[1])
     const month = Number(match[2])
@@ -265,119 +292,64 @@ function normalizeExplicitDateString(raw) {
     }
   }
 
-  match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  match = value.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/)
   if (match) {
     const day = Number(match[1])
-    const month = Number(match[2])
+    const month = DUTCH_MONTHS[match[2]]
     const year = Number(match[3])
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+    if (month && day >= 1 && day <= 31) {
       return `${year}-${pad2(month)}-${pad2(day)}`
     }
   }
 
-  match = value.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  match = value.match(/^(\d{1,2})\s+([a-z]+)$/)
   if (match) {
     const day = Number(match[1])
-    const month = Number(match[2])
-    const year = Number(match[3])
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      return `${year}-${pad2(month)}-${pad2(day)}`
+    const month = DUTCH_MONTHS[match[2]]
+    const currentYear = getAmsterdamDateParts(new Date()).year
+    if (month && day >= 1 && day <= 31) {
+      return `${currentYear}-${pad2(month)}-${pad2(day)}`
     }
   }
 
   return ''
 }
 
-function extractExplicitDateFromText(text, baseDate = new Date()) {
-  const raw = safeString(text).toLowerCase()
-  if (!raw) return ''
+function extractRelativeDate(raw) {
+  const value = ` ${safeString(raw).toLowerCase()} `
+  if (!value.trim()) return ''
 
-  const patterns = [
-    /\b\d{4}-\d{2}-\d{2}\b/,
-    /\b\d{1,2}-\d{1,2}-\d{4}\b/,
-    /\b\d{1,2}\/\d{1,2}\/\d{4}\b/,
-    /\b\d{1,2}\.\d{1,2}\.\d{4}\b/
-  ]
+  const today = getAmsterdamTodayUTC(new Date())
 
-  for (const pattern of patterns) {
-    const match = raw.match(pattern)
-    if (match) {
-      const normalized = normalizeExplicitDateString(match[0])
-      if (normalized) return normalized
-    }
-  }
-
-  const monthMatch = raw.match(
-    /\b(\d{1,2})\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)(?:\s+(\d{4}))?\b/i
-  )
-
-  if (monthMatch) {
-    const day = Number(monthMatch[1])
-    const month = DUTCH_MONTHS[monthMatch[2].toLowerCase()]
-    const year = monthMatch[3] ? Number(monthMatch[3]) : getAmsterdamDateParts(baseDate).year
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      return `${year}-${pad2(month)}-${pad2(day)}`
-    }
-  }
-
-  return ''
-}
-
-function extractRelativeDateFromText(text, baseDate = new Date()) {
-  const raw = safeString(text).toLowerCase()
-  if (!raw) return ''
-
-  const today = getAmsterdamTodayUTC(baseDate)
-
-  if (/\bovermorgen\b/.test(raw)) {
-    return formatUTCDateYMD(addDaysUTC(today, 2))
-  }
-
-  if (/\bmorgen\b/.test(raw)) {
-    return formatUTCDateYMD(addDaysUTC(today, 1))
-  }
-
-  if (/\bvandaag\b/.test(raw)) {
-    return formatUTCDateYMD(today)
-  }
+  if (/\bovermorgen\b/.test(value)) return formatUTCDateYMD(addDaysUTC(today, 2))
+  if (/\bmorgen\b/.test(value)) return formatUTCDateYMD(addDaysUTC(today, 1))
+  if (/\bvandaag\b/.test(value)) return formatUTCDateYMD(today)
 
   for (const [weekdayName, weekdayIndex] of Object.entries(DUTCH_WEEKDAYS)) {
-    const weekdayRegex = new RegExp(`\\b${weekdayName}\\b`, 'i')
-    const upcomingRegex = /\b(a\.s\.|as|aanstaande|komende)\b/i
-    if (weekdayRegex.test(raw) && upcomingRegex.test(raw)) {
-      return getNextWeekdayYMD(weekdayIndex, false, baseDate)
+    const regex = new RegExp(`\\b${weekdayName}(?:\\s*(?:a\\.s\\.|as|aanstaande))?\\b`, 'i')
+    if (regex.test(value)) {
+      return getNextWeekdayYMD(weekdayIndex, false, new Date())
     }
   }
 
   return ''
 }
 
-function normalizeDate(input, baseDate = new Date()) {
-  const raw = safeString(input)
-  if (!raw) return ''
-
-  const explicit = normalizeExplicitDateString(raw)
-  if (explicit) return explicit
-
-  const relative = extractRelativeDateFromText(raw, baseDate)
-  if (relative) return relative
-
-  const embeddedExplicit = extractExplicitDateFromText(raw, baseDate)
-  if (embeddedExplicit) return embeddedExplicit
-
-  return ''
+function normalizeDate(raw) {
+  const value = safeString(raw)
+  if (!value) return ''
+  return (
+    normalizeExplicitDateString(value) ||
+    extractRelativeDate(value) ||
+    ''
+  )
 }
 
-function normalizeTime(input) {
-  const raw = safeString(input).toLowerCase().replace(/\./g, ':')
-  if (!raw) return ''
+function normalizeTime(raw) {
+  const value = safeString(raw).toLowerCase()
+  if (!value) return ''
 
-  if (/^\d{1,2}$/.test(raw)) {
-    const hh = Number(raw)
-    if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
-  }
-
-  const match = raw.match(/^(\d{1,2}):(\d{1,2})$/)
+  let match = value.match(/^(\d{1,2}):(\d{2})$/)
   if (match) {
     const hh = Number(match[1])
     const mm = Number(match[2])
@@ -386,158 +358,118 @@ function normalizeTime(input) {
     }
   }
 
+  match = value.match(/^(\d{1,2})[.](\d{2})$/)
+  if (match) {
+    const hh = Number(match[1])
+    const mm = Number(match[2])
+    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
+      return `${pad2(hh)}:${pad2(mm)}`
+    }
+  }
+
+  match = value.match(/^(\d{1,2})$/)
+  if (match) {
+    const hh = Number(match[1])
+    if (hh >= 0 && hh <= 23) {
+      return `${pad2(hh)}:00`
+    }
+  }
+
   return ''
+}
+
+function extractDateFromText(text) {
+  const value = normalizeWhitespace(text).toLowerCase()
+  if (!value) return ''
+
+  const explicit =
+    value.match(/\b\d{4}-\d{2}-\d{2}\b/)?.[0] ||
+    value.match(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/)?.[0] ||
+    value.match(/\b\d{1,2}\s+[a-z]+\s+\d{4}\b/)?.[0] ||
+    value.match(/\b\d{1,2}\s+[a-z]+\b/)?.[0]
+
+  if (explicit) {
+    return normalizeExplicitDateString(explicit)
+  }
+
+  return extractRelativeDate(value)
 }
 
 function extractTimeFromText(text) {
-  const raw = safeString(text).toLowerCase().replace(/\./g, ':')
-  if (!raw) return ''
+  const value = normalizeWhitespace(text).toLowerCase()
+  if (!value) return ''
 
-  let match = raw.match(/\b(\d{1,2}):(\d{2})\b/)
-  if (match) {
-    const hh = Number(match[1])
-    const mm = Number(match[2])
-    if (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59) {
-      return `${pad2(hh)}:${pad2(mm)}`
-    }
-  }
+  const match =
+    value.match(/\b(\d{1,2}:\d{2})\b/)?.[1] ||
+    value.match(/\b(\d{1,2}\.\d{2})\b/)?.[1] ||
+    value.match(/\bom\s+(\d{1,2})\b/)?.[1]
 
-  match = raw.match(/\bom\s+(\d{1,2})\b/)
-  if (match) {
-    const hh = Number(match[1])
-    if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
-  }
-
-  match = raw.match(/\b(?:om\s*)?(\d{1,2})\s*uur\b/)
-  if (match) {
-    const hh = Number(match[1])
-    if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
-  }
-
-  return ''
-}
-
-function fixCommonTypos(input = '') {
-  let text = String(input)
-
-  const replacements = [
-    [/\bdfremel\b/gi, 'dremel'],
-    [/\bfiuller\b/gi, 'filler'],
-    [/\biun\b/gi, 'in'],
-    [/\bdaty\b/gi, 'date'],
-    [/\bgekleurde fiuller\b/gi, 'gekleurde filler'],
-    [/\bmet de dfremel\b/gi, 'met de dremel'],
-    [/`1/g, ''],
-    [/```/g, '']
-  ]
-
-  for (const [pattern, replacement] of replacements) {
-    text = text.replace(pattern, replacement)
-  }
-
-  return normalizeWhitespace(text)
-}
-
-function stripNoiseForAI(input = '') {
-  const lines = normalizeWhitespace(fixCommonTypos(input))
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
-
-  const filtered = lines.filter(line => {
-    const lower = line.toLowerCase()
-
-    if (/^opgeslagen\.?$/i.test(lower)) return false
-    if (/^controleer dit even\.?$/i.test(lower)) return false
-    if (/^welke datum bedoel je\b/i.test(lower)) return false
-    if (/^wat is de exacte datum\b/i.test(lower)) return false
-    if (/^is de datum\b/i.test(lower)) return false
-    if (/^valt aanstaande vrijdag\b/i.test(lower)) return false
-    if (/^wat is het type van deze invoer\b/i.test(lower)) return false
-    if (/^(taak|afspraak|notitie)$/i.test(lower)) return false
-    if (/^(ja|nee)(\b|,)/i.test(lower)) return false
-    if (/^\d{4}-\d{2}-\d{2}$/.test(lower)) return false
-
-    return true
-  })
-
-  return normalizeWhitespace(filtered.join('\n'))
+  return normalizeTime(match || '')
 }
 
 function sanitizeNotitieFields(item) {
   return {
     ...item,
+    status: '',
+    priority: '',
     date: '',
     end_date: '',
-    time: '',
-    priority: '',
-    status: '',
-    note_type: 'general'
+    time: ''
   }
 }
 
 function sanitizeItemCore(item, mode = 'save') {
-  const sourceText = safeString(item.source_text)
-  const title = safeString(item.title, 'Zonder titel')
-  const summary = safeString(item.summary)
-  const project = safeString(item.project)
-  const status = safeString(item.status, 'nieuw')
-  const priority = safeString(item.priority, 'middel')
+  const rawType = normalizeType(item?.type)
+  const type = rawType || 'notitie'
 
-  const combinedText = [title, summary, sourceText].filter(Boolean).join(' | ')
-  const type = normalizeType(item.type)
+  const title =
+    normalizeWhitespace(item?.title) ||
+    normalizeWhitespace(item?.summary).slice(0, 80) ||
+    normalizeWhitespace(item?.source_text).slice(0, 80)
 
-  let date = ''
-  let endDate = ''
-  let time = ''
+  const summary =
+    normalizeWhitespace(item?.summary) ||
+    title
+
+  const project = normalizeWhitespace(item?.project)
+  const sourceText =
+    normalizeWhitespace(item?.source_text) ||
+    normalizeWhitespace(item?.raw) ||
+    summary ||
+    title
+
+  let date = normalizeDate(item?.date)
+  let endDate = normalizeDate(item?.end_date)
+  let time = normalizeTime(item?.time)
+  let status = normalizeStatus(type, item?.status)
+  let priority = normalizePriority(type, item?.priority)
 
   if (mode === 'save') {
-    const dateFromAI = normalizeDate(item.date)
-    const dateFromText = normalizeDate(combinedText)
-
-    if (dateFromText) {
-      date = dateFromText
-    } else if (dateFromAI) {
-      const year = Number(dateFromAI.slice(0, 4))
-      const currentYear = getAmsterdamDateParts(new Date()).year
-      if (year >= currentYear) {
-        date = dateFromAI
-      }
-    }
-
-    endDate = normalizeDate(item.end_date) || ''
-
-    time = normalizeTime(item.time)
-    if (!time && type === 'afspraak') {
-      time = extractTimeFromText(combinedText)
-    }
-  } else {
-    date = normalizeDate(item.date) || normalizeDate(combinedText)
-    endDate = normalizeDate(item.end_date) || ''
-
-    time = normalizeTime(item.time)
-    if (!time && type === 'afspraak') {
-      time = extractTimeFromText(combinedText)
-    }
+    if (!date) date = extractDateFromText(sourceText)
+    if (!time && type === 'afspraak') time = extractTimeFromText(sourceText)
   }
 
   let cleaned = {
+    ...EMPTY_ITEM,
     type,
     title,
     summary,
     project,
     status,
+    priority,
     date,
     end_date: endDate,
     time,
-    priority,
-    note_type: 'general',
-    raw: sourceText,
     source_text: sourceText
   }
 
   if (type === 'notitie') {
     cleaned = sanitizeNotitieFields(cleaned)
+  }
+
+  if (type !== 'taak') {
+    cleaned.status = type === 'afspraak' ? '' : cleaned.status
+    cleaned.priority = type === 'afspraak' ? '' : cleaned.priority
   }
 
   return cleaned
@@ -647,7 +579,15 @@ function buildResponse(body, {
   }
 }
 
+function stripNoiseForAI(text) {
+  return normalizeWhitespace(text)
+    .replace(/^\s*(ja|nee|ok|oke|top|mooi|thanks|dank)\s*$/gim, '')
+    .trim()
+}
+
 async function parseWithOpenAI(text) {
+  const cleanedInput = stripNoiseForAI(text)
+
   if (!process.env.OPENAI_API_KEY) {
     return {
       mode: 'review',
@@ -657,19 +597,20 @@ async function parseWithOpenAI(text) {
         items: [
           {
             temp_id: 'item_1',
-            type: 'notitie',
-            title: text.slice(0, 80),
-            summary: text,
-            project: '',
-            date: '',
-            end_date: '',
-            time: '',
-            status: '',
-            priority: '',
-            source_text: text
+            ...sanitizeItemForSave({
+              type: 'notitie',
+              title: cleanedInput.slice(0, 80),
+              summary: cleanedInput,
+              source_text: cleanedInput
+            })
           }
         ]
       },
+      actions: [
+        { type: 'confirm_review', label: 'Opslaan' },
+        { type: 'edit_review_item', label: 'Aanpassen', temp_id: 'item_1' },
+        { type: 'cancel_review', label: 'Annuleren' }
+      ],
       meta: {
         needs_clarification: false,
         confidence: 0.7,
@@ -677,8 +618,6 @@ async function parseWithOpenAI(text) {
       }
     }
   }
-
-  const cleanedInput = stripNoiseForAI(text)
 
   const prompt = `${CLARA_MASTER_PROMPT}
 
@@ -693,7 +632,7 @@ ${cleanedInput || text}
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: 'gpt-4.1-mini',
+      model: OPENAI_MODEL,
       temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
@@ -719,46 +658,40 @@ ${cleanedInput || text}
   return JSON.parse(content)
 }
 
+function normalizeQuestionPayload(aiResult) {
+  return {
+    mode: 'question',
+    reply: null,
+    question: {
+      text: safeString(aiResult?.question?.text, 'Kun je dit iets preciezer maken?'),
+      field: safeString(aiResult?.question?.field, 'input'),
+      options: Array.isArray(aiResult?.question?.options) ? aiResult.question.options : [],
+      allow_free_input: aiResult?.question?.allow_free_input !== false
+    },
+    confirmation: null,
+    review: null,
+    actions: Array.isArray(aiResult?.actions) ? aiResult.actions : [],
+    meta: {
+      needs_clarification: true,
+      confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.55), 0, 1),
+      can_save: false
+    }
+  }
+}
+
 function normalizeReviewPayload(aiResult) {
   const mode = safeString(aiResult?.mode).toLowerCase()
 
   if (mode === 'question') {
-    return {
-      mode: 'question',
-      reply: null,
-      question: {
-        text: safeString(aiResult?.question?.text, 'Kun je dit iets preciezer maken?'),
-        field: safeString(aiResult?.question?.field, 'input'),
-        options: Array.isArray(aiResult?.question?.options) ? aiResult.question.options : [],
-        allow_free_input: aiResult?.question?.allow_free_input !== false
-      },
-      confirmation: null,
-      review: null,
-      actions: Array.isArray(aiResult?.actions) ? aiResult.actions : [],
-      meta: {
-        needs_clarification: true,
-        confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.55), 0, 1),
-        can_save: false
-      }
-    }
+    return normalizeQuestionPayload(aiResult)
   }
 
   const rawItems = Array.isArray(aiResult?.review?.items) ? aiResult.review.items : []
-
   const cleanedItems = rawItems.map((item, index) => {
     const cleaned = sanitizeItemForSave(item)
     return {
       temp_id: safeString(item?.temp_id, `item_${index + 1}`),
-      type: cleaned.type,
-      title: cleaned.title,
-      summary: cleaned.summary,
-      project: cleaned.project,
-      date: cleaned.date,
-      end_date: cleaned.end_date,
-      time: cleaned.time,
-      status: cleaned.status,
-      priority: cleaned.priority,
-      source_text: cleaned.source_text
+      ...cleaned
     }
   })
 
@@ -819,7 +752,7 @@ async function deleteItem(body) {
 
   if (itemId) {
     const { data, error } = await supabase
-      .from('clara_items')
+      .from(TABLE_NAME)
       .delete()
       .eq('id', itemId)
       .select('id, title, type')
@@ -845,7 +778,7 @@ async function deleteItem(body) {
   }
 
   let query = supabase
-    .from('clara_items')
+    .from(TABLE_NAME)
     .delete()
     .eq('type', type)
     .eq('title', title)
@@ -891,14 +824,14 @@ async function updateItem(body) {
     end_date: cleaned.end_date,
     time: cleaned.time,
     priority: cleaned.priority,
-    note_type: cleaned.note_type,
-    raw: cleaned.raw,
+    note_type: cleaned.type === 'notitie' ? 'general' : null,
+    raw: cleaned.source_text,
     source_text: cleaned.source_text,
     updated_at: now
   }
 
   const { data, error } = await supabase
-    .from('clara_items')
+    .from(TABLE_NAME)
     .update(updatePayload)
     .eq('id', itemId)
     .select()
@@ -911,12 +844,110 @@ async function updateItem(body) {
   return data
 }
 
+async function confirmReview(body) {
+  const items = Array.isArray(body.items) ? body.items : []
+
+  if (!items.length) {
+    throw new Error('no_items_to_save')
+  }
+
+  const cleanedItems = items.map((item, index) => ({
+    temp_id: safeString(item?.temp_id, `item_${index + 1}`),
+    ...sanitizeItemForSave(item)
+  }))
+
+  const enrichedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
+
+  if (blocked) {
+    return {
+      blocked: true,
+      response: buildResponse(body, {
+        ok: true,
+        mode: 'review',
+        reply: 'Nog niet opgeslagen. Vul eerst de ontbrekende velden aan.',
+        question: null,
+        confirmation: null,
+        review: {
+          summary: safeString(body.review_summary || 'Controleer en vul aan.'),
+          items: enrichedItems
+        },
+        actions: [
+          { type: 'confirm_review', label: 'Opslaan' },
+          ...enrichedItems.map(item => ({
+            type: 'edit_review_item',
+            label: 'Aanpassen',
+            temp_id: item.temp_id
+          })),
+          { type: 'cancel_review', label: 'Annuleren' }
+        ],
+        meta: {
+          needs_clarification: true,
+          confidence: 0.6,
+          can_save: false,
+          blocked_by: blocked.validation_issues?.[0]?.code || null
+        }
+      })
+    }
+  }
+
+  const now = new Date().toISOString()
+
+  const inserts = cleanedItems.map(item => ({
+    type: item.type,
+    title: item.title,
+    summary: item.summary,
+    project: item.project,
+    status: item.status,
+    date: item.date,
+    end_date: item.end_date,
+    time: item.time,
+    priority: item.priority,
+    note_type: item.type === 'notitie' ? 'general' : null,
+    raw: item.source_text,
+    source_text: item.source_text,
+    created_at: now,
+    updated_at: now
+  }))
+
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .insert(inserts)
+    .select()
+
+  if (error) {
+    throw new Error(`save_failed: ${error.message}`)
+  }
+
+  return {
+    blocked: false,
+    response: buildResponse(body, {
+      ok: true,
+      mode: 'confirmation',
+      reply: null,
+      confirmation: {
+        text: 'Opgeslagen.',
+        saved: (data || []).map(item => ({
+          id: item.id,
+          type: item.type,
+          title: item.title
+        }))
+      },
+      review: null,
+      actions: [],
+      meta: {
+        needs_clarification: false,
+        confidence: 1,
+        can_save: false
+      }
+    })
+  }
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
-      return res.status(405).json({
-        error: 'method_not_allowed'
-      })
+      return res.status(405).json({ error: 'method_not_allowed' })
     }
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {})
@@ -924,9 +955,7 @@ module.exports = async function handler(req, res) {
     const action = safeString(body.action)
 
     if (!message && !action) {
-      return res.status(400).json({
-        error: 'missing_input'
-      })
+      return res.status(400).json({ error: 'missing_input' })
     }
 
     if (!action) {
@@ -948,127 +977,8 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'confirm_review') {
-      const items = Array.isArray(body.items) ? body.items : []
-
-      if (!items.length) {
-        return res.status(400).json({
-          error: 'no_items_to_save'
-        })
-      }
-
-      const cleanedItems = items.map((item, index) => {
-        const cleaned = sanitizeItemForSave(item)
-        return {
-          temp_id: safeString(item?.temp_id, `item_${index + 1}`),
-          type: cleaned.type,
-          title: cleaned.title,
-          summary: cleaned.summary,
-          project: cleaned.project,
-          date: cleaned.date,
-          end_date: cleaned.end_date,
-          time: cleaned.time,
-          status: cleaned.status,
-          priority: cleaned.priority,
-          source_text: cleaned.source_text
-        }
-      })
-
-      const enrichedItems = enrichReviewItemsWithValidation(cleanedItems)
-      const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
-
-      if (blocked) {
-        return res.status(200).json(
-          buildResponse(body, {
-            ok: true,
-            mode: 'review',
-            reply: 'Nog niet opgeslagen. Vul eerst de ontbrekende velden aan.',
-            question: null,
-            confirmation: null,
-            review: {
-              summary: safeString(body.review_summary || 'Controleer en vul aan.'),
-              items: enrichedItems
-            },
-            actions: [
-              { type: 'confirm_review', label: 'Opslaan' },
-              ...enrichedItems.map(item => ({
-                type: 'edit_review_item',
-                label: 'Aanpassen',
-                temp_id: item.temp_id
-              })),
-              { type: 'cancel_review', label: 'Annuleren' }
-            ],
-            meta: {
-              needs_clarification: true,
-              confidence: 0.6,
-              can_save: false,
-              blocked_by: blocked.validation_issues?.[0]?.code || null
-            }
-          })
-        )
-      }
-
-      const now = new Date().toISOString()
-
-      const inserts = cleanedItems.map(item => ({
-        type: item.type,
-        title: item.title,
-        summary: item.summary,
-        project: item.project,
-        status: item.status,
-        date: item.date,
-        end_date: item.end_date,
-        time: item.time,
-        priority: item.priority,
-        note_type: 'general',
-        raw: item.source_text,
-        source_text: item.source_text,
-        created_at: now,
-        updated_at: now
-      }))
-
-      const { data, error } = await supabase
-        .from('clara_items')
-        .insert(inserts)
-        .select()
-
-      if (error) {
-        return res.status(500).json(
-          buildResponse(body, {
-            ok: false,
-            mode: 'reply',
-            reply: 'Er ging iets mis bij het opslaan.',
-            meta: {
-              needs_clarification: false,
-              confidence: 0,
-              can_save: false,
-              error_code: error.code || 'SUPABASE_ERROR'
-            }
-          })
-        )
-      }
-
-      return res.status(200).json(
-        buildResponse(body, {
-          ok: true,
-          mode: 'confirmation',
-          reply: null,
-          confirmation: {
-            text: 'Opgeslagen.',
-            saved: (data || []).map(item => ({
-              id: item.id,
-              type: item.type,
-              title: item.title
-            }))
-          },
-          review: null,
-          actions: [],
-          meta: {
-            needs_clarification: false,
-            confidence: 1,
-            can_save: false
-          }
-        })
-      )
+      const result = await confirmReview(body)
+      return res.status(200).json(result.response)
     }
 
     if (action === 'update_item') {
@@ -1130,10 +1040,14 @@ module.exports = async function handler(req, res) {
       )
     }
 
-    return res.status(400).json({
-      error: 'unknown_action'
-    })
-  } catch (e) {
+    return res.status(400).json({ error: 'unknown_action' })
+  } catch (error) {
+    const message = safeString(error?.message)
+
+    if (message === 'no_items_to_save') {
+      return res.status(400).json({ error: 'no_items_to_save' })
+    }
+
     return res.status(500).json(
       buildResponse({}, {
         ok: false,
