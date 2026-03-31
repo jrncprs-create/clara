@@ -755,6 +755,26 @@
       flex-shrink: 0;
     }
 
+    .review-warning {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.88);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .review-warning-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.58);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
     .review-inline-source {
       margin-top: 10px;
       padding: 10px 12px;
@@ -1371,7 +1391,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v3.6 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v3.7 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
     let currentReviewInlineEditTempId = null;
@@ -1404,7 +1424,7 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+        .replace(/\"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
 
@@ -1463,8 +1483,8 @@
         return new Date(y, m - 1, d);
       }
 
-      if (/^\d{2}[\/.-]\d{2}[\/.-]\d{4}$/.test(raw)) {
-        const parts = raw.split(/[\/.-]/).map(Number);
+      if (/^\d{2}[\\/.-]\d{2}[\\/.-]\d{4}$/.test(raw)) {
+        const parts = raw.split(/[\\/.-]/).map(Number);
         return new Date(parts[2], parts[1] - 1, parts[0]);
       }
 
@@ -1659,7 +1679,11 @@
         end_date: item.end_date || '',
         time: item.time || '',
         source_text: item.source_text || '',
-        raw: item.raw || ''
+        raw: item.raw || '',
+        duplicate_warning: false,
+        duplicate_match_id: '',
+        duplicate_match_title: '',
+        duplicate_match_reason: ''
       };
     }
 
@@ -2481,6 +2505,21 @@
       return parts;
     }
 
+    function getDuplicateWarningHtml(item) {
+      if (!item?.duplicate_warning) return '';
+
+      const reason = item.duplicate_match_reason || 'lijkt sterk op een bestaand item';
+      const matchTitle = item.duplicate_match_title || '';
+
+      return `
+        <div class="review-warning">
+          <div class="review-warning-label">Waarschijnlijk dubbel</div>
+          <div>${escapeHtml(reason)}</div>
+          ${matchTitle ? `<div style="margin-top:4px; color: rgba(255,255,255,0.62);">Bestaand item: ${escapeHtml(matchTitle)}</div>` : ''}
+        </div>
+      `;
+    }
+
     function openReviewModal(reviewData) {
       currentReviewData = reviewData;
       currentReviewInlineEditTempId = null;
@@ -2744,6 +2783,7 @@
               </div>
             </div>
 
+            ${getDuplicateWarningHtml(item)}
             ${renderReviewInlineEditPanel(item)}
           </div>
         `;
