@@ -94,8 +94,10 @@ Belangrijke regels:
 - Verzin geen datum of tijd als die niet duidelijk is.
 - Zet expliciete datums bij voorkeur direct om naar YYYY-MM-DD.
 - Zet expliciete tijden bij voorkeur direct om naar HH:MM.
-- Een afspraak mag alleen als datum EN tijd voldoende duidelijk zijn.
-- Als iets duidelijk een afspraak is maar datum of tijd ontbreekt, geef QUESTION terug.
+- Een afspraak mag met alleen datum.
+- Een afspraak zonder tijd betekent een hele-dag afspraak.
+- Een afspraak mag alleen als datum voldoende duidelijk is.
+- Als iets duidelijk een afspraak is maar datum ontbreekt, geef QUESTION terug.
 - Een taak mag wel met datum en zonder tijd.
 - Een notitie is altijd tijdloos:
   - status = ""
@@ -595,7 +597,6 @@ function getItemValidationIssues(item) {
   const type = normalizeType(item.type)
   const title = safeString(item.title)
   const date = safeString(item.date)
-  const time = safeString(item.time)
 
   const issues = []
 
@@ -612,14 +613,6 @@ function getItemValidationIssues(item) {
       field: 'date',
       code: 'missing_date',
       reason: 'Afspraak mist datum.'
-    })
-  }
-
-  if (type === 'afspraak' && !time) {
-    issues.push({
-      field: 'time',
-      code: 'missing_time',
-      reason: 'Afspraak mist tijd.'
     })
   }
 
