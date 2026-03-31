@@ -882,7 +882,7 @@ async function updateItem(body) {
     end_date: cleaned.end_date,
     time: cleaned.time,
     priority: cleaned.priority,
-    note_type: cleaned.type === 'notitie' ? 'general' : null,
+    note_type: clenote_type: cleaned.type === 'notitie' ? 'general' : '',aned.type === 'notitie' ? 'general' : null,
     raw: cleaned.source_text,
     source_text: cleaned.source_text,
     updated_at: now
@@ -961,7 +961,7 @@ async function confirmReview(body) {
     end_date: item.end_date,
     time: item.time,
     priority: item.priority,
-    note_type: item.type === 'notitie' ? 'general' : null,
+    note_type: item.type === 'notitie' ? 'general' : '',
     raw: item.source_text,
     source_text: item.source_text,
     created_at: now,
