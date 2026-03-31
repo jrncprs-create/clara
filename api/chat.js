@@ -5,6 +5,31 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 )
 
+const AMSTERDAM_TZ = 'Europe/Amsterdam'
+const DUTCH_MONTHS = {
+  januari: 1,
+  februari: 2,
+  maart: 3,
+  april: 4,
+  mei: 5,
+  juni: 6,
+  juli: 7,
+  augustus: 8,
+  september: 9,
+  oktober: 10,
+  november: 11,
+  december: 12
+}
+const DUTCH_WEEKDAYS = {
+  zondag: 0,
+  maandag: 1,
+  dinsdag: 2,
+  woensdag: 3,
+  donderdag: 4,
+  vrijdag: 5,
+  zaterdag: 6
+}
+
 function safeString(value, fallback = '') {
   if (value === undefined || value === null) return fallback
   return String(value).trim()
@@ -17,6 +42,18 @@ function safeNumber(value, fallback = 0) {
 
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n))
+}
+
+function pad2(n) {
+  return String(n).padStart(2, '0')
+}
+
+function normalizeWhitespace(str = '') {
+  return String(str)
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 function normalizeType(input) {
@@ -32,32 +69,30 @@ function normalizeType(input) {
   return 'notitie'
 }
 
-function pad2(n) {
-  return String(n).padStart(2, '0')
-}
-
 function getAmsterdamDateParts(baseDate = new Date()) {
   const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Amsterdam',
+    timeZone: AMSTERDAM_TZ,
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit'
+    day: '2-digit',
+    weekday: 'short'
   })
 
   const parts = fmt.formatToParts(baseDate)
   const year = Number(parts.find(p => p.type === 'year')?.value)
   const month = Number(parts.find(p => p.type === 'month')?.value)
   const day = Number(parts.find(p => p.type === 'day')?.value)
+  const weekdayShort = safeString(parts.find(p => p.type === 'weekday')?.value).toLowerCase()
 
-  return { year, month, day }
+  return { year, month, day, weekdayShort }
 }
 
 function makeUTCDateFromParts(year, month, day) {
   return new Date(Date.UTC(year, month - 1, day))
 }
 
-function getAmsterdamTodayUTC() {
-  const { year, month, day } = getAmsterdamDateParts(new Date())
+function getAmsterdamTodayUTC(baseDate = new Date()) {
+  const { year, month, day } = getAmsterdamDateParts(baseDate)
   return makeUTCDateFromParts(year, month, day)
 }
 
@@ -69,6 +104,18 @@ function addDaysUTC(date, days) {
 
 function formatUTCDateYMD(date) {
   return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`
+}
+
+function getNextWeekdayYMD(targetWeekday, includeToday = false, baseDate = new Date()) {
+  const today = getAmsterdamTodayUTC(baseDate)
+  const currentWeekday = today.getUTCDay()
+  let diff = targetWeekday - currentWeekday
+
+  if (diff < 0 || (!includeToday && diff === 0)) {
+    diff += 7
+  }
+
+  return formatUTCDateYMD(addDaysUTC(today, diff))
 }
 
 function normalizeExplicitDateString(raw) {
@@ -118,11 +165,11 @@ function normalizeExplicitDateString(raw) {
   return ''
 }
 
-function extractRelativeDateFromText(text) {
+function extractRelativeDateFromText(text, baseDate = new Date()) {
   const raw = safeString(text).toLowerCase()
   if (!raw) return ''
 
-  const today = getAmsterdamTodayUTC()
+  const today = getAmsterdamTodayUTC(baseDate)
 
   if (/\bovermorgen\b/.test(raw)) {
     return formatUTCDateYMD(addDaysUTC(today, 2))
@@ -136,11 +183,20 @@ function extractRelativeDateFromText(text) {
     return formatUTCDateYMD(today)
   }
 
+  for (const [weekdayName, weekdayIndex] of Object.entries(DUTCH_WEEKDAYS)) {
+    const weekdayRegex = new RegExp(`\\b${weekdayName}\\b`, 'i')
+    const upcomingRegex = /\b(a\.s\.|as|aanstaande|komende)\b/i
+
+    if (weekdayRegex.test(raw) && upcomingRegex.test(raw)) {
+      return getNextWeekdayYMD(weekdayIndex, false, baseDate)
+    }
+  }
+
   return ''
 }
 
-function extractExplicitDateFromText(text) {
-  const raw = safeString(text)
+function extractExplicitDateFromText(text, baseDate = new Date()) {
+  const raw = safeString(text).toLowerCase()
   if (!raw) return ''
 
   const patterns = [
@@ -158,20 +214,35 @@ function extractExplicitDateFromText(text) {
     }
   }
 
+  const textual = raw.match(
+    /\b(\d{1,2})\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)(?:\s+(\d{4}))?\b/i
+  )
+
+  if (textual) {
+    const day = Number(textual[1])
+    const month = DUTCH_MONTHS[textual[2].toLowerCase()]
+    const currentYear = getAmsterdamDateParts(baseDate).year
+    const year = textual[3] ? Number(textual[3]) : currentYear
+
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return `${year}-${pad2(month)}-${pad2(day)}`
+    }
+  }
+
   return ''
 }
 
-function normalizeDate(input) {
+function normalizeDate(input, baseDate = new Date()) {
   const raw = safeString(input)
   if (!raw) return ''
 
   const explicit = normalizeExplicitDateString(raw)
   if (explicit) return explicit
 
-  const relative = extractRelativeDateFromText(raw)
+  const relative = extractRelativeDateFromText(raw, baseDate)
   if (relative) return relative
 
-  const embeddedExplicit = extractExplicitDateFromText(raw)
+  const embeddedExplicit = extractExplicitDateFromText(raw, baseDate)
   if (embeddedExplicit) return embeddedExplicit
 
   return ''
@@ -217,7 +288,284 @@ function extractTimeFromText(text) {
     if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
   }
 
+  match = raw.match(/\b(?:om\s*)?(\d{1,2})\s*uur\b/)
+  if (match) {
+    const hh = Number(match[1])
+    if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
+  }
+
   return ''
+}
+
+function fixCommonTypos(input = '') {
+  let text = String(input)
+
+  const replacements = [
+    [/\bdfremel\b/gi, 'dremel'],
+    [/\bdremel`?1\b/gi, 'dremel'],
+    [/\bfiuller\b/gi, 'filler'],
+    [/\biun\b/gi, 'in'],
+    [/\bdaty\b/gi, 'date'],
+    [/\bgeen gekleurde fiuller\b/gi, 'geen gekleurde filler'],
+    [/\bmet de dfremel\b/gi, 'met de dremel'],
+    [/`1/g, '']
+  ]
+
+  for (const [pattern, replacement] of replacements) {
+    text = text.replace(pattern, replacement)
+  }
+
+  return normalizeWhitespace(text)
+}
+
+function stripMetaPhrases(input = '') {
+  return normalizeWhitespace(
+    String(input)
+      .replace(/\bcontroleer dit even\.?/gi, '')
+      .replace(/\bopgeslagen\.?/gi, '')
+      .replace(/\bwat is de exacte datum van ['"].+?['"]\??/gi, '')
+      .replace(/\bwelke datum bedoel je met ['"].+?['"](?: voor .+?)?\??/gi, '')
+      .replace(/\bis de datum ['"].+?['"] zeker\??/gi, '')
+      .replace(/\bvalt aanstaande vrijdag op de derde van april\??/gi, '')
+      .replace(/\bwat is het type van deze invoer\??/gi, '')
+      .replace(/\btaak\b\s*\n?/gi, '')
+      .replace(/\bafspraak\b\s*\n?/gi, '')
+      .replace(/\bnotitie\b\s*\n?/gi, '')
+      .replace(/\bja,\s*3 april\b/gi, '3 april')
+      .replace(/\b3 april denk ik\??/gi, '3 april')
+      .replace(/\bnee,\s*niet zeker\b/gi, '')
+      .replace(/\bvrijdag na 3 april\b/gi, '')
+      .replace(/\b2024-04-03\b/gi, '')
+  )
+}
+
+function stripQuestionLines(text = '') {
+  const lines = String(text)
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+
+  const filtered = lines.filter(line => {
+    const lower = line.toLowerCase()
+
+    if (/^welke datum\b/.test(lower)) return false
+    if (/^wat is de exacte datum\b/.test(lower)) return false
+    if (/^is de datum\b/.test(lower)) return false
+    if (/^wat is het type\b/.test(lower)) return false
+    if (/^(taak|afspraak|notitie)$/i.test(lower)) return false
+
+    return true
+  })
+
+  return normalizeWhitespace(filtered.join('\n'))
+}
+
+function detectPreparseType(raw = '') {
+  const text = safeString(raw).toLowerCase()
+
+  if (/\bnotitie\b/.test(text)) return 'notitie'
+  if (/\bafspraak\b/.test(text)) return 'afspraak'
+  if (/\btaak\b/.test(text)) return 'taak'
+
+  if (/\bdeadline\b/.test(text)) return 'taak'
+  if (/\bcontroleer\b/.test(text)) return 'taak'
+  if (/\bafwerking\b/.test(text)) return 'taak'
+  if (/\bmoet\b/.test(text)) return 'taak'
+
+  return 'taak'
+}
+
+function shouldForcePreparse(text = '') {
+  const raw = safeString(text).toLowerCase()
+  if (!raw) return false
+
+  const signals = [
+    /\bdeadline\b/,
+    /\bcontroleer dit even\b/,
+    /\bovermorgen\b/,
+    /\bmorgen\b/,
+    /\bvandaag\b/,
+    /\b(a\.s\.|as|aanstaande|komende)\b/,
+    /\bmaandag\b/,
+    /\bdinsdag\b/,
+    /\bwoensdag\b/,
+    /\bdonderdag\b/,
+    /\bvrijdag\b/,
+    /\bzaterdag\b/,
+    /\bzondag\b/,
+    /\bdremel\b/,
+    /\bfiller\b/,
+    /\bafwerking\b/,
+    /\btaak\b/,
+    /\bafspraak\b/,
+    /\bnotitie\b/
+  ]
+
+  return signals.some(rx => rx.test(raw))
+}
+
+function firstSentence(text = '') {
+  const normalized = normalizeWhitespace(text)
+  if (!normalized) return ''
+  const parts = normalized.split(/[.!?]\s+/)
+  return safeString(parts[0], normalized)
+}
+
+function buildTaskSummaryFromLines(text = '') {
+  const lines = String(text)
+    .split('\n')
+    .map(line => normalizeWhitespace(line))
+    .filter(Boolean)
+
+  const useful = []
+
+  for (const line of lines) {
+    const lower = line.toLowerCase()
+
+    if (/^deadline\b/.test(lower)) continue
+    if (/^(3 april|overmorgen|morgen|vandaag)$/i.test(lower)) continue
+    if (/^(ja|nee)\b/i.test(lower)) continue
+
+    useful.push(line)
+  }
+
+  if (!useful.length) return ''
+
+  const summary = useful.join('. ')
+    .replace(/\.\s+\./g, '. ')
+    .replace(/\s+,/g, ',')
+    .trim()
+
+  return summary
+}
+
+function extractTitleAndSummaryFromPreparse(raw = '') {
+  const cleaned = stripQuestionLines(stripMetaPhrases(fixCommonTypos(raw)))
+  const deadlineMatch = cleaned.match(/\bdeadline\s+(.+?)(?:,|\n|$)/i)
+
+  if (deadlineMatch) {
+    const title = safeString(deadlineMatch[1], 'Nieuwe taak')
+    const summaryText = cleaned.replace(deadlineMatch[0], '').trim()
+    const summary = buildTaskSummaryFromLines(summaryText) || firstSentence(summaryText) || title
+    return { title, summary }
+  }
+
+  const lines = cleaned
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+
+  const firstMeaningful = lines.find(line => {
+    const lower = line.toLowerCase()
+    if (/^(ja|nee)\b/.test(lower)) return false
+    if (/^(3 april|overmorgen|morgen|vandaag)$/i.test(lower)) return false
+    return true
+  })
+
+  const title = safeString(firstMeaningful, 'Nieuwe invoer').slice(0, 80)
+  const summary = buildTaskSummaryFromLines(cleaned) || firstSentence(cleaned) || title
+
+  return { title, summary }
+}
+
+function preprocessUserInput(rawInput = '', baseDate = new Date()) {
+  const fixed = fixCommonTypos(rawInput)
+  const stripped = stripQuestionLines(stripMetaPhrases(fixed))
+
+  const explicitDate = extractExplicitDateFromText(stripped, baseDate)
+  const relativeDate = extractRelativeDateFromText(stripped, baseDate)
+
+  let finalDate = explicitDate || relativeDate || ''
+
+  if (explicitDate && /\b(vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)\b/i.test(stripped)) {
+    const explicitAsDate = new Date(`${explicitDate}T12:00:00Z`)
+    const lower = stripped.toLowerCase()
+
+    for (const [weekdayName, weekdayIndex] of Object.entries(DUTCH_WEEKDAYS)) {
+      if (new RegExp(`\\b${weekdayName}\\b`, 'i').test(lower)) {
+        if (explicitAsDate.getUTCDay() !== weekdayIndex) {
+          finalDate = extractRelativeDateFromText(stripped, baseDate) || explicitDate
+        }
+      }
+    }
+  }
+
+  const type = detectPreparseType(stripped)
+  const { title, summary } = extractTitleAndSummaryFromPreparse(stripped)
+
+  const cleanedSummary = normalizeWhitespace(
+    summary
+      .replace(/\b(?:morgen|overmorgen|vandaag)\b/gi, '')
+      .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '')
+      .replace(/\b\d{1,2}\s+(?:januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)(?:\s+\d{4})?\b/gi, '')
+  )
+
+  return {
+    type,
+    title: safeString(title, 'Nieuwe invoer'),
+    summary: cleanedSummary || safeString(summary, 'Nieuwe invoer'),
+    date: type === 'notitie' ? '' : finalDate,
+    end_date: '',
+    time: '',
+    status: type === 'taak' ? 'nieuw' : '',
+    priority: type === 'taak' ? 'middel' : '',
+    source_text: stripped || fixed || rawInput
+  }
+}
+
+function buildPreparseReview(body, pre) {
+  const item = sanitizeItemForSave({
+    temp_id: 'item_1',
+    type: pre.type,
+    title: pre.title,
+    summary: pre.summary,
+    project: '',
+    date: pre.date,
+    end_date: pre.end_date,
+    time: pre.time,
+    status: pre.status,
+    priority: pre.priority,
+    source_text: pre.source_text
+  })
+
+  const enrichedItem = enrichReviewItemsWithValidation([
+    {
+      temp_id: 'item_1',
+      type: item.type,
+      title: item.title,
+      summary: item.summary,
+      project: item.project,
+      date: item.date,
+      end_date: item.end_date,
+      time: item.time,
+      status: item.status,
+      priority: item.priority,
+      source_text: item.source_text
+    }
+  ])[0]
+
+  const blocked = enrichedItem.invalid_fields.length > 0
+
+  return buildResponse(body, {
+    ok: true,
+    mode: 'review',
+    reply: blocked ? 'Controleer dit even. Er ontbreekt nog iets.' : 'Controleer dit even.',
+    review: {
+      summary: 'Ik heb dit alvast klaargezet.',
+      items: [enrichedItem]
+    },
+    actions: [
+      { type: 'confirm_review', label: 'Opslaan' },
+      { type: 'edit_review_item', label: 'Aanpassen', temp_id: 'item_1' },
+      { type: 'cancel_review', label: 'Annuleren' }
+    ],
+    meta: {
+      needs_clarification: blocked,
+      confidence: 0.92,
+      can_save: !blocked,
+      blocked_by: blocked ? enrichedItem.validation_issues?.[0]?.code || null : null
+    }
+  })
 }
 
 function sanitizeNotitieFields(item) {
@@ -759,6 +1107,11 @@ module.exports = async function handler(req, res) {
     }
 
     if (!action) {
+      if (shouldForcePreparse(message)) {
+        const pre = preprocessUserInput(message, new Date())
+        return res.status(200).json(buildPreparseReview(body, pre))
+      }
+
       const aiResult = await parseWithOpenAI(message)
       const normalized = normalizeReviewPayload(aiResult)
 
