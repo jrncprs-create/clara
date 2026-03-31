@@ -505,6 +505,71 @@ function projectLooksSimilar(a, b) {
   if (!normA || !normB) return false
   return normA === normB
 }
+function choosePreferredValue(existingValue, incomingValue) {
+  const existing = safeString(existingValue)
+  const incoming = safeString(incomingValue)
+
+  if (!existing && !incoming) return ''
+  if (!existing) return incoming
+  if (!incoming) return existing
+
+  return incoming.length > existing.length ? incoming : existing
+}
+
+function mergeSourceText(existingValue, incomingValue) {
+  const existing = normalizeWhitespace(existingValue || '')
+  const incoming = normalizeWhitespace(incomingValue || '')
+
+  if (!existing && !incoming) return ''
+  if (!existing) return incoming
+  if (!incoming) return existing
+  if (existing === incoming) return existing
+  if (existing.includes(incoming)) return existing
+  if (incoming.includes(existing)) return incoming
+
+  return `${existing}\n\n${incoming}`
+}
+
+async function mergeIntoExistingDuplicate(matchId, incomingItem) {
+  const { data: existing, error: readError } = await supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .eq('id', matchId)
+    .single()
+
+  if (readError) {
+    throw new Error(`merge_lookup_failed: ${readError.message}`)
+  }
+
+  const mergedPayload = {
+    type: existing.type || incomingItem.type,
+    title: choosePreferredValue(existing.title, incomingItem.title),
+    summary: choosePreferredValue(existing.summary, incomingItem.summary),
+    project: choosePreferredValue(existing.project, incomingItem.project),
+    status: choosePreferredValue(existing.status, incomingItem.status),
+    date: choosePreferredValue(existing.date, incomingItem.date),
+    end_date: choosePreferredValue(existing.end_date, incomingItem.end_date),
+    time: choosePreferredValue(existing.time, incomingItem.time),
+    priority: choosePreferredValue(existing.priority, incomingItem.priority),
+    note_type: existing.note_type || (incomingItem.type === 'notitie' ? 'general' : ''),
+    raw: mergeSourceText(existing.raw, incomingItem.source_text),
+    source_text: mergeSourceText(existing.source_text, incomingItem.source_text),
+    updated_at: new Date().toISOString()
+  }
+
+  const { data: updated, error: updateError } = await supabase
+    .from(TABLE_NAME)
+    .update(mergedPayload)
+    .eq('id', matchId)
+    .select()
+    .single()
+
+  if (updateError) {
+    throw new Error(`merge_update_failed: ${updateError.message}`)
+  }
+
+  return updated
+}
 
 function buildDedupeKey(item) {
   return [
@@ -922,13 +987,14 @@ async function normalizeReviewPayload(aiResult) {
   }
 
   const rawItems = Array.isArray(aiResult?.review?.items) ? aiResult.review.items : []
-  const cleanedItems = rawItems.map((item, index) => {
-    const cleaned = sanitizeItemForSave(item)
-    return {
-      temp_id: safeString(item?.temp_id, `item_${index + 1}`),
-      ...cleaned
-    }
-  })
+const cleanedItems = rawItems.map((item, index) => {
+  const cleaned = sanitizeItemForSave(item)
+  return {
+    temp_id: safeString(item?.temp_id, `item_${index + 1}`),
+    duplicate_action: safeString(item?.duplicate_action, 'auto'),
+    ...cleaned
+  }
+})
 
   const validatedItems = enrichReviewItemsWithValidation(cleanedItems)
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
