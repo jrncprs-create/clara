@@ -462,6 +462,42 @@ function makeComparableText(value) {
     .trim()
 }
 
+function tokenizeComparableText(value) {
+  const text = makeComparableText(value)
+  return text ? text.split(' ').filter(Boolean) : []
+}
+
+function overlapScore(a, b) {
+  const aTokens = new Set(tokenizeComparableText(a))
+  const bTokens = new Set(tokenizeComparableText(b))
+  if (!aTokens.size || !bTokens.size) return 0
+
+  let overlap = 0
+  for (const token of aTokens) {
+    if (bTokens.has(token)) overlap += 1
+  }
+
+  return overlap / Math.max(aTokens.size, bTokens.size)
+}
+
+function titlesLookSimilar(a, b) {
+  const normA = makeComparableText(a)
+  const normB = makeComparableText(b)
+  if (!normA || !normB) return false
+  if (normA === normB) return true
+  if (normA.includes(normB) || normB.includes(normA)) return true
+  return overlapScore(normA, normB) >= 0.6
+}
+
+function summariesLookSimilar(a, b) {
+  const normA = makeComparableText(a)
+  const normB = makeComparableText(b)
+  if (!normA || !normB) return false
+  if (normA === normB) return true
+  if (normA.includes(normB) || normB.includes(normA)) return true
+  return overlapScore(normA, normB) >= 0.7
+}
+
 function buildDedupeKey(item) {
   return [
     normalizeType(item?.type),
@@ -755,7 +791,107 @@ function normalizeQuestionPayload(aiResult) {
   }
 }
 
-function normalizeReviewPayload(aiResult) {
+async function findReviewDuplicateCandidates(items) {
+  const seenIds = new Set()
+  const candidates = []
+
+  for (const item of items) {
+    const baseQuery = supabase
+      .from(TABLE_NAME)
+      .select('id, type, title, summary, project, date, time')
+      .eq('type', item.type)
+      .limit(25)
+
+    let query = baseQuery
+
+    if (item.date) {
+      query = query.eq('date', item.date)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      throw new Error(`duplicate_candidates_failed: ${error.message}`)
+    }
+
+    for (const row of data || []) {
+      if (!seenIds.has(row.id)) {
+        seenIds.add(row.id)
+        candidates.push(row)
+      }
+    }
+  }
+
+  return candidates
+}
+
+function detectDuplicateMatch(item, candidates) {
+  for (const candidate of candidates) {
+    if (normalizeType(candidate.type) !== normalizeType(item.type)) continue
+
+    const sameDate = safeString(candidate.date) === safeString(item.date)
+    const sameTime = safeString(candidate.time) === safeString(item.time)
+    const sameProject =
+      makeComparableText(candidate.project) === makeComparableText(item.project)
+
+    const titleSimilar = titlesLookSimilar(candidate.title, item.title)
+    const summarySimilar = summariesLookSimilar(candidate.summary, item.summary)
+
+    if (titleSimilar && sameDate && sameTime) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'zelfde titel, datum en tijd'
+      }
+    }
+
+    if (titleSimilar && sameDate) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare titel op dezelfde datum'
+      }
+    }
+
+    if (titleSimilar && sameDate && sameProject) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare titel, datum en project'
+      }
+    }
+
+    if (summarySimilar && sameDate && sameTime) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare inhoud op dezelfde datum en tijd'
+      }
+    }
+  }
+
+  return {
+    duplicate_warning: false,
+    duplicate_match_id: '',
+    duplicate_match_title: '',
+    duplicate_match_reason: ''
+  }
+}
+
+async function addDuplicateWarningsToReviewItems(items) {
+  const candidates = await findReviewDuplicateCandidates(items)
+
+  return items.map(item => ({
+    ...item,
+    ...detectDuplicateMatch(item, candidates)
+  }))
+}
+
+async function normalizeReviewPayload(aiResult) {
   const mode = safeString(aiResult?.mode).toLowerCase()
 
   if (mode === 'question') {
@@ -771,7 +907,8 @@ function normalizeReviewPayload(aiResult) {
     }
   })
 
-  const enrichedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const validatedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
   const review = {
@@ -960,7 +1097,8 @@ async function confirmReview(body) {
     ...sanitizeItemForSave(item)
   }))
 
-  const enrichedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const validatedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
   if (blocked) {
@@ -1102,7 +1240,7 @@ module.exports = async function handler(req, res) {
 
     if (!action) {
       const aiResult = await parseWithOpenAI(message)
-      const normalized = normalizeReviewPayload(aiResult)
+      const normalized = await normalizeReviewPayload(aiResult)
 
       return res.status(200).json(
         buildResponse(body, {
