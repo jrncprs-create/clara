@@ -51,6 +51,14 @@ const ALLOWED_TYPES = new Set(['taak', 'afspraak', 'notitie', 'idee', 'project',
 const TASK_STATUSES = new Set(['nieuw', 'open', 'bezig', 'wacht', 'klaar'])
 const TASK_PRIORITIES = new Set(['laag', 'middel', 'hoog'])
 
+const STOP_WORDS = new Set([
+  'de', 'het', 'een', 'en', 'of', 'van', 'voor', 'met', 'naar', 'om', 'te', 'op', 'in',
+  'aan', 'bij', 'tot', 'uit', 'als', 'dan', 'dat', 'dit', 'die', 'is', 'zijn', 'was',
+  'wordt', 'werd', 'ik', 'je', 'jij', 'we', 'wij', 'hij', 'zij', 'ze', 'u', 'mijn',
+  'jouw', 'ons', 'onze', 'hun', 'hem', 'haar', 'er', 'hier', 'daar', 'nog', 'ook',
+  'wel', 'niet', 'geen', 'al', 'maar', 'dus', 'dan', 'nu', 'later', 'even'
+])
+
 const CLARA_MASTER_PROMPT = `
 Je bent Clara, een compacte en scherpe assistent voor werkstructuur.
 
@@ -87,7 +95,7 @@ Belangrijke regels:
 - Zet expliciete datums bij voorkeur direct om naar YYYY-MM-DD.
 - Zet expliciete tijden bij voorkeur direct om naar HH:MM.
 - Een afspraak mag alleen als datum EN tijd voldoende duidelijk zijn.
-- Als iets duidelijk een afspraak is maar datum of tijd ontbreekt, geef dan QUESTION terug.
+- Als iets duidelijk een afspraak is maar datum of tijd ontbreekt, geef QUESTION terug.
 - Een taak mag wel met datum en zonder tijd.
 - Een notitie is altijd tijdloos:
   - status = ""
@@ -216,16 +224,14 @@ function normalizeStatus(type, input) {
   if (type !== 'taak') return ''
   const raw = safeString(input).toLowerCase()
   if (!raw) return 'nieuw'
-  if (TASK_STATUSES.has(raw)) return raw
-  return 'nieuw'
+  return TASK_STATUSES.has(raw) ? raw : 'nieuw'
 }
 
 function normalizePriority(type, input) {
   if (type !== 'taak') return ''
   const raw = safeString(input).toLowerCase()
   if (!raw) return 'middel'
-  if (TASK_PRIORITIES.has(raw)) return raw
-  return 'middel'
+  return TASK_PRIORITIES.has(raw) ? raw : 'middel'
 }
 
 function getAmsterdamDateParts(baseDate = new Date()) {
@@ -297,9 +303,7 @@ function getNextWeekdayYMD(targetWeekday, includeToday = false, baseDate = new D
   const currentWeekday = today.getUTCDay()
   let diff = targetWeekday - currentWeekday
 
-  if (diff < 0 || (!includeToday && diff === 0)) {
-    diff += 7
-  }
+  if (diff < 0 || (!includeToday && diff === 0)) diff += 7
 
   return formatUTCDateYMD(addDaysUTC(today, diff))
 }
@@ -374,11 +378,7 @@ function extractRelativeDate(raw) {
 function normalizeDate(raw) {
   const value = safeString(raw)
   if (!value) return ''
-  return (
-    normalizeExplicitDateString(value) ||
-    extractRelativeDate(value) ||
-    ''
-  )
+  return normalizeExplicitDateString(value) || extractRelativeDate(value) || ''
 }
 
 function normalizeTime(raw) {
@@ -406,9 +406,7 @@ function normalizeTime(raw) {
   match = value.match(/^(\d{1,2})$/)
   if (match) {
     const hh = Number(match[1])
-    if (hh >= 0 && hh <= 23) {
-      return `${pad2(hh)}:00`
-    }
+    if (hh >= 0 && hh <= 23) return `${pad2(hh)}:00`
   }
 
   return ''
@@ -424,9 +422,7 @@ function extractDateFromText(text) {
     value.match(/\b\d{1,2}\s+[a-z]+\s+\d{4}\b/)?.[0] ||
     value.match(/\b\d{1,2}\s+[a-z]+\b/)?.[0]
 
-  if (explicit) {
-    return normalizeExplicitDateString(explicit)
-  }
+  if (explicit) return normalizeExplicitDateString(explicit)
 
   return extractRelativeDate(value)
 }
@@ -467,9 +463,13 @@ function tokenizeComparableText(value) {
   return text ? text.split(' ').filter(Boolean) : []
 }
 
+function tokenizeForSimilarity(value) {
+  return tokenizeComparableText(value).filter(token => !STOP_WORDS.has(token))
+}
+
 function overlapScore(a, b) {
-  const aTokens = new Set(tokenizeComparableText(a))
-  const bTokens = new Set(tokenizeComparableText(b))
+  const aTokens = new Set(tokenizeForSimilarity(a))
+  const bTokens = new Set(tokenizeForSimilarity(b))
   if (!aTokens.size || !bTokens.size) return 0
 
   let overlap = 0
@@ -480,13 +480,23 @@ function overlapScore(a, b) {
   return overlap / Math.max(aTokens.size, bTokens.size)
 }
 
+function titleCore(value) {
+  return makeComparableText(value)
+    .replace(/\b(vandaag|morgen|overmorgen)\b/g, ' ')
+    .replace(/\b(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\b/g, ' ')
+    .replace(/\b\d{1,2}[:.]\d{2}\b/g, ' ')
+    .replace(/\b\d{1,2}\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function titlesLookSimilar(a, b) {
-  const normA = makeComparableText(a)
-  const normB = makeComparableText(b)
+  const normA = titleCore(a)
+  const normB = titleCore(b)
   if (!normA || !normB) return false
   if (normA === normB) return true
   if (normA.includes(normB) || normB.includes(normA)) return true
-  return overlapScore(normA, normB) >= 0.6
+  return overlapScore(normA, normB) >= 0.72
 }
 
 function summariesLookSimilar(a, b) {
@@ -495,7 +505,7 @@ function summariesLookSimilar(a, b) {
   if (!normA || !normB) return false
   if (normA === normB) return true
   if (normA.includes(normB) || normB.includes(normA)) return true
-  return overlapScore(normA, normB) >= 0.7
+  return overlapScore(normA, normB) >= 0.8
 }
 
 function projectLooksSimilar(a, b) {
@@ -505,6 +515,7 @@ function projectLooksSimilar(a, b) {
   if (!normA || !normB) return false
   return normA === normB
 }
+
 function choosePreferredValue(existingValue, incomingValue) {
   const existing = safeString(existingValue)
   const incoming = safeString(incomingValue)
@@ -512,6 +523,7 @@ function choosePreferredValue(existingValue, incomingValue) {
   if (!existing && !incoming) return ''
   if (!existing) return incoming
   if (!incoming) return existing
+  if (existing === incoming) return existing
 
   return incoming.length > existing.length ? incoming : existing
 }
@@ -530,51 +542,10 @@ function mergeSourceText(existingValue, incomingValue) {
   return `${existing}\n\n${incoming}`
 }
 
-async function mergeIntoExistingDuplicate(matchId, incomingItem) {
-  const { data: existing, error: readError } = await supabase
-    .from(TABLE_NAME)
-    .select('*')
-    .eq('id', matchId)
-    .single()
-
-  if (readError) {
-    throw new Error(`merge_lookup_failed: ${readError.message}`)
-  }
-
-  const mergedPayload = {
-    type: existing.type || incomingItem.type,
-    title: choosePreferredValue(existing.title, incomingItem.title),
-    summary: choosePreferredValue(existing.summary, incomingItem.summary),
-    project: choosePreferredValue(existing.project, incomingItem.project),
-    status: choosePreferredValue(existing.status, incomingItem.status),
-    date: choosePreferredValue(existing.date, incomingItem.date),
-    end_date: choosePreferredValue(existing.end_date, incomingItem.end_date),
-    time: choosePreferredValue(existing.time, incomingItem.time),
-    priority: choosePreferredValue(existing.priority, incomingItem.priority),
-    note_type: existing.note_type || (incomingItem.type === 'notitie' ? 'general' : ''),
-    raw: mergeSourceText(existing.raw, incomingItem.source_text),
-    source_text: mergeSourceText(existing.source_text, incomingItem.source_text),
-    updated_at: new Date().toISOString()
-  }
-
-  const { data: updated, error: updateError } = await supabase
-    .from(TABLE_NAME)
-    .update(mergedPayload)
-    .eq('id', matchId)
-    .select()
-    .single()
-
-  if (updateError) {
-    throw new Error(`merge_update_failed: ${updateError.message}`)
-  }
-
-  return updated
-}
-
 function buildDedupeKey(item) {
   return [
     normalizeType(item?.type),
-    makeComparableText(item?.title),
+    titleCore(item?.title),
     safeString(item?.date),
     safeString(item?.time),
     makeComparableText(item?.project)
@@ -631,8 +602,8 @@ function sanitizeItemCore(item, mode = 'save') {
   }
 
   if (type !== 'taak') {
-    cleaned.status = type === 'afspraak' ? '' : cleaned.status
-    cleaned.priority = type === 'afspraak' ? '' : cleaned.priority
+    cleaned.status = ''
+    cleaned.priority = ''
   }
 
   return cleaned
@@ -683,7 +654,6 @@ function getItemValidationIssues(item) {
 
 function validateItemForSave(item) {
   const issues = getItemValidationIssues(item)
-
   if (!issues.length) {
     return { ok: true, blocked_by: null, reason: '', issues: [] }
   }
@@ -873,7 +843,7 @@ async function findReviewDuplicateCandidates(items) {
       .from(TABLE_NAME)
       .select('id, type, title, summary, project, date, time')
       .eq('type', item.type)
-      .limit(50)
+      .limit(80)
 
     if (item.date) {
       query = query.eq('date', item.date)
@@ -881,9 +851,7 @@ async function findReviewDuplicateCandidates(items) {
 
     const { data, error } = await query
 
-    if (error) {
-      throw new Error(`duplicate_candidates_failed: ${error.message}`)
-    }
+    if (error) throw new Error(`duplicate_candidates_failed: ${error.message}`)
 
     for (const row of data || []) {
       if (!seenIds.has(row.id)) {
@@ -897,8 +865,10 @@ async function findReviewDuplicateCandidates(items) {
 }
 
 function detectDuplicateMatch(item, candidates) {
+  const itemType = normalizeType(item.type)
+
   for (const candidate of candidates) {
-    if (normalizeType(candidate.type) !== normalizeType(item.type)) continue
+    if (normalizeType(candidate.type) !== itemType) continue
 
     const sameDate = safeString(candidate.date) === safeString(item.date)
     const sameTime = safeString(candidate.time) === safeString(item.time)
@@ -907,12 +877,39 @@ function detectDuplicateMatch(item, candidates) {
     const titleSimilar = titlesLookSimilar(candidate.title, item.title)
     const summarySimilar = summariesLookSimilar(candidate.summary, item.summary)
 
-    if (titleSimilar && sameDate && sameTime) {
+    if (titleSimilar && sameDate && sameTime && sameProject) {
       return {
         duplicate_warning: true,
         duplicate_match_id: candidate.id,
         duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'zelfde titel, datum en tijd'
+        duplicate_match_reason: 'zelfde kern, datum, tijd en project'
+      }
+    }
+
+    if (itemType === 'afspraak' && titleSimilar && sameDate && sameTime) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare afspraak op hetzelfde moment'
+      }
+    }
+
+    if (itemType === 'taak' && titleSimilar && sameDate && sameProject) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare taak op dezelfde datum'
+      }
+    }
+
+    if (itemType === 'notitie' && !item.date && !candidate.date && titleSimilar && summarySimilar) {
+      return {
+        duplicate_warning: true,
+        duplicate_match_id: candidate.id,
+        duplicate_match_title: candidate.title,
+        duplicate_match_reason: 'vergelijkbare notitie zonder datum'
       }
     }
 
@@ -925,39 +922,12 @@ function detectDuplicateMatch(item, candidates) {
       }
     }
 
-    if (titleSimilar && sameDate) {
+    if (summarySimilar && sameDate && sameTime && sameProject) {
       return {
         duplicate_warning: true,
         duplicate_match_id: candidate.id,
         duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'vergelijkbare titel op dezelfde datum'
-      }
-    }
-
-    if (summarySimilar && sameDate && sameTime) {
-      return {
-        duplicate_warning: true,
-        duplicate_match_id: candidate.id,
-        duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'vergelijkbare inhoud op dezelfde datum en tijd'
-      }
-    }
-
-    if (!item.date && !candidate.date && titleSimilar && sameProject) {
-      return {
-        duplicate_warning: true,
-        duplicate_match_id: candidate.id,
-        duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'vergelijkbare titel zonder datum'
-      }
-    }
-
-    if (!item.date && !candidate.date && titleSimilar && summarySimilar) {
-      return {
-        duplicate_warning: true,
-        duplicate_match_id: candidate.id,
-        duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'vergelijkbare titel en inhoud zonder datum'
+        duplicate_match_reason: 'vergelijkbare inhoud op hetzelfde moment'
       }
     }
   }
@@ -987,16 +957,22 @@ async function normalizeReviewPayload(aiResult) {
   }
 
   const rawItems = Array.isArray(aiResult?.review?.items) ? aiResult.review.items : []
-const cleanedItems = rawItems.map((item, index) => {
-  const cleaned = sanitizeItemForSave(item)
-  return {
-    temp_id: safeString(item?.temp_id, `item_${index + 1}`),
-    duplicate_action: safeString(item?.duplicate_action, 'auto'),
-    ...cleaned
-  }
-})
+  const cleanedItems = rawItems.map((item, index) => {
+    const cleaned = sanitizeItemForSave(item)
+    return {
+      temp_id: safeString(item?.temp_id, `item_${index + 1}`),
+      ...cleaned
+    }
+  })
 
-  const validatedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const uniqueMap = new Map()
+  for (const item of cleanedItems) {
+    const key = buildDedupeKey(item)
+    if (!uniqueMap.has(key)) uniqueMap.set(key, item)
+  }
+
+  const uniqueItems = Array.from(uniqueMap.values())
+  const validatedItems = enrichReviewItemsWithValidation(uniqueItems)
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
@@ -1059,9 +1035,7 @@ async function deleteItem(body) {
       .eq('id', itemId)
       .select('id, title, type')
 
-    if (error) {
-      throw new Error(`delete_failed: ${error.message}`)
-    }
+    if (error) throw new Error(`delete_failed: ${error.message}`)
 
     return {
       deleted: data?.length || 0,
@@ -1075,9 +1049,7 @@ async function deleteItem(body) {
   const time = safeString(body.time)
   const project = safeString(body.project)
 
-  if (!title) {
-    throw new Error('delete_failed: missing id and title')
-  }
+  if (!title) throw new Error('delete_failed: missing id and title')
 
   let query = supabase
     .from(TABLE_NAME)
@@ -1090,10 +1062,7 @@ async function deleteItem(body) {
   if (project) query = query.eq('project', project)
 
   const { data, error } = await query.select('id, title, type')
-
-  if (error) {
-    throw new Error(`delete_failed: ${error.message}`)
-  }
+  if (error) throw new Error(`delete_failed: ${error.message}`)
 
   return {
     deleted: data?.length || 0,
@@ -1103,9 +1072,7 @@ async function deleteItem(body) {
 
 async function updateItem(body) {
   const itemId = safeString(body.id || body.item_id)
-  if (!itemId) {
-    throw new Error('update_failed: missing id')
-  }
+  if (!itemId) throw new Error('update_failed: missing id')
 
   const cleaned = sanitizeItemForUpdate(body)
   const validation = validateItemForSave(cleaned)
@@ -1139,9 +1106,7 @@ async function updateItem(body) {
     .select()
     .single()
 
-  if (error) {
-    throw new Error(`update_failed: ${error.message}`)
-  }
+  if (error) throw new Error(`update_failed: ${error.message}`)
 
   return data
 }
@@ -1150,21 +1115,23 @@ async function findExactExistingMatches(items) {
   const matchMap = new Map()
 
   for (const item of items) {
-    const query = supabase
+    let query = supabase
       .from(TABLE_NAME)
       .select('id, type, title, summary, project, date, time')
       .eq('type', item.type)
       .eq('title', item.title)
       .eq('date', item.date)
       .eq('time', item.time)
-      .eq('project', item.project || '')
-      .limit(1)
+      .limit(5)
+
+    if (item.project) {
+      query = query.eq('project', item.project)
+    } else {
+      query = query.eq('project', '')
+    }
 
     const { data, error } = await query
-
-    if (error) {
-      throw new Error(`dedupe_lookup_failed: ${error.message}`)
-    }
+    if (error) throw new Error(`dedupe_lookup_failed: ${error.message}`)
 
     if (data?.length) {
       matchMap.set(buildDedupeKey(item), data[0])
@@ -1188,19 +1155,30 @@ async function findSmartDuplicateMatches(items) {
   return matchMap
 }
 
+function summarizeSavedResult(savedCount, skippedCount) {
+  if (savedCount && skippedCount) return `Opgeslagen. ${savedCount} nieuw, ${skippedCount} dubbel overgeslagen.`
+  if (savedCount) return 'Opgeslagen.'
+  if (skippedCount) return 'Dubbel herkend. Ik heb niets extra opgeslagen.'
+  return 'Niets nieuws opgeslagen.'
+}
+
 async function confirmReview(body) {
   const items = Array.isArray(body.items) ? body.items : []
-
-  if (!items.length) {
-    throw new Error('no_items_to_save')
-  }
+  if (!items.length) throw new Error('no_items_to_save')
 
   const cleanedItems = items.map((item, index) => ({
     temp_id: safeString(item?.temp_id, `item_${index + 1}`),
     ...sanitizeItemForSave(item)
   }))
 
-  const validatedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const uniqueMap = new Map()
+  for (const item of cleanedItems) {
+    const key = buildDedupeKey(item)
+    if (!uniqueMap.has(key)) uniqueMap.set(key, item)
+  }
+
+  const uniqueItems = Array.from(uniqueMap.values())
+  const validatedItems = enrichReviewItemsWithValidation(uniqueItems)
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
@@ -1236,20 +1214,12 @@ async function confirmReview(body) {
     }
   }
 
-  const uniqueMap = new Map()
-  for (const item of cleanedItems) {
-    const key = buildDedupeKey(item)
-    if (!uniqueMap.has(key)) {
-      uniqueMap.set(key, item)
-    }
-  }
-
-  const uniqueItems = Array.from(uniqueMap.values())
   const exactExistingMatches = await findExactExistingMatches(uniqueItems)
   const smartDuplicateMatches = await findSmartDuplicateMatches(uniqueItems)
 
   const skippedDuplicates = []
-  const newItems = []
+  const inserts = []
+  const now = new Date().toISOString()
 
   for (const item of uniqueItems) {
     const key = buildDedupeKey(item)
@@ -1278,25 +1248,37 @@ async function confirmReview(body) {
       continue
     }
 
-    newItems.push(item)
+    inserts.push({
+      type: item.type,
+      title: item.title,
+      summary: item.summary,
+      project: item.project,
+      status: item.status,
+      date: item.date,
+      end_date: item.end_date,
+      time: item.time,
+      priority: item.priority,
+      note_type: item.type === 'notitie' ? 'general' : '',
+      raw: item.source_text,
+      source_text: item.source_text,
+      created_at: now,
+      updated_at: now
+    })
   }
 
- if (!newItems.length) {
-  return {
-    blocked: false,
-    response: buildResponse(body, {
-      ok: true,
-      mode: 'confirmation',
-      reply: skippedDuplicates.length
-        ? 'Dubbel herkend. Ik heb niets extra opgeslagen.'
-        : 'Niets nieuws opgeslagen.',
-      confirmation: {
-        text: skippedDuplicates.length
-          ? 'Dubbel herkend. Ik heb niets extra opgeslagen.'
-          : 'Niets nieuws opgeslagen.',
-        saved: [],
-        skipped_duplicates: skippedDuplicates
-      },
+  if (!inserts.length) {
+    const text = summarizeSavedResult(0, skippedDuplicates.length)
+    return {
+      blocked: false,
+      response: buildResponse(body, {
+        ok: true,
+        mode: 'confirmation',
+        reply: text,
+        confirmation: {
+          text,
+          saved: [],
+          skipped_duplicates: skippedDuplicates
+        },
         review: null,
         actions: [],
         meta: {
@@ -1308,41 +1290,16 @@ async function confirmReview(body) {
     }
   }
 
-  const now = new Date().toISOString()
-
-  const inserts = newItems.map(item => ({
-    type: item.type,
-    title: item.title,
-    summary: item.summary,
-    project: item.project,
-    status: item.status,
-    date: item.date,
-    end_date: item.end_date,
-    time: item.time,
-    priority: item.priority,
-    note_type: item.type === 'notitie' ? 'general' : '',
-    raw: item.source_text,
-    source_text: item.source_text,
-    created_at: now,
-    updated_at: now
-  }))
-
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .insert(inserts)
     .select()
 
-  if (error) {
-    throw new Error(`save_failed: ${error.message}`)
-  }
+  if (error) throw new Error(`save_failed: ${error.message}`)
 
   const savedCount = Array.isArray(data) ? data.length : 0
   const skippedCount = skippedDuplicates.length
-
-  let confirmationText = 'Opgeslagen.'
-  if (savedCount && skippedCount) {
-    confirmationText = `Opgeslagen. ${savedCount} nieuw, ${skippedCount} dubbel overgeslagen.`
-  }
+  const confirmationText = summarizeSavedResult(savedCount, skippedCount)
 
   return {
     blocked: false,
@@ -1381,115 +1338,4 @@ module.exports = async function handler(req, res) {
     const action = safeString(body.action)
 
     if (!message && !action) {
-      return res.status(400).json({ error: 'missing_input' })
-    }
-
-    if (!action) {
-      const aiResult = await parseWithOpenAI(message)
-      const normalized = await normalizeReviewPayload(aiResult)
-
-      return res.status(200).json(
-        buildResponse(body, {
-          ok: true,
-          mode: normalized.mode,
-          reply: normalized.reply,
-          question: normalized.question,
-          confirmation: normalized.confirmation,
-          review: normalized.review,
-          actions: normalized.actions,
-          meta: normalized.meta
-        })
-      )
-    }
-
-    if (action === 'confirm_review') {
-      const result = await confirmReview(body)
-      return res.status(200).json(result.response)
-    }
-
-    if (action === 'update_item') {
-      const updated = await updateItem(body)
-
-      return res.status(200).json(
-        buildResponse(body, {
-          ok: true,
-          mode: 'confirmation',
-          reply: 'Item bijgewerkt.',
-          confirmation: {
-            text: 'Item bijgewerkt.',
-            saved: [
-              {
-                id: updated.id,
-                type: updated.type,
-                title: updated.title
-              }
-            ]
-          },
-          review: null,
-          actions: [],
-          meta: {
-            needs_clarification: false,
-            confidence: 1,
-            can_save: false
-          }
-        })
-      )
-    }
-
-    if (action === 'delete_item') {
-      const result = await deleteItem(body)
-
-      if (!result.deleted) {
-        return res.status(404).json({
-          error: 'not_found',
-          details: 'Geen match gevonden om te verwijderen.'
-        })
-      }
-
-      return res.status(200).json(
-        buildResponse(body, {
-          ok: true,
-          mode: 'confirmation',
-          reply: `Verwijderd. ${result.deleted} item(s).`,
-          confirmation: {
-            text: `Verwijderd. ${result.deleted} item(s).`,
-            saved: []
-          },
-          review: null,
-          actions: [],
-          meta: {
-            needs_clarification: false,
-            confidence: 1,
-            can_save: false
-          }
-        })
-      )
-    }
-
-    return res.status(400).json({ error: 'unknown_action' })
-  } catch (error) {
-    const message = safeString(error?.message)
-    const stack = safeString(error?.stack)
-
-    if (message === 'no_items_to_save') {
-      return res.status(400).json({ error: 'no_items_to_save' })
-    }
-
-    return res.status(500).json({
-      ok: false,
-      success: false,
-      mode: 'reply',
-      reply: `DEBUG ERROR: ${message || 'unknown error'}`,
-      debug: {
-        message,
-        stack
-      },
-      meta: {
-        needs_clarification: false,
-        confidence: 0,
-        can_save: false,
-        error_code: 'SERVER_ERROR'
-      }
-    })
-  }
-}
+      return res.status(400).
