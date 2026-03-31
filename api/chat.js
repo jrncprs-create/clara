@@ -882,7 +882,7 @@ async function updateItem(body) {
     end_date: cleaned.end_date,
     time: cleaned.time,
     priority: cleaned.priority,
-    note_type: clenote_type: cleaned.type === 'notitie' ? 'general' : '',aned.type === 'notitie' ? 'general' : null,
+    note_type: cleaned.type === 'notitie' ? 'general' : '',
     raw: cleaned.source_text,
     source_text: cleaned.source_text,
     updated_at: now
