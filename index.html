@@ -22,12 +22,10 @@
       --radius-sm: 12px;
       --header-h: 46px;
       --shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-      --warn-line: rgba(255,255,255,0.18);
-      --warn-bg: rgba(255,255,255,0.06);
-      --warn-text: rgba(255,255,255,0.92);
-      --error-line: rgba(255,255,255,0.28);
-      --error-bg: rgba(255,255,255,0.08);
-      --error-soft: rgba(255,255,255,0.72);
+      --error-line: rgba(255,255,255,0.24);
+      --error-bg: rgba(255,255,255,0.06);
+      --ok-bg: rgba(255,255,255,0.05);
+      --transition: 220ms cubic-bezier(.2,.8,.2,1);
     }
 
     html, body {
@@ -70,7 +68,7 @@
       position: fixed;
       top: 10px;
       right: 14px;
-      z-index: 30;
+      z-index: 40;
       font-size: 11px;
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.34);
@@ -108,6 +106,8 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--line);
+      position: relative;
+      z-index: 2;
     }
 
     .panel-title {
@@ -134,8 +134,80 @@
     .agenda-panel { grid-column: 1; grid-row: 1 / 3; }
     .tasks-panel { grid-column: 2; grid-row: 1; }
     .appointments-panel { grid-column: 2; grid-row: 2; }
-    .chat-panel { grid-column: 3; grid-row: 1; }
-    .notes-panel { grid-column: 3; grid-row: 2; }
+
+    .right-stack {
+      grid-column: 3;
+      grid-row: 1 / 3;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border-radius: 22px;
+    }
+
+    .stack-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition:
+        transform var(--transition),
+        opacity var(--transition),
+        top var(--transition),
+        height var(--transition),
+        filter var(--transition);
+    }
+
+    .chat-panel {
+      top: 0;
+      height: calc(50% - 7px);
+      z-index: 2;
+    }
+
+    .notes-panel {
+      top: calc(50% + 7px);
+      height: calc(50% - 7px);
+      z-index: 1;
+    }
+
+    .review-pane {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(8,8,8,0.98);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(28px);
+      transition: transform var(--transition), opacity var(--transition);
+    }
+
+    .app.review-mode .chat-panel {
+      height: 100%;
+      filter: blur(0px);
+    }
+
+    .app.review-mode .notes-panel {
+      transform: translateX(44px);
+      opacity: 0;
+      pointer-events: none;
+      filter: blur(8px);
+    }
+
+    .app.review-mode .review-pane {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
 
     .empty {
       padding: 18px;
@@ -319,7 +391,7 @@
     }
 
     .field-help.is-error {
-      color: var(--error-soft);
+      color: rgba(255,255,255,0.8);
     }
 
     .edit-actions {
@@ -587,7 +659,184 @@
       border-top: 1px solid var(--line);
     }
 
-    .review-overlay,
+    .review-head {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .review-title-block {
+      min-width: 0;
+    }
+
+    .review-title {
+      font-size: 16px;
+      line-height: 1.15;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .review-subtitle {
+      margin-top: 5px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .review-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .review-summary {
+      border: 1px solid var(--line);
+      background: var(--ghost);
+      border-radius: 16px;
+      padding: 12px 14px;
+    }
+
+    .review-summary-text {
+      font-size: 14px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.92);
+      white-space: pre-wrap;
+    }
+
+    .review-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .review-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--ghost);
+      overflow: hidden;
+      transition: opacity 160ms ease, border-color 160ms ease;
+    }
+
+    .review-card.is-dimmed {
+      opacity: 0.42;
+    }
+
+    .review-card.has-invalid {
+      border-color: rgba(255,255,255,0.16);
+    }
+
+    .review-card.is-open {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .review-card-head {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 14px;
+    }
+
+    .review-badge {
+      min-width: 74px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      color: rgba(255,255,255,0.84);
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 10px 10px;
+      text-align: center;
+    }
+
+    .review-main {
+      min-width: 0;
+    }
+
+    .review-card-title {
+      font-size: 14px;
+      line-height: 1.3;
+      font-weight: 650;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .review-meta {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    .review-signals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0 14px 12px;
+    }
+
+    .signal {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.78);
+      font-size: 11px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .signal.invalid {
+      border-color: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+    }
+
+    .signal.duplicate {
+      color: rgba(255,255,255,0.68);
+    }
+
+    .review-edit {
+      display: none;
+      border-top: 1px solid var(--line);
+      padding: 14px;
+      background: rgba(255,255,255,0.015);
+    }
+
+    .review-card.is-open .review-edit {
+      display: block;
+    }
+
+    .review-foot {
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .footer-note {
+      font-size: 12px;
+      color: var(--soft);
+    }
+
     .confirm-overlay {
       position: fixed;
       inset: 0;
@@ -598,23 +847,10 @@
       padding: 18px;
     }
 
-    .review-overlay.open,
     .confirm-overlay.open {
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .review-modal {
-      width: min(760px, calc(100vw - 36px));
-      max-height: min(88vh, 980px);
-      border-radius: 22px;
-      border: 1px solid var(--line);
-      background: rgba(10,10,10,0.98);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
     }
 
     .confirm-modal {
@@ -649,167 +885,6 @@
       color: var(--muted);
     }
 
-    .modal-body {
-      overflow: auto;
-      min-height: 0;
-      padding: 16px 18px;
-    }
-
-    .modal-footer {
-      padding: 14px 18px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .review-summary {
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      background: var(--ghost);
-      border-radius: 16px;
-      margin-bottom: 14px;
-    }
-
-    .review-summary-label {
-      font-size: 11px;
-      line-height: 1.2;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--soft);
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .review-summary-text {
-      font-size: 14px;
-      line-height: 1.45;
-      color: rgba(255,255,255,0.92);
-      white-space: pre-wrap;
-    }
-
-    .review-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .review-card {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: var(--ghost);
-      overflow: hidden;
-      transition: opacity 160ms ease;
-    }
-
-    .review-card.is-dimmed {
-      opacity: 0.45;
-    }
-
-    .review-card.has-invalid {
-      border-color: var(--warn-line);
-    }
-
-    .review-card-head {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 12px;
-      align-items: start;
-      padding: 12px 14px;
-    }
-
-    .review-badge {
-      min-width: 76px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.03);
-      color: rgba(255,255,255,0.84);
-      font-size: 11px;
-      line-height: 1;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      padding: 10px 10px;
-      text-align: center;
-    }
-
-    .review-main {
-      min-width: 0;
-    }
-
-    .review-title {
-      font-size: 14px;
-      line-height: 1.3;
-      font-weight: 650;
-      color: #fff;
-      word-break: break-word;
-    }
-
-    .review-meta {
-      margin-top: 4px;
-      font-size: 12px;
-      line-height: 1.35;
-      color: var(--muted);
-      word-break: break-word;
-    }
-
-    .review-warning,
-    .review-invalid {
-      margin: 0 14px 12px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      line-height: 1.45;
-    }
-
-    .review-warning {
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.04);
-      color: rgba(255,255,255,0.86);
-    }
-
-    .review-invalid {
-      border: 1px solid var(--error-line);
-      background: var(--error-bg);
-      color: var(--warn-text);
-    }
-
-    .review-warning strong,
-    .review-invalid strong {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 11px;
-      line-height: 1.2;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .review-warning strong {
-      color: rgba(255,255,255,0.58);
-    }
-
-    .review-invalid strong {
-      color: rgba(255,255,255,0.88);
-    }
-
-    .review-edit {
-      display: none;
-      border-top: 1px solid var(--line);
-      padding: 14px;
-      background: rgba(255,255,255,0.015);
-    }
-
-    .review-card.is-open .review-edit {
-      display: block;
-    }
-
-    .footer-note {
-      font-size: 12px;
-      color: var(--soft);
-    }
-
     .confirm-content {
       padding: 0 20px 18px;
     }
@@ -826,6 +901,16 @@
       word-break: break-word;
     }
 
+    .modal-footer {
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 1180px) {
       html, body {
         overflow: auto;
@@ -840,8 +925,12 @@
       .agenda-panel { grid-column: 1 / 3; grid-row: 1; min-height: 520px; }
       .tasks-panel { grid-column: 1; grid-row: 2; min-height: 340px; }
       .appointments-panel { grid-column: 2; grid-row: 2; min-height: 340px; }
-      .chat-panel { grid-column: 1; grid-row: 3; min-height: 360px; }
-      .notes-panel { grid-column: 2; grid-row: 3; min-height: 360px; }
+
+      .right-stack {
+        grid-column: 1 / 3;
+        grid-row: 3;
+        min-height: 740px;
+      }
     }
 
     @media (max-width: 860px) {
@@ -852,10 +941,13 @@
       .agenda-panel,
       .tasks-panel,
       .appointments-panel,
-      .chat-panel,
-      .notes-panel {
+      .right-stack {
         grid-column: auto;
         grid-row: auto;
+      }
+
+      .right-stack {
+        min-height: 860px;
       }
 
       .edit-grid,
@@ -871,11 +963,13 @@
         min-width: 0;
       }
 
+      .review-foot,
       .modal-footer {
         flex-direction: column;
         align-items: stretch;
       }
 
+      .review-foot .btn,
       .modal-footer .btn {
         width: 100%;
       }
@@ -885,7 +979,7 @@
 <body>
   <div class="version" id="version"></div>
 
-  <div class="app">
+  <div class="app" id="app">
     <section class="panel agenda-panel">
       <div class="panel-header">
         <div class="panel-title">Agenda</div>
@@ -928,58 +1022,58 @@
       <div class="panel-body" id="appointments"></div>
     </section>
 
-    <section class="panel chat-panel">
-      <div class="panel-header">
-        <div class="panel-title">Chat</div>
-      </div>
-      <div class="panel-body">
-        <div class="chat-shell">
-          <div id="chatMessages" class="chat-messages">
-            <div class="bubble clara">Zeg iets als: morgen werkplaats opruimen, call met Sam morgen 14:00, of notitie voor LaLampe.</div>
+    <section class="right-stack">
+      <section class="stack-panel chat-panel">
+        <div class="panel-header">
+          <div class="panel-title">Chat</div>
+          <div class="panel-meta" id="chatModeMeta"></div>
+        </div>
+        <div class="panel-body">
+          <div class="chat-shell">
+            <div id="chatMessages" class="chat-messages">
+              <div class="bubble clara">Zeg iets als: morgen werkplaats opruimen, call met Sam morgen 14:00, of notitie voor LaLampe.</div>
+            </div>
+            <div class="composer">
+              <input id="chatInput" class="input" placeholder="Typ hier..." />
+              <button id="chatSend" class="btn primary">OK</button>
+            </div>
           </div>
-          <div class="composer">
-            <input id="chatInput" class="input" placeholder="Typ hier..." />
-            <button id="chatSend" class="btn primary">OK</button>
+        </div>
+      </section>
+
+      <section class="stack-panel notes-panel">
+        <div class="panel-header">
+          <div class="panel-title">Notities</div>
+          <div class="panel-meta" id="notesMeta"></div>
+        </div>
+        <div class="panel-body" id="notes"></div>
+      </section>
+
+      <section class="review-pane" id="reviewPane">
+        <div class="review-head">
+          <div class="review-title-block">
+            <div class="review-title">Controle</div>
+            <div class="review-subtitle" id="reviewSubtitle">Controleer en pas aan waar nodig.</div>
+          </div>
+          <button class="btn ghost" id="reviewClose">Sluiten</button>
+        </div>
+
+        <div class="review-body">
+          <div class="review-summary" id="reviewSummary">
+            <div class="review-summary-text" id="reviewSummaryText"></div>
+          </div>
+          <div class="review-list" id="reviewItems"></div>
+        </div>
+
+        <div class="review-foot">
+          <div class="footer-note" id="reviewFooterText">Nog niet opgeslagen.</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn ghost" id="reviewCancelBtn">Annuleren</button>
+            <button class="btn primary" id="reviewSaveBtn">Opslaan</button>
           </div>
         </div>
-      </div>
+      </section>
     </section>
-
-    <section class="panel notes-panel">
-      <div class="panel-header">
-        <div class="panel-title">Notities</div>
-        <div class="panel-meta" id="notesMeta"></div>
-      </div>
-      <div class="panel-body" id="notes"></div>
-    </section>
-  </div>
-
-  <div class="review-overlay" id="reviewOverlay">
-    <div class="review-modal">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title">Controleer voor opslaan</div>
-          <div class="modal-subtitle" id="reviewSubtitle">Controleer en pas aan waar nodig.</div>
-        </div>
-        <button class="btn ghost" id="reviewClose">Sluiten</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="review-summary">
-          <div class="review-summary-label">Samenvatting</div>
-          <div class="review-summary-text" id="reviewSummaryText"></div>
-        </div>
-        <div class="review-list" id="reviewItems"></div>
-      </div>
-
-      <div class="modal-footer">
-        <div class="footer-note" id="reviewFooterText">Nog niet opgeslagen.</div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn ghost" id="reviewCancelBtn">Annuleren</button>
-          <button class="btn primary" id="reviewSaveBtn">Klopt, opslaan</button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class="confirm-overlay" id="confirmOverlay">
@@ -1005,7 +1099,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v4.1 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v5.0 • ${AUTO_VERSION}`;
 
     let dashboardRawData = { agenda: [], tasks: [], notes: [] };
     let dashboardEditIndex = new Map();
@@ -1035,7 +1129,7 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/\"/g, '&quot;')
+        .replace(/\\"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
 
@@ -1742,6 +1836,7 @@
       renderTasks(dashboardRawData);
       renderAppointments(dashboardRawData);
       renderNotes(dashboardRawData);
+      syncReviewMode();
     }
 
     function addChatBubble(text, sender) {
@@ -1820,7 +1915,7 @@
       const mode = String(result.mode || '').toLowerCase();
 
       if (mode === 'review' && result.review) {
-        openReviewModal(result);
+        openReviewPane(result);
         addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
         return;
       }
@@ -1861,30 +1956,6 @@
       if (reloadDashboard) await loadDashboard();
     }
 
-    function createReviewItemFromDashboardItem(item) {
-      return {
-        temp_id: `dashboard_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
-        id: item.id || '',
-        type: item.type || 'notitie',
-        title: item.title || '',
-        project: item.project || '',
-        summary: item.summary || '',
-        status: item.status || '',
-        priority: item.priority || '',
-        date: item.date || '',
-        end_date: item.end_date || '',
-        time: item.time || '',
-        source_text: item.source_text || '',
-        raw: item.raw || '',
-        duplicate_warning: false,
-        duplicate_match_id: '',
-        duplicate_match_title: '',
-        duplicate_match_reason: '',
-        invalid_fields: [],
-        validation_issues: []
-      };
-    }
-
     function getReviewItems() {
       return currentReviewData?.review?.items || [];
     }
@@ -1897,8 +1968,10 @@
       const parts = [];
       if (item.date) parts.push(item.date);
       if (item.time) parts.push(item.time);
+      else if (String(item.type || '').toLowerCase() === 'afspraak' && item.date) parts.push('hele dag');
       if (item.project) parts.push(item.project);
       if (item.priority) parts.push(`prio ${item.priority}`);
+      if (item.status && String(item.type || '').toLowerCase() === 'taak') parts.push(item.status);
       return parts;
     }
 
@@ -1909,20 +1982,6 @@
       item.time = '';
       item.status = '';
       item.priority = '';
-    }
-
-    function getDuplicateWarningHtml(item) {
-      if (!item?.duplicate_warning) return '';
-      const reason = item.duplicate_match_reason || 'lijkt sterk op een bestaand item';
-      const matchTitle = item.duplicate_match_title || '';
-
-      return `
-        <div class="review-warning">
-          <strong>Waarschijnlijk dubbel</strong>
-          <div>${escapeHtml(reason)}</div>
-          ${matchTitle ? `<div style="margin-top:4px; color: rgba(255,255,255,0.62);">Bestaand item: ${escapeHtml(matchTitle)}</div>` : ''}
-        </div>
-      `;
     }
 
     function getValidationIssues(item) {
@@ -1942,22 +2001,6 @@
       return issue?.reason || '';
     }
 
-    function getValidationWarningHtml(item) {
-      const issues = getValidationIssues(item);
-      if (!issues.length) return '';
-
-      const reasons = issues
-        .map(issue => issue?.reason)
-        .filter(Boolean);
-
-      return `
-        <div class="review-invalid">
-          <strong>Ontbreekt nog</strong>
-          <div>${escapeHtml(reasons.join(' '))}</div>
-        </div>
-      `;
-    }
-
     function renderReviewFieldHelp(item, field) {
       const error = getReviewFieldError(item, field);
       if (!error) return '';
@@ -1972,19 +2015,39 @@
       return getReviewItems().reduce((sum, item) => sum + getInvalidFields(item).length, 0);
     }
 
-    function openReviewModal(reviewData) {
+    function isReviewOpen() {
+      return !!currentReviewData;
+    }
+
+    function syncReviewMode() {
+      const app = document.getElementById('app');
+      const meta = document.getElementById('chatModeMeta');
+      if (isReviewOpen()) {
+        app.classList.add('review-mode');
+        meta.textContent = 'review';
+      } else {
+        app.classList.remove('review-mode');
+        meta.textContent = '';
+      }
+    }
+
+    function openReviewPane(reviewData) {
       currentReviewData = reviewData;
       currentReviewInlineEditTempId = null;
-
       document.getElementById('reviewSummaryText').textContent = reviewData?.review?.summary || '';
       document.getElementById('reviewSubtitle').textContent = reviewData?.reply || 'Controleer en pas aan waar nodig.';
       renderReviewItemsCompact();
       updateReviewFooter();
-      document.getElementById('reviewOverlay').classList.add('open');
+      syncReviewMode();
     }
 
-    function closeReviewModal() {
-      document.getElementById('reviewOverlay').classList.remove('open');
+    function closeReviewPane() {
+      currentReviewData = null;
+      currentReviewInlineEditTempId = null;
+      document.getElementById('reviewItems').innerHTML = '';
+      document.getElementById('reviewSummaryText').textContent = '';
+      document.getElementById('reviewFooterText').textContent = 'Nog niet opgeslagen.';
+      syncReviewMode();
     }
 
     function updateReviewFooter() {
@@ -1992,16 +2055,16 @@
       const invalidCount = countReviewInvalidFields();
 
       if (!count) {
-        document.getElementById('reviewFooterText').textContent = 'Geen items om op te slaan.';
+        document.getElementById('reviewFooterText').textContent = 'Geen items.';
         return;
       }
 
       if (invalidCount > 0) {
-        document.getElementById('reviewFooterText').textContent = `${count} item(s). Nog ${invalidCount} verplicht veld${invalidCount === 1 ? '' : 'en'} aanvullen.`;
+        document.getElementById('reviewFooterText').textContent = `${invalidCount} controle${invalidCount === 1 ? '' : 's'} nodig.`;
         return;
       }
 
-      document.getElementById('reviewFooterText').textContent = `${count} item(s). Nog niet opgeslagen.`;
+      document.getElementById('reviewFooterText').textContent = `${count} klaar om op te slaan.`;
     }
 
     function openReviewInlineEdit(tempId) {
@@ -2048,6 +2111,25 @@
       currentReviewInlineEditTempId = null;
       renderReviewItemsCompact();
       updateReviewFooter();
+    }
+
+    function getReviewSignalsHtml(item) {
+      const chips = [];
+      const issues = getValidationIssues(item);
+
+      issues.forEach(issue => {
+        chips.push(`<span class="signal invalid">${escapeHtml(issue?.reason || 'controle nodig')}</span>`);
+      });
+
+      if (item?.duplicate_warning) {
+        const text = item?.duplicate_match_title
+          ? `lijkt op: ${item.duplicate_match_title}`
+          : 'waarschijnlijk dubbel';
+        chips.push(`<span class="signal duplicate">${escapeHtml(text)}</span>`);
+      }
+
+      if (!chips.length) return '';
+      return `<div class="review-signals">${chips.join('')}</div>`;
     }
 
     function renderReviewEditPanel(item) {
@@ -2222,7 +2304,7 @@
             <div class="review-card-head">
               <div class="review-badge">${escapeHtml(item.type || 'notitie')}</div>
               <div class="review-main">
-                <div class="review-title">${escapeHtml(item.title || `Item ${index + 1}`)}</div>
+                <div class="review-card-title">${escapeHtml(item.title || `Item ${index + 1}`)}</div>
                 <div class="review-meta">${escapeHtml(metaParts.length ? metaParts.join(' • ') : 'geen extra info')}</div>
               </div>
               <div class="item-actions">
@@ -2234,8 +2316,7 @@
                 </button>
               </div>
             </div>
-            ${getValidationWarningHtml(item)}
-            ${getDuplicateWarningHtml(item)}
+            ${getReviewSignalsHtml(item)}
             ${renderReviewEditPanel(item)}
           </div>
         `;
@@ -2253,6 +2334,10 @@
 
       renderReviewItemsCompact();
       updateReviewFooter();
+
+      if (!getReviewItems().length) {
+        closeReviewPane();
+      }
     }
 
     function openConfirmDialog({ title, subtitle, onConfirm }) {
@@ -2346,12 +2431,12 @@
       const items = getReviewItems();
 
       if (!items.length) {
-        footerText.textContent = 'Geen items om op te slaan.';
+        footerText.textContent = 'Geen items.';
         return;
       }
 
       saveBtn.disabled = true;
-      footerText.textContent = 'Bezig met opslaan...';
+      footerText.textContent = 'Opslaan...';
 
       try {
         const response = await fetch('/api/chat', {
@@ -2367,13 +2452,13 @@
         const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          footerText.textContent = `Opslaan ging mis: ${result.details || 'unknown error'}`;
+          footerText.textContent = `Opslaan mislukt.`;
           handleChatApiError(result, 'Opslaan ging mis.');
           return;
         }
 
         if (String(result.mode || '').toLowerCase() === 'question') {
-          footerText.textContent = 'Nog niet opgeslagen. Eerst ontbrekende info aanvullen.';
+          footerText.textContent = 'Controle nodig.';
           await handleApiResult(result, { reloadDashboard: false });
           return;
         }
@@ -2385,13 +2470,14 @@
           document.getElementById('reviewSummaryText').textContent = result?.review?.summary || '';
           renderReviewItemsCompact();
           updateReviewFooter();
+          syncReviewMode();
           return;
         }
 
-        closeReviewModal();
+        closeReviewPane();
         await handleApiResult(result, { reloadDashboard: true });
       } catch (error) {
-        footerText.textContent = `Verbinding mislukt: ${error.message || 'unknown error'}`;
+        footerText.textContent = `Verbinding mislukt.`;
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
       } finally {
         saveBtn.disabled = false;
@@ -2485,13 +2571,9 @@
       if (e.key === 'Enter') sendChat();
     });
 
-    document.getElementById('reviewClose').addEventListener('click', closeReviewModal);
-    document.getElementById('reviewCancelBtn').addEventListener('click', closeReviewModal);
+    document.getElementById('reviewClose').addEventListener('click', closeReviewPane);
+    document.getElementById('reviewCancelBtn').addEventListener('click', closeReviewPane);
     document.getElementById('reviewSaveBtn').addEventListener('click', saveReviewedItems);
-
-    document.getElementById('reviewOverlay').addEventListener('click', (e) => {
-      if (e.target.id === 'reviewOverlay') closeReviewModal();
-    });
 
     document.getElementById('confirmOverlay').addEventListener('click', (e) => {
       if (e.target.id === 'confirmOverlay') closeConfirmDialog();
