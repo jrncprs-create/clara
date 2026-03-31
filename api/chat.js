@@ -299,25 +299,54 @@ function sanitizeItemForUpdate(item) {
   return sanitizeItemCore(item, 'update')
 }
 
-function validateItemForSave(item) {
+function getItemValidationIssues(item) {
   const type = normalizeType(item.type)
   const title = safeString(item.title)
   const date = safeString(item.date)
   const time = safeString(item.time)
 
+  const issues = []
+
   if (!title) {
-    return { ok: false, blocked_by: 'missing_title', reason: 'Titel ontbreekt.' }
+    issues.push({
+      field: 'title',
+      code: 'missing_title',
+      reason: 'Titel ontbreekt.'
+    })
   }
 
   if (type === 'afspraak' && !date) {
-    return { ok: false, blocked_by: 'missing_date', reason: 'Afspraak mist datum.' }
+    issues.push({
+      field: 'date',
+      code: 'missing_date',
+      reason: 'Afspraak mist datum.'
+    })
   }
 
   if (type === 'afspraak' && !time) {
-    return { ok: false, blocked_by: 'missing_time', reason: 'Afspraak mist tijd.' }
+    issues.push({
+      field: 'time',
+      code: 'missing_time',
+      reason: 'Afspraak mist tijd.'
+    })
   }
 
-  return { ok: true, blocked_by: null, reason: '' }
+  return issues
+}
+
+function validateItemForSave(item) {
+  const issues = getItemValidationIssues(item)
+
+  if (!issues.length) {
+    return { ok: true, blocked_by: null, reason: '', issues: [] }
+  }
+
+  return {
+    ok: false,
+    blocked_by: issues[0].code,
+    reason: issues[0].reason,
+    issues
+  }
 }
 
 function buildMeta(body = {}, overrides = {}) {
@@ -509,6 +538,17 @@ ${text}
   return JSON.parse(content)
 }
 
+function enrichReviewItemsWithValidation(items) {
+  return items.map(item => {
+    const validation = validateItemForSave(item)
+    return {
+      ...item,
+      invalid_fields: validation.issues.map(issue => issue.field),
+      validation_issues: validation.issues
+    }
+  })
+}
+
 function normalizeReviewPayload(aiResult) {
   const mode = safeString(aiResult?.mode).toLowerCase()
 
@@ -551,57 +591,18 @@ function normalizeReviewPayload(aiResult) {
     }
   })
 
-  let needsClarification = false
-  let blockedBy = null
-
-  for (const item of cleanedItems) {
-    const validation = validateItemForSave(item)
-    if (!validation.ok) {
-      needsClarification = true
-      blockedBy = validation.blocked_by
-      break
-    }
-  }
-
-  if (needsClarification && cleanedItems.length === 1) {
-    const first = cleanedItems[0]
-    const questionText =
-      blockedBy === 'missing_date'
-        ? 'Welke datum bedoel je precies?'
-        : blockedBy === 'missing_time'
-          ? 'Hoe laat is deze afspraak precies?'
-          : 'Kun je dit iets preciezer maken?'
-
-    return {
-      mode: 'question',
-      reply: null,
-      question: {
-        text: questionText,
-        field: blockedBy === 'missing_date' ? 'date' : blockedBy === 'missing_time' ? 'time' : 'input',
-        options: [],
-        allow_free_input: true
-      },
-      confirmation: null,
-      review: null,
-      actions: [],
-      meta: {
-        needs_clarification: true,
-        confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.6), 0, 1),
-        can_save: false,
-        blocked_by: blockedBy
-      }
-    }
-  }
+  const enrichedItems = enrichReviewItemsWithValidation(cleanedItems)
+  const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
   const review = {
     summary: safeString(aiResult?.review?.summary),
-    items: cleanedItems
+    items: enrichedItems
   }
 
-  const actions = cleanedItems.length
+  const actions = enrichedItems.length
     ? [
         { type: 'confirm_review', label: 'Opslaan' },
-        ...cleanedItems.map(item => ({
+        ...enrichedItems.map(item => ({
           type: 'edit_review_item',
           label: 'Aanpassen',
           temp_id: item.temp_id
@@ -609,6 +610,23 @@ function normalizeReviewPayload(aiResult) {
         { type: 'cancel_review', label: 'Annuleren' }
       ]
     : []
+
+  if (blocked) {
+    return {
+      mode: 'review',
+      reply: 'Controleer dit even. Er ontbreekt nog iets.',
+      question: null,
+      confirmation: null,
+      review,
+      actions,
+      meta: {
+        needs_clarification: true,
+        confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.6), 0, 1),
+        can_save: false,
+        blocked_by: blocked.validation_issues?.[0]?.code || null
+      }
+    }
+  }
 
   return {
     mode: 'review',
@@ -767,41 +785,52 @@ module.exports = async function handler(req, res) {
         })
       }
 
-      const cleanedItems = items.map(sanitizeItemForSave)
-      const blocked = cleanedItems
-        .map(item => ({ item, validation: validateItemForSave(item) }))
-        .find(entry => !entry.validation.ok)
+      const cleanedItems = items.map((item, index) => {
+        const cleaned = sanitizeItemForSave(item)
+        return {
+          temp_id: safeString(item?.temp_id, `item_${index + 1}`),
+          type: cleaned.type,
+          title: cleaned.title,
+          summary: cleaned.summary,
+          project: cleaned.project,
+          date: cleaned.date,
+          end_date: cleaned.end_date,
+          time: cleaned.time,
+          status: cleaned.status,
+          priority: cleaned.priority,
+          source_text: cleaned.source_text
+        }
+      })
+
+      const enrichedItems = enrichReviewItemsWithValidation(cleanedItems)
+      const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
       if (blocked) {
         return res.status(200).json(
           buildResponse(body, {
             ok: true,
-            mode: 'question',
-            reply: null,
-            question: {
-              text:
-                blocked.validation.blocked_by === 'missing_date'
-                  ? 'Welke datum bedoel je precies?'
-                  : blocked.validation.blocked_by === 'missing_time'
-                    ? 'Hoe laat is deze afspraak precies?'
-                    : 'Kun je dit iets preciezer maken?',
-              field:
-                blocked.validation.blocked_by === 'missing_date'
-                  ? 'date'
-                  : blocked.validation.blocked_by === 'missing_time'
-                    ? 'time'
-                    : 'input',
-              options: [],
-              allow_free_input: true
-            },
+            mode: 'review',
+            reply: 'Nog niet opgeslagen. Vul eerst de ontbrekende velden aan.',
+            question: null,
             confirmation: null,
-            review: null,
-            actions: [],
+            review: {
+              summary: safeString(body.review_summary || 'Controleer en vul aan.'),
+              items: enrichedItems
+            },
+            actions: [
+              { type: 'confirm_review', label: 'Opslaan' },
+              ...enrichedItems.map(item => ({
+                type: 'edit_review_item',
+                label: 'Aanpassen',
+                temp_id: item.temp_id
+              })),
+              { type: 'cancel_review', label: 'Annuleren' }
+            ],
             meta: {
               needs_clarification: true,
               confidence: 0.6,
               can_save: false,
-              blocked_by: blocked.validation.blocked_by
+              blocked_by: blocked.validation_issues?.[0]?.code || null
             }
           })
         )
@@ -819,8 +848,8 @@ module.exports = async function handler(req, res) {
         end_date: item.end_date,
         time: item.time,
         priority: item.priority,
-        note_type: item.note_type,
-        raw: item.raw,
+        note_type: 'general',
+        raw: item.source_text,
         source_text: item.source_text,
         created_at: now,
         updated_at: now
