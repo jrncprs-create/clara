@@ -41,10 +41,6 @@
     .chat-input,
     .review-modal-content,
     .review-items,
-    .review-edit-modal-content,
-    .review-input,
-    .review-select,
-    .review-textarea,
     .agenda-day-strip,
     .timeline-scroll,
     * {
@@ -57,10 +53,6 @@
     .chat-input::-webkit-scrollbar,
     .review-modal-content::-webkit-scrollbar,
     .review-items::-webkit-scrollbar,
-    .review-edit-modal-content::-webkit-scrollbar,
-    .review-input::-webkit-scrollbar,
-    .review-select::-webkit-scrollbar,
-    .review-textarea::-webkit-scrollbar,
     .agenda-day-strip::-webkit-scrollbar,
     .timeline-scroll::-webkit-scrollbar,
     *::-webkit-scrollbar {
@@ -276,7 +268,8 @@
       stroke-width: 2.1;
     }
 
-    .flat-edit-wrap {
+    .flat-edit-wrap,
+    .review-inline-edit-wrap {
       overflow: hidden;
       max-height: 0;
       opacity: 0;
@@ -289,14 +282,16 @@
       margin-top: 0;
     }
 
-    .flat-item.is-open .flat-edit-wrap {
-      max-height: 1200px;
+    .flat-item.is-open .flat-edit-wrap,
+    .review-list-item.is-open .review-inline-edit-wrap {
+      max-height: 1400px;
       opacity: 1;
       transform: translateY(0);
       margin-top: 14px;
     }
 
-    .flat-edit-panel {
+    .flat-edit-panel,
+    .review-inline-edit-panel {
       border-top: 1px solid rgba(255,255,255,0.08);
       padding-top: 14px;
       display: flex;
@@ -304,41 +299,50 @@
       gap: 0;
     }
 
-    .flat-edit-group {
+    .flat-edit-group,
+    .review-inline-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
-    .flat-edit-group.single {
+    .flat-edit-group.single,
+    .review-inline-group.single {
       grid-template-columns: 1fr;
     }
 
-    .flat-edit-group:last-of-type {
+    .flat-edit-group:last-of-type,
+    .review-inline-group:last-of-type {
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
-    .flat-edit-field {
+    .flat-edit-field,
+    .review-inline-field {
       padding: 12px 0;
       min-width: 0;
     }
 
-    .flat-edit-group .flat-edit-field:first-child {
+    .flat-edit-group .flat-edit-field:first-child,
+    .review-inline-group .review-inline-field:first-child {
       padding-right: 12px;
     }
 
-    .flat-edit-group .flat-edit-field:last-child {
+    .flat-edit-group .flat-edit-field:last-child,
+    .review-inline-group .review-inline-field:last-child {
       padding-left: 12px;
     }
 
     .flat-edit-group.single .flat-edit-field:first-child,
-    .flat-edit-group.single .flat-edit-field:last-child {
+    .flat-edit-group.single .flat-edit-field:last-child,
+    .review-inline-group.single .review-inline-field:first-child,
+    .review-inline-group.single .review-inline-field:last-child {
       padding-left: 0;
       padding-right: 0;
     }
 
-    .flat-edit-label {
+    .flat-edit-label,
+    .review-inline-label {
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -349,7 +353,10 @@
 
     .flat-edit-input,
     .flat-edit-select,
-    .flat-edit-textarea {
+    .flat-edit-textarea,
+    .review-inline-input,
+    .review-inline-select,
+    .review-inline-textarea {
       width: 100%;
       background: transparent;
       border: none;
@@ -364,28 +371,34 @@
     }
 
     .flat-edit-input::placeholder,
-    .flat-edit-textarea::placeholder {
+    .flat-edit-textarea::placeholder,
+    .review-inline-input::placeholder,
+    .review-inline-textarea::placeholder {
       color: rgba(255,255,255,0.28);
     }
 
-    .flat-edit-select {
+    .flat-edit-select,
+    .review-inline-select {
       cursor: pointer;
       color: #fff;
     }
 
-    .flat-edit-textarea {
+    .flat-edit-textarea,
+    .review-inline-textarea {
       resize: vertical;
       min-height: 84px;
     }
 
-    .flat-edit-actions {
+    .flat-edit-actions,
+    .review-inline-actions {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
       padding-top: 14px;
     }
 
-    .flat-edit-btn {
+    .flat-edit-btn,
+    .review-inline-btn {
       border-radius: 12px;
       padding: 10px 14px;
       font-size: 13px;
@@ -395,17 +408,20 @@
       transition: opacity 120ms ease, transform 120ms ease, background 120ms ease, color 120ms ease;
     }
 
-    .flat-edit-btn:hover {
+    .flat-edit-btn:hover,
+    .review-inline-btn:hover {
       opacity: 1;
       transform: translateY(-1px);
     }
 
-    .flat-edit-btn.secondary {
+    .flat-edit-btn.secondary,
+    .review-inline-btn.secondary {
       background: rgba(255,255,255,0.04);
       color: #fff;
     }
 
-    .flat-edit-btn.primary {
+    .flat-edit-btn.primary,
+    .review-inline-btn.primary {
       background: #fff;
       color: #000;
       border-color: #fff;
@@ -527,7 +543,6 @@
     }
 
     .review-overlay,
-    .review-edit-overlay,
     .confirm-overlay {
       position: fixed;
       inset: 0;
@@ -536,12 +551,6 @@
       z-index: 1000;
       display: none;
       padding: 22px;
-    }
-
-    .review-edit-overlay {
-      z-index: 1100;
-      background: rgba(0,0,0,0.80);
-      backdrop-filter: blur(16px);
     }
 
     .confirm-overlay {
@@ -553,7 +562,6 @@
     }
 
     .review-overlay.open,
-    .review-edit-overlay.open,
     .confirm-overlay.open {
       display: block;
     }
@@ -575,19 +583,6 @@
       overflow: hidden;
     }
 
-    .review-edit-modal {
-      width: min(820px, calc(100vw - 44px));
-      height: min(88vh, 900px);
-      margin: 24px auto 0;
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 24px;
-      background: rgba(10,10,10,0.98);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
     .confirm-modal {
       width: min(420px, calc(100vw - 32px));
       border: 1px solid rgba(255,255,255,0.10);
@@ -597,8 +592,7 @@
       overflow: hidden;
     }
 
-    .review-modal-header,
-    .review-edit-modal-header {
+    .review-modal-header {
       padding: 18px 20px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
@@ -613,7 +607,6 @@
     }
 
     .review-modal-title,
-    .review-edit-modal-title,
     .confirm-title {
       font-size: 16px;
       font-weight: 700;
@@ -621,7 +614,6 @@
     }
 
     .review-modal-subtitle,
-    .review-edit-modal-subtitle,
     .confirm-subtitle {
       font-size: 13px;
       color: rgba(255,255,255,0.50);
@@ -629,8 +621,7 @@
       line-height: 1.4;
     }
 
-    .review-close,
-    .review-edit-close {
+    .review-close {
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.04);
       color: #fff;
@@ -656,8 +647,7 @@
       word-break: break-word;
     }
 
-    .review-modal-content,
-    .review-edit-modal-content {
+    .review-modal-content {
       flex: 1;
       overflow: auto;
       padding: 18px;
@@ -699,6 +689,22 @@
       border-radius: 18px;
       background: rgba(255,255,255,0.02);
       padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: background 220ms ease, border-color 220ms ease, opacity 220ms ease;
+    }
+
+    .review-list-item.is-open {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .review-list-item.is-dimmed {
+      opacity: 0.42;
+    }
+
+    .review-list-head {
       display: grid;
       grid-template-columns: auto 1fr auto;
       gap: 14px;
@@ -749,50 +755,7 @@
       flex-shrink: 0;
     }
 
-    .review-edit-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .review-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .review-field.span-2 {
-      grid-column: span 2;
-    }
-
-    .review-field label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.46);
-      font-weight: 700;
-    }
-
-    .review-input,
-    .review-select,
-    .review-textarea {
-      width: 100%;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: #111;
-      color: #fff;
-      border-radius: 12px;
-      outline: none;
-      font-size: 14px;
-      padding: 11px 12px;
-      font-family: inherit;
-    }
-
-    .review-textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    .review-source {
+    .review-inline-source {
       margin-top: 10px;
       padding: 10px 12px;
       border-radius: 12px;
@@ -804,7 +767,6 @@
     }
 
     .review-modal-footer,
-    .review-edit-modal-footer,
     .confirm-footer {
       padding: 16px 18px;
       border-top: 1px solid rgba(255,255,255,0.08);
@@ -815,14 +777,12 @@
       flex-shrink: 0;
     }
 
-    .review-footer-left,
-    .review-edit-footer-left {
+    .review-footer-left {
       font-size: 13px;
       color: rgba(255,255,255,0.48);
     }
 
     .review-actions,
-    .review-edit-actions,
     .confirm-actions {
       display: flex;
       gap: 10px;
@@ -831,7 +791,6 @@
     }
 
     .review-btn,
-    .review-edit-btn,
     .confirm-btn {
       border-radius: 12px;
       padding: 11px 14px;
@@ -842,7 +801,6 @@
     }
 
     .review-btn.primary,
-    .review-edit-btn.primary,
     .confirm-btn.primary {
       background: #fff;
       color: #000;
@@ -850,14 +808,12 @@
     }
 
     .review-btn.secondary,
-    .review-edit-btn.secondary,
     .confirm-btn.secondary {
       background: rgba(255,255,255,0.06);
       color: #fff;
     }
 
-    .review-btn.ghost,
-    .review-edit-btn.ghost {
+    .review-btn.ghost {
       background: transparent;
       color: rgba(255,255,255,0.80);
     }
@@ -1219,7 +1175,7 @@
         min-height: 360px;
       }
 
-      .review-list-item {
+      .review-list-head {
         grid-template-columns: 1fr;
         align-items: start;
       }
@@ -1228,75 +1184,69 @@
         justify-content: flex-start;
       }
 
-      .review-edit-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .review-field.span-2 {
-        grid-column: span 1;
-      }
-
       .timeline-event {
         min-height: 64px;
       }
 
-      .flat-edit-group {
+      .flat-edit-group,
+      .review-inline-group {
         grid-template-columns: 1fr;
       }
 
       .flat-edit-group .flat-edit-field:first-child,
-      .flat-edit-group .flat-edit-field:last-child {
+      .flat-edit-group .flat-edit-field:last-child,
+      .review-inline-group .review-inline-field:first-child,
+      .review-inline-group .review-inline-field:last-child {
         padding-left: 0;
         padding-right: 0;
       }
 
-      .flat-edit-group .flat-edit-field {
+      .flat-edit-group .flat-edit-field,
+      .review-inline-group .review-inline-field {
         border-bottom: 1px solid rgba(255,255,255,0.08);
       }
 
-      .flat-edit-group .flat-edit-field:last-child {
+      .flat-edit-group .flat-edit-field:last-child,
+      .review-inline-group .review-inline-field:last-child {
         border-bottom: none;
       }
     }
 
     @media (max-width: 760px) {
       .review-overlay,
-      .review-edit-overlay,
       .confirm-overlay {
         padding: 10px;
       }
 
-      .review-modal,
-      .review-edit-modal {
+      .review-modal {
         width: 100%;
         height: 92vh;
       }
 
       .review-modal-footer,
-      .review-edit-modal-footer,
       .confirm-footer {
         flex-direction: column;
         align-items: stretch;
       }
 
       .review-actions,
-      .review-edit-actions,
       .confirm-actions {
         width: 100%;
       }
 
       .review-btn,
-      .review-edit-btn,
       .confirm-btn {
         width: 100%;
       }
 
-      .flat-edit-actions {
+      .flat-edit-actions,
+      .review-inline-actions {
         flex-direction: column;
         align-items: stretch;
       }
 
-      .flat-edit-btn {
+      .flat-edit-btn,
+      .review-inline-btn {
         width: 100%;
       }
     }
@@ -1400,100 +1350,6 @@
     </div>
   </div>
 
-  <div class="review-edit-overlay" id="reviewEditOverlay">
-    <div class="review-edit-modal">
-      <div class="review-edit-modal-header">
-        <div>
-          <div class="review-edit-modal-title">Item aanpassen</div>
-          <div class="review-edit-modal-subtitle" id="reviewEditSubtitle">Pas dit item aan en bewaar de wijziging.</div>
-        </div>
-        <button class="review-edit-close" id="reviewEditClose">Sluiten</button>
-      </div>
-
-      <div class="review-edit-modal-content">
-        <div class="review-edit-grid">
-          <div class="review-field">
-            <label>Type</label>
-            <select class="review-select" id="editType">
-              <option value="taak">taak</option>
-              <option value="afspraak">afspraak</option>
-              <option value="notitie">notitie</option>
-              <option value="idee">idee</option>
-              <option value="project">project</option>
-              <option value="beslissing">beslissing</option>
-            </select>
-          </div>
-
-          <div class="review-field">
-            <label>Project</label>
-            <input class="review-input" id="editProject" />
-          </div>
-
-          <div class="review-field span-2">
-            <label>Titel</label>
-            <input class="review-input" id="editTitle" />
-          </div>
-
-          <div class="review-field span-2">
-            <label>Samenvatting</label>
-            <textarea class="review-textarea" id="editSummary"></textarea>
-          </div>
-
-          <div class="review-field">
-            <label>Status</label>
-            <input class="review-input" id="editStatus" />
-          </div>
-
-          <div class="review-field">
-            <label>Prioriteit</label>
-            <select class="review-select" id="editPriority">
-              <option value="">-</option>
-              <option value="hoog">hoog</option>
-              <option value="middel">middel</option>
-              <option value="laag">laag</option>
-            </select>
-          </div>
-
-          <div class="review-field">
-            <label>Datum</label>
-            <input class="review-input" id="editDate" placeholder="2026-03-30" />
-          </div>
-
-          <div class="review-field">
-            <label>Einddatum</label>
-            <input class="review-input" id="editEndDate" />
-          </div>
-
-          <div class="review-field">
-            <label>Tijd</label>
-            <input class="review-input" id="editTime" placeholder="14:00" />
-          </div>
-
-          <div class="review-field">
-            <label>Brontekst</label>
-            <input class="review-input" id="editSourceText" />
-          </div>
-        </div>
-
-        <div class="review-source" id="editSourcePreview"></div>
-      </div>
-
-      <div class="review-edit-modal-footer">
-        <div class="review-edit-footer-left" id="reviewEditFooterText">Nog niet opgeslagen.</div>
-        <div class="review-edit-actions">
-          <button class="review-icon-btn delete" id="reviewEditDeleteBtn" type="button" aria-label="Verwijderen">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 7l10 10"></path>
-              <path d="M17 7L7 17"></path>
-            </svg>
-          </button>
-          <button class="review-edit-btn secondary" id="reviewEditCancelBtn">Terug</button>
-          <button class="review-edit-btn primary" id="reviewEditSaveBtn">Wijziging bewaren</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="confirm-overlay" id="confirmOverlay">
     <div class="confirm-modal">
       <div class="confirm-header">
@@ -1515,10 +1371,10 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v3.5 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v3.6 • ${AUTO_VERSION}`;
 
     let currentReviewData = null;
-    let currentEditTempId = null;
+    let currentReviewInlineEditTempId = null;
 
     let dashboardRawData = {
       agenda: [],
@@ -1887,7 +1743,7 @@
       };
 
       openReviewModal(reviewPayload);
-      openEditItem(reviewPayload.review.items[0].temp_id);
+      openReviewInlineEdit(reviewPayload.review.items[0].temp_id);
     }
 
     function closeDashboardInlineEdit() {
@@ -2627,7 +2483,7 @@
 
     function openReviewModal(reviewData) {
       currentReviewData = reviewData;
-      currentEditTempId = null;
+      currentReviewInlineEditTempId = null;
 
       document.getElementById('reviewSummaryText').textContent = reviewData?.review?.summary || '';
       document.getElementById('reviewSubtitle').textContent = reviewData?.reply || 'Controleer en pas aan waar nodig.';
@@ -2654,6 +2510,199 @@
       item.priority = '';
     }
 
+    function openReviewInlineEdit(tempId) {
+      const item = findReviewItem(tempId);
+      if (!item) return;
+      currentReviewInlineEditTempId = tempId;
+      renderReviewItemsCompact();
+
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`[data-review-temp-id="${CSS.escape(tempId)}"]`);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        setTimeout(() => {
+          const input = el.querySelector('.review-inline-input, .review-inline-select, .review-inline-textarea');
+          if (input) input.focus();
+        }, 220);
+      });
+    }
+
+    function closeReviewInlineEdit() {
+      currentReviewInlineEditTempId = null;
+      renderReviewItemsCompact();
+    }
+
+    function updateReviewInlineField(tempId, field, value) {
+      const item = findReviewItem(tempId);
+      if (!item) return;
+
+      item[field] = value;
+
+      const currentType = String(item.type || '').toLowerCase();
+      if (field === 'type' && currentType === 'notitie') {
+        item.status = '';
+        item.priority = '';
+        item.date = '';
+        item.end_date = '';
+        item.time = '';
+      }
+    }
+
+    function saveReviewInlineEdit(tempId) {
+      const item = findReviewItem(tempId);
+      if (!item) return;
+
+      applyNotitieRulesToReviewItem(item);
+      currentReviewInlineEditTempId = null;
+      renderReviewItemsCompact();
+      updateReviewFooter();
+    }
+
+    function renderReviewInlineEditPanel(item) {
+      const isOpen = currentReviewInlineEditTempId === item.temp_id;
+      if (!isOpen) return '';
+
+      const isNote = String(item.type || '').toLowerCase() === 'notitie';
+
+      if (isNote) {
+        return `
+          <div class="review-inline-edit-wrap">
+            <div class="review-inline-edit-panel">
+              <div class="review-inline-group">
+                <div class="review-inline-field">
+                  <div class="review-inline-label">Type</div>
+                  <select class="review-inline-select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
+                    <option value="taak" ${item.type === 'taak' ? 'selected' : ''}>taak</option>
+                    <option value="afspraak" ${item.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
+                    <option value="notitie" ${item.type === 'notitie' ? 'selected' : ''}>notitie</option>
+                    <option value="idee" ${item.type === 'idee' ? 'selected' : ''}>idee</option>
+                    <option value="project" ${item.type === 'project' ? 'selected' : ''}>project</option>
+                    <option value="beslissing" ${item.type === 'beslissing' ? 'selected' : ''}>beslissing</option>
+                  </select>
+                </div>
+                <div class="review-inline-field">
+                  <div class="review-inline-label">Project</div>
+                  <input class="review-inline-input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
+                </div>
+              </div>
+
+              <div class="review-inline-group single">
+                <div class="review-inline-field">
+                  <div class="review-inline-label">Titel</div>
+                  <input class="review-inline-input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
+                </div>
+              </div>
+
+              <div class="review-inline-group single">
+                <div class="review-inline-field">
+                  <div class="review-inline-label">Samenvatting</div>
+                  <textarea class="review-inline-textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
+                </div>
+              </div>
+
+              <div class="review-inline-group single">
+                <div class="review-inline-field">
+                  <div class="review-inline-label">Brontekst</div>
+                  <input class="review-inline-input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
+                </div>
+              </div>
+
+              <div class="review-inline-source">${escapeHtml(item.source_text || '')}</div>
+
+              <div class="review-inline-actions">
+                <button class="review-inline-btn secondary" type="button" onclick="closeReviewInlineEdit()">Terug</button>
+                <button class="review-inline-btn primary" type="button" onclick="saveReviewInlineEdit('${escapeHtml(item.temp_id || '')}')">Wijziging bewaren</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="review-inline-edit-wrap">
+          <div class="review-inline-edit-panel">
+            <div class="review-inline-group">
+              <div class="review-inline-field">
+                <div class="review-inline-label">Type</div>
+                <select class="review-inline-select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'type', this.value)">
+                  <option value="taak" ${item.type === 'taak' ? 'selected' : ''}>taak</option>
+                  <option value="afspraak" ${item.type === 'afspraak' ? 'selected' : ''}>afspraak</option>
+                  <option value="notitie" ${item.type === 'notitie' ? 'selected' : ''}>notitie</option>
+                  <option value="idee" ${item.type === 'idee' ? 'selected' : ''}>idee</option>
+                  <option value="project" ${item.type === 'project' ? 'selected' : ''}>project</option>
+                  <option value="beslissing" ${item.type === 'beslissing' ? 'selected' : ''}>beslissing</option>
+                </select>
+              </div>
+              <div class="review-inline-field">
+                <div class="review-inline-label">Project</div>
+                <input class="review-inline-input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
+              </div>
+            </div>
+
+            <div class="review-inline-group single">
+              <div class="review-inline-field">
+                <div class="review-inline-label">Titel</div>
+                <input class="review-inline-input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
+              </div>
+            </div>
+
+            <div class="review-inline-group single">
+              <div class="review-inline-field">
+                <div class="review-inline-label">Samenvatting</div>
+                <textarea class="review-inline-textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
+              </div>
+            </div>
+
+            <div class="review-inline-group">
+              <div class="review-inline-field">
+                <div class="review-inline-label">Status</div>
+                <input class="review-inline-input" value="${escapeHtml(item.status || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'status', this.value)" />
+              </div>
+              <div class="review-inline-field">
+                <div class="review-inline-label">Prioriteit</div>
+                <select class="review-inline-select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'priority', this.value)">
+                  <option value="" ${!item.priority ? 'selected' : ''}>-</option>
+                  <option value="hoog" ${item.priority === 'hoog' ? 'selected' : ''}>hoog</option>
+                  <option value="middel" ${item.priority === 'middel' ? 'selected' : ''}>middel</option>
+                  <option value="laag" ${item.priority === 'laag' ? 'selected' : ''}>laag</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="review-inline-group">
+              <div class="review-inline-field">
+                <div class="review-inline-label">Datum</div>
+                <input class="review-inline-input" value="${escapeHtml(item.date || '')}" placeholder="2026-03-31" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'date', this.value)" />
+              </div>
+              <div class="review-inline-field">
+                <div class="review-inline-label">Einddatum</div>
+                <input class="review-inline-input" value="${escapeHtml(item.end_date || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'end_date', this.value)" />
+              </div>
+            </div>
+
+            <div class="review-inline-group">
+              <div class="review-inline-field">
+                <div class="review-inline-label">Tijd</div>
+                <input class="review-inline-input" value="${escapeHtml(item.time || '')}" placeholder="14:00" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'time', this.value)" />
+              </div>
+              <div class="review-inline-field">
+                <div class="review-inline-label">Brontekst</div>
+                <input class="review-inline-input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
+              </div>
+            </div>
+
+            <div class="review-inline-source">${escapeHtml(item.source_text || '')}</div>
+
+            <div class="review-inline-actions">
+              <button class="review-inline-btn secondary" type="button" onclick="closeReviewInlineEdit()">Terug</button>
+              <button class="review-inline-btn primary" type="button" onclick="saveReviewInlineEdit('${escapeHtml(item.temp_id || '')}')">Wijziging bewaren</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderReviewItemsCompact() {
       const wrap = document.getElementById('reviewItems');
       const items = getReviewItems();
@@ -2665,94 +2714,40 @@
 
       wrap.innerHTML = items.map((item, index) => {
         const metaParts = getMetaParts(item);
+        const isOpen = currentReviewInlineEditTempId === item.temp_id;
+        const hasOtherOpen = !!currentReviewInlineEditTempId && currentReviewInlineEditTempId !== item.temp_id;
+        const classes = [
+          'review-list-item',
+          isOpen ? 'is-open' : '',
+          hasOtherOpen ? 'is-dimmed' : ''
+        ].filter(Boolean).join(' ');
 
         return `
-          <div class="review-list-item">
-            <div class="review-list-badge">${escapeHtml(item.type || 'notitie')}</div>
+          <div class="${classes}" data-review-temp-id="${escapeHtml(item.temp_id || '')}">
+            <div class="review-list-head">
+              <div class="review-list-badge">${escapeHtml(item.type || 'notitie')}</div>
 
-            <div class="review-list-main">
-              <div class="review-list-title">${escapeHtml(item.title || `Item ${index + 1}`)}</div>
-              <div class="review-list-meta">
-                ${metaParts.length ? metaParts.map(part => `<span>${escapeHtml(part)}</span>`).join('') : '<span>geen extra info</span>'}
+              <div class="review-list-main">
+                <div class="review-list-title">${escapeHtml(item.title || `Item ${index + 1}`)}</div>
+                <div class="review-list-meta">
+                  ${metaParts.length ? metaParts.map(part => `<span>${escapeHtml(part)}</span>`).join('') : '<span>geen extra info</span>'}
+                </div>
+              </div>
+
+              <div class="review-list-actions">
+                <button class="review-icon-btn" type="button" onclick="openReviewInlineEdit('${escapeHtml(item.temp_id || '')}')" aria-label="Aanpassen">
+                  ${editIconSvg()}
+                </button>
+                <button class="review-icon-btn delete" type="button" onclick="requestReviewDelete('${escapeHtml(item.temp_id || '')}')" aria-label="Verwijderen">
+                  ${deleteIconSvg()}
+                </button>
               </div>
             </div>
 
-            <div class="review-list-actions">
-              <button class="review-icon-btn" type="button" onclick="openEditItem('${escapeHtml(item.temp_id || '')}')" aria-label="Aanpassen">
-                ${editIconSvg()}
-              </button>
-              <button class="review-icon-btn delete" type="button" onclick="requestReviewDelete('${escapeHtml(item.temp_id || '')}')" aria-label="Verwijderen">
-                ${deleteIconSvg()}
-              </button>
-            </div>
+            ${renderReviewInlineEditPanel(item)}
           </div>
         `;
       }).join('');
-    }
-
-    function syncReviewEditFieldVisibility() {
-      const type = document.getElementById('editType').value;
-      const isNote = type === 'notitie';
-
-      const ids = ['editStatus', 'editPriority', 'editDate', 'editEndDate', 'editTime'];
-      ids.forEach(id => {
-        const el = document.getElementById(id);
-        const field = el.closest('.review-field');
-        if (!field) return;
-        field.style.display = isNote ? 'none' : '';
-      });
-    }
-
-    function openEditItem(tempId) {
-      const item = findReviewItem(tempId);
-      if (!item) return;
-
-      currentEditTempId = tempId;
-
-      document.getElementById('editType').value = item.type || 'notitie';
-      document.getElementById('editTitle').value = item.title || '';
-      document.getElementById('editProject').value = item.project || '';
-      document.getElementById('editSummary').value = item.summary || '';
-      document.getElementById('editStatus').value = item.status || '';
-      document.getElementById('editPriority').value = item.priority || '';
-      document.getElementById('editDate').value = item.date || '';
-      document.getElementById('editEndDate').value = item.end_date || '';
-      document.getElementById('editTime').value = item.time || '';
-      document.getElementById('editSourceText').value = item.source_text || '';
-      document.getElementById('editSourcePreview').textContent = item.source_text || '';
-      document.getElementById('reviewEditFooterText').textContent = `Item: ${item.title || 'zonder titel'}`;
-
-      syncReviewEditFieldVisibility();
-      document.getElementById('reviewEditOverlay').classList.add('open');
-    }
-
-    function closeEditItem() {
-      currentEditTempId = null;
-      document.getElementById('reviewEditOverlay').classList.remove('open');
-    }
-
-    function saveEditItem() {
-      if (!currentEditTempId) return;
-
-      const item = findReviewItem(currentEditTempId);
-      if (!item) return;
-
-      item.type = document.getElementById('editType').value.trim() || 'notitie';
-      item.title = document.getElementById('editTitle').value.trim();
-      item.project = document.getElementById('editProject').value.trim();
-      item.summary = document.getElementById('editSummary').value.trim();
-      item.status = document.getElementById('editStatus').value.trim();
-      item.priority = document.getElementById('editPriority').value.trim();
-      item.date = document.getElementById('editDate').value.trim();
-      item.end_date = document.getElementById('editEndDate').value.trim();
-      item.time = document.getElementById('editTime').value.trim();
-      item.source_text = document.getElementById('editSourceText').value.trim();
-
-      applyNotitieRulesToReviewItem(item);
-
-      renderReviewItemsCompact();
-      updateReviewFooter();
-      closeEditItem();
     }
 
     function deleteReviewItem(tempId) {
@@ -2760,7 +2755,9 @@
 
       currentReviewData.review.items = currentReviewData.review.items.filter(item => item.temp_id !== tempId);
 
-      if (currentEditTempId === tempId) closeEditItem();
+      if (currentReviewInlineEditTempId === tempId) {
+        currentReviewInlineEditTempId = null;
+      }
 
       renderReviewItemsCompact();
       updateReviewFooter();
@@ -2889,7 +2886,17 @@
           return;
         }
 
-        closeEditItem();
+        if (String(result.mode || '').toLowerCase() === 'review') {
+          currentReviewData = result;
+          currentReviewInlineEditTempId = null;
+          document.getElementById('reviewSubtitle').textContent = result?.reply || 'Controleer en pas aan waar nodig.';
+          document.getElementById('reviewSummaryText').textContent = result?.review?.summary || '';
+          renderReviewItemsCompact();
+          updateReviewFooter();
+          footerText.textContent = 'Nog niet opgeslagen. Controleer de items.';
+          return;
+        }
+
         closeReviewModal();
         await handleApiResult(result, { reloadDashboard: true });
       } catch (error) {
@@ -2965,28 +2972,8 @@
     document.getElementById('reviewOnlyCloseBtn').addEventListener('click', closeReviewModal);
     document.getElementById('reviewSaveBtn').addEventListener('click', saveReviewedItems);
 
-    document.getElementById('reviewEditClose').addEventListener('click', closeEditItem);
-    document.getElementById('reviewEditCancelBtn').addEventListener('click', closeEditItem);
-    document.getElementById('reviewEditSaveBtn').addEventListener('click', saveEditItem);
-    document.getElementById('reviewEditDeleteBtn').addEventListener('click', () => {
-      if (!currentEditTempId) return;
-      requestReviewDelete(currentEditTempId);
-    });
-
-    document.getElementById('editSourceText').addEventListener('input', (e) => {
-      document.getElementById('editSourcePreview').textContent = e.target.value;
-    });
-
-    document.getElementById('editType').addEventListener('change', () => {
-      syncReviewEditFieldVisibility();
-    });
-
     document.getElementById('reviewOverlay').addEventListener('click', (e) => {
       if (e.target.id === 'reviewOverlay') closeReviewModal();
-    });
-
-    document.getElementById('reviewEditOverlay').addEventListener('click', (e) => {
-      if (e.target.id === 'reviewEditOverlay') closeEditItem();
     });
 
     document.getElementById('confirmOverlay').addEventListener('click', (e) => {
@@ -2996,7 +2983,10 @@
     document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmDialog);
     document.getElementById('confirmOkBtn').addEventListener('click', runConfirmAction);
 
-    window.openEditItem = openEditItem;
+    window.openReviewInlineEdit = openReviewInlineEdit;
+    window.closeReviewInlineEdit = closeReviewInlineEdit;
+    window.updateReviewInlineField = updateReviewInlineField;
+    window.saveReviewInlineEdit = saveReviewInlineEdit;
     window.openDashboardEdit = openDashboardEdit;
     window.selectAgendaDay = selectAgendaDay;
     window.requestDashboardDelete = requestDashboardDelete;
