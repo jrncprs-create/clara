@@ -454,6 +454,24 @@ function sanitizeNotitieFields(item) {
   }
 }
 
+function makeComparableText(value) {
+  return normalizeWhitespace(value)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function buildDedupeKey(item) {
+  return [
+    normalizeType(item?.type),
+    makeComparableText(item?.title),
+    safeString(item?.date),
+    safeString(item?.time),
+    makeComparableText(item?.project)
+  ].join('|')
+}
+
 function sanitizeItemCore(item, mode = 'save') {
   const rawType = normalizeType(item?.type)
   const type = rawType || 'notitie'
@@ -902,6 +920,34 @@ async function updateItem(body) {
   return data
 }
 
+async function findExistingMatches(items) {
+  const matchMap = new Map()
+
+  for (const item of items) {
+    const query = supabase
+      .from(TABLE_NAME)
+      .select('id, type, title, project, date, time')
+      .eq('type', item.type)
+      .eq('title', item.title)
+      .eq('date', item.date)
+      .eq('time', item.time)
+      .eq('project', item.project || '')
+      .limit(1)
+
+    const { data, error } = await query
+
+    if (error) {
+      throw new Error(`dedupe_lookup_failed: ${error.message}`)
+    }
+
+    if (data?.length) {
+      matchMap.set(buildDedupeKey(item), data[0])
+    }
+  }
+
+  return matchMap
+}
+
 async function confirmReview(body) {
   const items = Array.isArray(body.items) ? body.items : []
 
@@ -949,9 +995,47 @@ async function confirmReview(body) {
     }
   }
 
+  const uniqueMap = new Map()
+  for (const item of cleanedItems) {
+    const key = buildDedupeKey(item)
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, item)
+    }
+  }
+
+  const uniqueItems = Array.from(uniqueMap.values())
+  const existingMatches = await findExistingMatches(uniqueItems)
+
+  const newItems = uniqueItems.filter(item => {
+    const key = buildDedupeKey(item)
+    return !existingMatches.has(key)
+  })
+
+  if (!newItems.length) {
+    return {
+      blocked: false,
+      response: buildResponse(body, {
+        ok: true,
+        mode: 'confirmation',
+        reply: null,
+        confirmation: {
+          text: 'Niets nieuws opgeslagen.',
+          saved: []
+        },
+        review: null,
+        actions: [],
+        meta: {
+          needs_clarification: false,
+          confidence: 1,
+          can_save: false
+        }
+      })
+    }
+  }
+
   const now = new Date().toISOString()
 
-  const inserts = cleanedItems.map(item => ({
+  const inserts = newItems.map(item => ({
     type: item.type,
     title: item.title,
     summary: item.summary,
