@@ -32,6 +32,128 @@ const DUTCH_WEEKDAYS = {
   zaterdag: 6
 }
 
+const CLARA_MASTER_PROMPT = `
+Je bent Clara, een compacte en scherpe assistent voor werkstructuur.
+
+Taak:
+Zet rommelige menselijke invoer om naar 1 of meer schone review-items.
+
+Belangrijk:
+- Begrijp de echte bedoeling van de gebruiker
+- Negeer ruis, twijfels, herhalingen, correctievragen en meta-gesprek
+- Gebruik alleen de feitelijke instructie als basis
+- Maak nooit dubbele zinnen in de samenvatting
+- Maak nooit een titel van losse stopwoorden of datumfragmenten
+- Als tekst rommelig is, herstel hem stilzwijgend naar logisch Nederlands
+- Verbeter duidelijke typfouten stilzwijgend
+- Als er een duidelijke taak in de tekst zit, geef die taak prioriteit boven alle losse vraag/antwoord-fragmenten
+- Behandel tekst als één logische invoer, niet als losse chatregels
+
+Soorten:
+- taak
+- afspraak
+- notitie
+- idee
+- project
+- beslissing
+
+Regels:
+- notitie is altijd tijdloos:
+  - geen date
+  - geen end_date
+  - geen time
+  - geen priority
+  - geen status
+- afspraak alleen als datum én tijd voldoende duidelijk zijn
+- taak mag wel met datum en zonder tijd
+- verzin geen tijd
+- verzin geen datum als die echt niet afleidbaar is
+- als datum relatief is of als weekdag genoemd wordt (zoals morgen, overmorgen, vrijdag a.s.), laat dat als menselijke datum-intentie terugkomen in het item; de backend normaliseert daarna verder
+- title:
+  - kort
+  - concreet
+  - geen datum vooraan
+  - geen losse woorden zoals "a", "ja", "vrijdag a.s."
+  - kies de werkelijke kern van de taak
+- summary:
+  - 1 korte, schone zin
+  - zonder duplicatie
+  - zonder meta-zinnen
+  - met de echte inhoud/instructie
+- source_text:
+  - alleen het relevante opgeschoonde bronstuk
+  - niet het hele vraaggesprek terugplakken
+- project leeg laten tenzij echt duidelijk
+- status voor taak meestal "nieuw"
+- priority voor taak meestal "middel" tenzij echt duidelijk anders
+
+Als iets voldoende duidelijk is:
+- geef mode="review"
+
+Alleen als echt noodzakelijk:
+- geef mode="question"
+
+Geef alleen geldige JSON terug, zonder uitleg.
+
+QUESTION:
+{
+  "mode": "question",
+  "reply": null,
+  "question": {
+    "text": "",
+    "field": "",
+    "options": [
+      { "value": "", "label": "" }
+    ],
+    "allow_free_input": true
+  },
+  "confirmation": null,
+  "review": null,
+  "actions": [],
+  "meta": {
+    "needs_clarification": true,
+    "confidence": 0.0,
+    "can_save": false
+  }
+}
+
+REVIEW:
+{
+  "mode": "review",
+  "reply": "Controleer dit even.",
+  "question": null,
+  "confirmation": null,
+  "review": {
+    "summary": "Ik heb dit alvast klaargezet.",
+    "items": [
+      {
+        "temp_id": "item_1",
+        "type": "taak",
+        "title": "",
+        "summary": "",
+        "project": "",
+        "date": "",
+        "end_date": "",
+        "time": "",
+        "status": "",
+        "priority": "",
+        "source_text": ""
+      }
+    ]
+  },
+  "actions": [
+    { "type": "confirm_review", "label": "Opslaan" },
+    { "type": "edit_review_item", "label": "Aanpassen", "temp_id": "item_1" },
+    { "type": "cancel_review", "label": "Annuleren" }
+  ],
+  "meta": {
+    "needs_clarification": false,
+    "confidence": 0.0,
+    "can_save": true
+  }
+}
+`.trim()
+
 function safeString(value, fallback = '') {
   if (value === undefined || value === null) return fallback
   return String(value).trim()
@@ -316,240 +438,30 @@ function fixCommonTypos(input = '') {
   return normalizeWhitespace(text)
 }
 
-function stripAssistantMeta(input = '') {
-  return normalizeWhitespace(
-    String(input)
-      .replace(/\bopgeslagen\.?/gi, '')
-      .replace(/\bcontroleer dit even\.?/gi, '')
-      .replace(/\bwelke datum bedoel je.*$/gim, '')
-      .replace(/\bwat is de exacte datum.*$/gim, '')
-      .replace(/\bis de datum.*$/gim, '')
-      .replace(/\bvalt aanstaande vrijdag.*$/gim, '')
-      .replace(/\bwat is het type van deze invoer.*$/gim, '')
-  )
-}
-
-function splitUsefulLines(input = '') {
-  return normalizeWhitespace(input)
+function stripNoiseForAI(input = '') {
+  const lines = normalizeWhitespace(fixCommonTypos(input))
     .split('\n')
-    .map(line => normalizeWhitespace(line))
-    .filter(Boolean)
-    .filter(line => {
-      const lower = line.toLowerCase()
-
-      if (/^(taak|afspraak|notitie)$/i.test(lower)) return false
-      if (/^(ja|nee)(,|\b)/i.test(lower)) return false
-      if (/^\d{4}-\d{2}-\d{2}$/.test(lower)) return false
-      if (/^\d{1,2}\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)(\s+\d{4})?$/i.test(lower)) return false
-      if (/^(vandaag|morgen|overmorgen)$/i.test(lower)) return false
-      if (/^(vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)(\s+a\.?s\.?)?$/i.test(lower)) return false
-
-      return true
-    })
-}
-
-function dedupeSentences(text = '') {
-  const cleaned = normalizeWhitespace(text)
-  if (!cleaned) return ''
-
-  const parts = cleaned
-    .split(/[.]\s+/)
-    .map(s => normalizeWhitespace(s.replace(/\.+$/g, '')))
+    .map(line => line.trim())
     .filter(Boolean)
 
-  const seen = new Set()
-  const out = []
+  const filtered = lines.filter(line => {
+    const lower = line.toLowerCase()
 
-  for (const part of parts) {
-    const key = part.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push(part)
-  }
+    if (/^opgeslagen\.?$/i.test(lower)) return false
+    if (/^controleer dit even\.?$/i.test(lower)) return false
+    if (/^welke datum bedoel je\b/i.test(lower)) return false
+    if (/^wat is de exacte datum\b/i.test(lower)) return false
+    if (/^is de datum\b/i.test(lower)) return false
+    if (/^valt aanstaande vrijdag\b/i.test(lower)) return false
+    if (/^wat is het type van deze invoer\b/i.test(lower)) return false
+    if (/^(taak|afspraak|notitie)$/i.test(lower)) return false
+    if (/^(ja|nee)(\b|,)/i.test(lower)) return false
+    if (/^\d{4}-\d{2}-\d{2}$/.test(lower)) return false
 
-  return out.join('. ')
-}
-
-function removeLooseDateFragments(text = '') {
-  return normalizeWhitespace(
-    String(text)
-      .replace(/\bdeadline\s+(vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)\s*(a\.s\.|as|aanstaande|komende)?\b/gi, '')
-      .replace(/\b(vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)\s*(a\.s\.|as|aanstaande|komende)\b/gi, '')
-      .replace(/\b(vandaag|morgen|overmorgen)\b/gi, '')
-      .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '')
-      .replace(/\b\d{1,2}\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)(\s+\d{4})?\b/gi, '')
-      .replace(/\s+[.,]/g, '.')
-  )
-}
-
-function detectRuleType(raw = '') {
-  const text = safeString(raw).toLowerCase()
-
-  if (/\bnotitie\b/.test(text)) return 'notitie'
-  if (/\bafspraak\b/.test(text)) return 'afspraak'
-  if (/\btaak\b/.test(text)) return 'taak'
-
-  const hasDate = !!extractRelativeDateFromText(text) || !!extractExplicitDateFromText(text)
-  const hasTime = !!extractTimeFromText(text)
-  const hasMeetingWords = /\b(afspraak|meeting|call|bellen|overleg|met )\b/.test(text)
-
-  if (hasDate && hasTime && hasMeetingWords) return 'afspraak'
-  if (/\b(deadline|moet|check|controleer|afwerking|doen|regelen)\b/.test(text)) return 'taak'
-
-  return 'taak'
-}
-
-function detectRulePriority(raw = '') {
-  const text = safeString(raw).toLowerCase()
-
-  if (/\b(urgent|spoed|meteen|vandaag nog)\b/.test(text)) return 'hoog'
-  if (/\b(later|ooit|ooit nog)\b/.test(text)) return 'laag'
-  return 'middel'
-}
-
-function extractRuleDate(raw = '', baseDate = new Date()) {
-  const text = safeString(raw)
-  const explicit = extractExplicitDateFromText(text, baseDate)
-  const relative = extractRelativeDateFromText(text, baseDate)
-
-  const weekdayMentioned = /\b(vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)\b/i.test(text)
-
-  if (weekdayMentioned && relative) {
-    if (explicit) {
-      const dt = new Date(`${explicit}T12:00:00Z`)
-      const lower = text.toLowerCase()
-
-      for (const [weekdayName, weekdayIndex] of Object.entries(DUTCH_WEEKDAYS)) {
-        if (new RegExp(`\\b${weekdayName}\\b`, 'i').test(lower)) {
-          if (dt.getUTCDay() !== weekdayIndex) {
-            return relative
-          }
-        }
-      }
-    }
-
-    return relative
-  }
-
-  return explicit || relative || ''
-}
-
-function extractRuleTime(raw = '') {
-  const text = safeString(raw)
-  return extractTimeFromText(text) || ''
-}
-
-function buildRuleTitle(raw = '') {
-  const text = safeString(raw)
-  const lower = text.toLowerCase()
-
-  const deadlineMatch = lower.match(/\bdeadline\s+([^\n,.]+)/i)
-  if (deadlineMatch) {
-    let fragment = safeString(deadlineMatch[1])
-
-    fragment = fragment
-      .replace(/\b(vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)\s*(a\.s\.|as|aanstaande|komende)?\b/gi, '')
-      .replace(/\b(vandaag|morgen|overmorgen)\b/gi, '')
-      .trim()
-
-    if (fragment) return fragment.slice(0, 80)
-  }
-
-  if (/\bafwerking schip\b/i.test(text)) return 'afwerking schip'
-  if (/\bschip\b/i.test(text) && /\bafwerking\b/i.test(text)) return 'afwerking schip'
-  if (/\bfiller\b/i.test(text) && /\bdremel\b/i.test(text)) return 'afwerking schip'
-
-  const usefulLines = splitUsefulLines(text)
-
-  for (const line of usefulLines) {
-    let candidate = line
-      .replace(/^[•\-*]\s*/, '')
-      .replace(/\b(deadline|vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)\b.*$/i, '')
-      .trim()
-
-    if (!candidate) continue
-
-    if (candidate.length > 80) candidate = candidate.slice(0, 80).trim()
-
-    if (candidate.split(' ').length <= 8) return candidate
-  }
-
-  return 'Nieuwe taak'
-}
-
-function buildRuleSummary(raw = '', title = '') {
-  const fixed = fixCommonTypos(raw)
-  const stripped = stripAssistantMeta(fixed)
-  const usefulLines = splitUsefulLines(stripped)
-
-  let text = usefulLines.join('. ')
-  text = removeLooseDateFragments(text)
-  text = dedupeSentences(text)
-
-  text = normalizeWhitespace(
-    text
-      .replace(/\bdeadline\b/gi, '')
-      .replace(/\b(taak|afspraak|notitie)\b/gi, '')
-  )
-
-  if (title) {
-    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    text = normalizeWhitespace(text.replace(new RegExp(`^${escaped}[.:,-]*\\s*`, 'i'), ''))
-  }
-
-  text = text.replace(/\.\s*\./g, '.').replace(/^\W+|\W+$/g, '').trim()
-
-  if (!text) return title || 'Nieuwe invoer'
-
-  return text
-}
-
-function shouldUseRuleParser(text = '') {
-  const raw = safeString(text).toLowerCase()
-  if (!raw) return false
-
-  const triggers = [
-    /\bdeadline\b/,
-    /\bcontroleer\b/,
-    /\b(vandaag|morgen|overmorgen)\b/,
-    /\b(a\.s\.|as|aanstaande|komende)\b/,
-    /\b(vrijdag|maandag|dinsdag|woensdag|donderdag|zaterdag|zondag)\b/,
-    /\btaak\b/,
-    /\bafspraak\b/,
-    /\bnotitie\b/,
-    /\bdremel\b/,
-    /\bfiller\b/,
-    /\bafwerking\b/
-  ]
-
-  return triggers.some(rx => rx.test(raw))
-}
-
-function buildRuleParsedItem(rawInput = '', baseDate = new Date()) {
-  const fixed = fixCommonTypos(rawInput)
-  const type = detectRuleType(fixed)
-  const title = buildRuleTitle(fixed)
-  const summary = buildRuleSummary(fixed, title)
-  const date = type === 'notitie' ? '' : extractRuleDate(fixed, baseDate)
-
-  let time = ''
-  if (type === 'afspraak') {
-    time = extractRuleTime(fixed)
-  }
-
-  return sanitizeItemForSave({
-    temp_id: 'item_1',
-    type,
-    title,
-    summary,
-    project: '',
-    date,
-    end_date: '',
-    time,
-    status: type === 'taak' ? 'nieuw' : '',
-    priority: type === 'taak' ? detectRulePriority(fixed) : '',
-    source_text: fixed
+    return true
   })
+
+  return normalizeWhitespace(filtered.join('\n'))
 }
 
 function sanitizeNotitieFields(item) {
@@ -594,16 +506,16 @@ function sanitizeItemCore(item, mode = 'save') {
     }
 
     endDate = normalizeDate(item.end_date) || ''
-    time = normalizeTime(item.time)
 
+    time = normalizeTime(item.time)
     if (!time && type === 'afspraak') {
       time = extractTimeFromText(combinedText)
     }
   } else {
     date = normalizeDate(item.date) || normalizeDate(combinedText)
     endDate = normalizeDate(item.end_date) || ''
-    time = normalizeTime(item.time)
 
+    time = normalizeTime(item.time)
     if (!time && type === 'afspraak') {
       time = extractTimeFromText(combinedText)
     }
@@ -689,6 +601,17 @@ function validateItemForSave(item) {
   }
 }
 
+function enrichReviewItemsWithValidation(items) {
+  return items.map(item => {
+    const validation = validateItemForSave(item)
+    return {
+      ...item,
+      invalid_fields: validation.issues.map(issue => issue.field),
+      validation_issues: validation.issues
+    }
+  })
+}
+
 function buildMeta(body = {}, overrides = {}) {
   const baseConfidence = safeNumber(overrides.confidence, safeNumber(body.confidence, 0))
   return {
@@ -724,138 +647,13 @@ function buildResponse(body, {
   }
 }
 
-function enrichReviewItemsWithValidation(items) {
-  return items.map(item => {
-    const validation = validateItemForSave(item)
-    return {
-      ...item,
-      invalid_fields: validation.issues.map(issue => issue.field),
-      validation_issues: validation.issues
-    }
-  })
-}
-
-function buildRuleReviewResponse(body, parsedItem) {
-  const item = {
-    temp_id: 'item_1',
-    type: parsedItem.type,
-    title: parsedItem.title,
-    summary: parsedItem.summary,
-    project: parsedItem.project,
-    date: parsedItem.date,
-    end_date: parsedItem.end_date,
-    time: parsedItem.time,
-    status: parsedItem.status,
-    priority: parsedItem.priority,
-    source_text: parsedItem.source_text
-  }
-
-  const enriched = enrichReviewItemsWithValidation([item])[0]
-  const blocked = enriched.invalid_fields.length > 0
-
-  return buildResponse(body, {
-    ok: true,
-    mode: 'review',
-    reply: blocked ? 'Controleer dit even. Er ontbreekt nog iets.' : 'Controleer dit even.',
-    question: null,
-    confirmation: null,
-    review: {
-      summary: 'Ik heb dit alvast klaargezet.',
-      items: [enriched]
-    },
-    actions: [
-      { type: 'confirm_review', label: 'Opslaan' },
-      { type: 'edit_review_item', label: 'Aanpassen', temp_id: 'item_1' },
-      { type: 'cancel_review', label: 'Annuleren' }
-    ],
-    meta: {
-      needs_clarification: blocked,
-      confidence: 0.96,
-      can_save: !blocked,
-      blocked_by: blocked ? enriched.validation_issues?.[0]?.code || null : null
-    }
-  })
-}
-const CLARA_MASTER_PROMPT = `
-Je bent Clara, een compacte en scherpe assistent voor werkstructuur.
-
-Taak:
-Zet rommelige menselijke invoer om naar 1 of meer schone review-items.
-
-Belangrijk:
-- Begrijp de echte bedoeling van de gebruiker
-- Negeer ruis, twijfels, herhalingen, correctievragen en meta-gesprek
-- Gebruik alleen de feitelijke instructie als basis
-- Maak nooit dubbele zinnen in de samenvatting
-- Maak nooit een titel van losse stopwoorden of datumfragmenten
-- Als tekst rommelig is, herstel hem stilzwijgend naar logisch Nederlands
-- Verbeter duidelijke typfouten stilzwijgend
-
-Soorten:
-- taak
-- afspraak
-- notitie
-- idee
-- project
-- beslissing
-
-Regels:
-- notitie is altijd tijdloos:
-  - geen date
-  - geen end_date
-  - geen time
-  - geen priority
-  - geen status
-- afspraak alleen als datum én tijd voldoende duidelijk zijn
-- taak mag wel met datum en zonder tijd
-- verzin geen tijd
-- verzin geen datum als die echt niet afleidbaar is
-- title:
-  - kort
-  - concreet
-  - geen datum vooraan
-  - geen losse woorden zoals "a", "ja", "vrijdag a.s."
-- summary:
-  - 1 korte, schone zin
-  - zonder duplicatie
-  - zonder meta-zinnen
-  - met de echte inhoud/instructie
-- source_text:
-  - alleen het relevante opgeschoonde bronstuk
-
-Geef alleen geldige JSON terug.
-
-REVIEW:
-{
-  "mode": "review",
-  "reply": "Controleer dit even.",
-  "review": {
-    "summary": "Ik heb dit alvast klaargezet.",
-    "items": [
-      {
-        "temp_id": "item_1",
-        "type": "taak",
-        "title": "",
-        "summary": "",
-        "project": "",
-        "date": "",
-        "end_date": "",
-        "time": "",
-        "status": "",
-        "priority": "",
-        "source_text": ""
-      }
-    ]
-  }
-}
-`.trim()
 async function parseWithOpenAI(text) {
   if (!process.env.OPENAI_API_KEY) {
     return {
       mode: 'review',
       reply: 'Controleer dit even.',
       review: {
-        summary: text,
+        summary: 'Ik heb dit alvast klaargezet.',
         items: [
           {
             temp_id: 'item_1',
@@ -880,101 +678,13 @@ async function parseWithOpenAI(text) {
     }
   }
 
-  const prompt = `
-Je bent Clara.
+  const cleanedInput = stripNoiseForAI(text)
 
-Zet de input om naar geldige JSON.
-
-Doel:
-- begrijp de input
-- bepaal of iets direct review-klaar is of dat eerst een vraag nodig is
-
-Regels:
-- Types: taak, afspraak, notitie, idee, project, beslissing
-- notitie is tijdloos:
-  - geen date
-  - geen end_date
-  - geen time
-  - geen priority
-  - geen status
-- afspraak moet alleen als afspraak terugkomen als datum en tijd voldoende duidelijk zijn
-- bij onduidelijkheid geef mode="question"
-- bij voldoende duidelijkheid geef mode="review"
-- geef GEEN uitleg buiten JSON
-- title = kort
-- summary = 1 zin
-- date alleen YYYY-MM-DD als zeker
-- time alleen HH:MM als zeker
-- elk review-item krijgt temp_id
-- source_text = exact stukje uit input
-- voeg meta toe met:
-  - needs_clarification: true/false
-  - confidence: 0..1
-  - can_save: true/false
-
-Toegestane formats:
-
-QUESTION:
-{
-  "mode": "question",
-  "reply": null,
-  "question": {
-    "text": "",
-    "field": "",
-    "options": [
-      { "value": "", "label": "" }
-    ],
-    "allow_free_input": true
-  },
-  "confirmation": null,
-  "review": null,
-  "actions": [],
-  "meta": {
-    "needs_clarification": true,
-    "confidence": 0.0,
-    "can_save": false
-  }
-}
-
-REVIEW:
-{
-  "mode": "review",
-  "reply": "",
-  "question": null,
-  "confirmation": null,
-  "review": {
-    "summary": "",
-    "items": [
-      {
-        "temp_id": "",
-        "type": "",
-        "title": "",
-        "summary": "",
-        "project": "",
-        "date": "",
-        "end_date": "",
-        "time": "",
-        "status": "",
-        "priority": "",
-        "source_text": ""
-      }
-    ]
-  },
-  "actions": [
-    { "type": "confirm_review", "label": "Opslaan" },
-    { "type": "edit_review_item", "label": "Aanpassen", "temp_id": "item_1" },
-    { "type": "cancel_review", "label": "Annuleren" }
-  ],
-  "meta": {
-    "needs_clarification": false,
-    "confidence": 0.0,
-    "can_save": true
-  }
-}
+  const prompt = `${CLARA_MASTER_PROMPT}
 
 Input:
-${text}
-`.trim()
+${cleanedInput || text}
+`
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -984,11 +694,17 @@ ${text}
     },
     body: JSON.stringify({
       model: 'gpt-4.1-mini',
-      temperature: 0.2,
+      temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: 'Geef alleen geldige JSON terug, zonder codeblok.' },
-        { role: 'user', content: prompt }
+        {
+          role: 'system',
+          content: 'Geef alleen geldige JSON terug, zonder codeblok of toelichting.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
       ]
     })
   })
@@ -1028,6 +744,7 @@ function normalizeReviewPayload(aiResult) {
   }
 
   const rawItems = Array.isArray(aiResult?.review?.items) ? aiResult.review.items : []
+
   const cleanedItems = rawItems.map((item, index) => {
     const cleaned = sanitizeItemForSave(item)
     return {
@@ -1049,7 +766,7 @@ function normalizeReviewPayload(aiResult) {
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
   const review = {
-    summary: safeString(aiResult?.review?.summary),
+    summary: safeString(aiResult?.review?.summary, 'Ik heb dit alvast klaargezet.'),
     items: enrichedItems
   }
 
@@ -1213,11 +930,6 @@ module.exports = async function handler(req, res) {
     }
 
     if (!action) {
-      if (shouldUseRuleParser(message)) {
-        const parsedItem = buildRuleParsedItem(message, new Date())
-        return res.status(200).json(buildRuleReviewResponse(body, parsedItem))
-      }
-
       const aiResult = await parseWithOpenAI(message)
       const normalized = normalizeReviewPayload(aiResult)
 
