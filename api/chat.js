@@ -1101,23 +1101,27 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'unknown_action' })
   } catch (error) {
     const message = safeString(error?.message)
+    const stack = safeString(error?.stack)
 
     if (message === 'no_items_to_save') {
       return res.status(400).json({ error: 'no_items_to_save' })
     }
 
-    return res.status(500).json(
-      buildResponse({}, {
-        ok: false,
-        mode: 'reply',
-        reply: 'Er ging iets mis bij het verwerken van je bericht.',
-        meta: {
-          needs_clarification: false,
-          confidence: 0,
-          can_save: false,
-          error_code: 'SERVER_ERROR'
-        }
-      })
-    )
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      mode: 'reply',
+      reply: `DEBUG ERROR: ${message || 'unknown error'}`,
+      debug: {
+        message,
+        stack
+      },
+      meta: {
+        needs_clarification: false,
+        confidence: 0,
+        can_save: false,
+        error_code: 'SERVER_ERROR'
+      }
+    })
   }
 }
