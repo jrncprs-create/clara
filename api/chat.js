@@ -59,6 +59,8 @@ Zet rommelige menselijke invoer om naar een strakke JSON-response voor review.
 
 Belangrijke regels:
 - Begrijp de echte bedoeling van de gebruiker.
+- Begrijp relatieve datums altijd vanuit de expliciet meegegeven datumcontext.
+- Gebruik "vandaag", "morgen", "overmorgen" en weekdagen alleen relatief aan die datumcontext.
 - Negeer ruis, herhalingen, twijfelzinnen en meta-praat.
 - Maak nooit dubbele of halve zinnen.
 - Verbeter duidelijke typfouten stilzwijgend.
@@ -82,7 +84,10 @@ Belangrijke regels:
   - source_text
 - Geef ontbrekende waarden als lege string.
 - Verzin geen datum of tijd als die niet duidelijk is.
+- Zet expliciete datums bij voorkeur direct om naar YYYY-MM-DD.
+- Zet expliciete tijden bij voorkeur direct om naar HH:MM.
 - Een afspraak mag alleen als datum EN tijd voldoende duidelijk zijn.
+- Als iets duidelijk een afspraak is maar datum of tijd ontbreekt, geef dan QUESTION terug.
 - Een taak mag wel met datum en zonder tijd.
 - Een notitie is altijd tijdloos:
   - status = ""
@@ -101,6 +106,8 @@ Belangrijke regels:
   - zonder duplicatie
 - Source_text:
   - alleen het relevante opgeschoonde bronstuk
+- Maak liever 1 goed item dan meerdere slordige duplicaten.
+- Als de input alleen bevestiging/ruis is zonder echte inhoud, geef QUESTION terug.
 
 Antwoord altijd als geldige JSON in exact een van deze vormen.
 
@@ -235,6 +242,35 @@ function getAmsterdamDateParts(baseDate = new Date()) {
   const day = Number(parts.find(p => p.type === 'day')?.value)
 
   return { year, month, day }
+}
+
+function getAmsterdamNowContext(baseDate = new Date()) {
+  const dateFmt = new Intl.DateTimeFormat('nl-NL', {
+    timeZone: AMSTERDAM_TZ,
+    weekday: 'long',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+
+  const timeFmt = new Intl.DateTimeFormat('nl-NL', {
+    timeZone: AMSTERDAM_TZ,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  })
+
+  const { year, month, day } = getAmsterdamDateParts(baseDate)
+  const weekday = dateFmt.format(baseDate).split(' ')[0].toLowerCase()
+  const todayYMD = `${year}-${pad2(month)}-${pad2(day)}`
+  const nowHHMM = timeFmt.format(baseDate)
+
+  return {
+    timezone: AMSTERDAM_TZ,
+    today_ymd: todayYMD,
+    weekday_nl: weekday,
+    now_hhmm: nowHHMM
+  }
 }
 
 function makeUTCDateFromParts(year, month, day) {
@@ -585,8 +621,24 @@ function stripNoiseForAI(text) {
     .trim()
 }
 
-async function parseWithOpenAI(text) {
+function buildAIInput(text) {
+  const ctx = getAmsterdamNowContext(new Date())
   const cleanedInput = stripNoiseForAI(text)
+
+  return {
+    cleaned_input: cleanedInput || normalizeWhitespace(text),
+    context: {
+      timezone: ctx.timezone,
+      today_ymd: ctx.today_ymd,
+      weekday_nl: ctx.weekday_nl,
+      now_hhmm: ctx.now_hhmm
+    }
+  }
+}
+
+async function parseWithOpenAI(text) {
+  const aiInput = buildAIInput(text)
+  const cleanedInput = aiInput.cleaned_input
 
   if (!process.env.OPENAI_API_KEY) {
     return {
@@ -621,8 +673,14 @@ async function parseWithOpenAI(text) {
 
   const prompt = `${CLARA_MASTER_PROMPT}
 
+Datumcontext Amsterdam:
+- timezone: ${aiInput.context.timezone}
+- vandaag: ${aiInput.context.today_ymd}
+- weekdag: ${aiInput.context.weekday_nl}
+- huidige tijd: ${aiInput.context.now_hhmm}
+
 Input:
-${cleanedInput || text}
+${cleanedInput}
 `
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
