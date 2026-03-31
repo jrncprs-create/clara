@@ -24,8 +24,7 @@
       --shadow: inset 0 1px 0 rgba(255,255,255,0.03);
       --error-line: rgba(255,255,255,0.24);
       --error-bg: rgba(255,255,255,0.06);
-      --ok-bg: rgba(255,255,255,0.05);
-      --transition: 220ms cubic-bezier(.2,.8,.2,1);
+      --transition: 280ms cubic-bezier(.2,.8,.2,1);
     }
 
     html, body {
@@ -180,24 +179,23 @@
       z-index: 5;
       border: 1px solid var(--line);
       border-radius: 22px;
-      background: rgba(8,8,8,0.98);
+      background: rgba(8,8,8,0.985);
       box-shadow: var(--shadow);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       opacity: 0;
       pointer-events: none;
-      transform: translateX(28px);
+      transform: translateY(-40px);
       transition: transform var(--transition), opacity var(--transition);
     }
 
     .app.review-mode .chat-panel {
       height: 100%;
-      filter: blur(0px);
     }
 
     .app.review-mode .notes-panel {
-      transform: translateX(44px);
+      transform: translateY(36px);
       opacity: 0;
       pointer-events: none;
       filter: blur(8px);
@@ -206,7 +204,7 @@
     .app.review-mode .review-pane {
       opacity: 1;
       pointer-events: auto;
-      transform: translateX(0);
+      transform: translateY(0);
     }
 
     .empty {
@@ -355,22 +353,39 @@
     .textarea {
       width: 100%;
       border: 1px solid var(--line);
-      background: var(--panel-2);
+      background: #090909;
       color: #fff;
-      border-radius: 12px;
+      border-radius: 14px;
       outline: none;
       padding: 11px 12px;
       font-size: 14px;
       line-height: 1.35;
       transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+      -webkit-appearance: none;
+      appearance: none;
+      box-shadow: none;
+      background-image: none;
+    }
+
+    .select {
+      padding-right: 38px;
+      cursor: pointer;
+      background-repeat: no-repeat;
+      background-position: right 13px center;
+      background-size: 12px 8px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='rgba(255,255,255,0.72)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    }
+
+    .select::-ms-expand {
+      display: none;
     }
 
     .field.is-invalid .input,
     .field.is-invalid .select,
     .field.is-invalid .textarea {
       border-color: var(--error-line);
-      background: var(--error-bg);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+      background-color: var(--error-bg);
+      box-shadow: none;
     }
 
     .textarea {
@@ -405,12 +420,15 @@
       border: 1px solid var(--line-strong);
       background: var(--ghost);
       color: #fff;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       transition: background 120ms ease, color 120ms ease, opacity 120ms ease, transform 120ms ease;
+      box-shadow: none;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .btn:hover {
@@ -640,6 +658,9 @@
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
+      box-shadow: none;
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .chat-meta {
@@ -657,6 +678,8 @@
       gap: 8px;
       padding: 12px;
       border-top: 1px solid var(--line);
+      position: relative;
+      z-index: 2;
     }
 
     .review-head {
@@ -1099,7 +1122,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v5.0 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v5.1 • ${AUTO_VERSION}`;
 
     let dashboardRawData = { agenda: [], tasks: [], notes: [] };
     let dashboardEditIndex = new Map();
@@ -1372,6 +1395,23 @@
       if (item.status && String(item.type || '').toLowerCase() !== 'notitie') parts.push(item.status);
 
       return parts.filter(Boolean).join(' • ');
+    }
+
+    function isReviewOpen() {
+      return !!currentReviewData;
+    }
+
+    function syncReviewMode() {
+      const app = document.getElementById('app');
+      const meta = document.getElementById('chatModeMeta');
+
+      if (isReviewOpen()) {
+        app.classList.add('review-mode');
+        meta.textContent = 'review';
+      } else {
+        app.classList.remove('review-mode');
+        meta.textContent = '';
+      }
     }
 
     function supportsInlineEdit(item) {
@@ -1914,6 +1954,10 @@
 
       const mode = String(result.mode || '').toLowerCase();
 
+      if (mode !== 'review' && currentReviewData) {
+        closeReviewPane(true);
+      }
+
       if (mode === 'review' && result.review) {
         openReviewPane(result);
         addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
@@ -2015,22 +2059,6 @@
       return getReviewItems().reduce((sum, item) => sum + getInvalidFields(item).length, 0);
     }
 
-    function isReviewOpen() {
-      return !!currentReviewData;
-    }
-
-    function syncReviewMode() {
-      const app = document.getElementById('app');
-      const meta = document.getElementById('chatModeMeta');
-      if (isReviewOpen()) {
-        app.classList.add('review-mode');
-        meta.textContent = 'review';
-      } else {
-        app.classList.remove('review-mode');
-        meta.textContent = '';
-      }
-    }
-
     function openReviewPane(reviewData) {
       currentReviewData = reviewData;
       currentReviewInlineEditTempId = null;
@@ -2041,13 +2069,20 @@
       syncReviewMode();
     }
 
-    function closeReviewPane() {
+    function closeReviewPane(silent = false) {
       currentReviewData = null;
       currentReviewInlineEditTempId = null;
       document.getElementById('reviewItems').innerHTML = '';
       document.getElementById('reviewSummaryText').textContent = '';
       document.getElementById('reviewFooterText').textContent = 'Nog niet opgeslagen.';
       syncReviewMode();
+
+      if (!silent) {
+        setTimeout(() => {
+          const input = document.getElementById('chatInput');
+          if (input) input.focus();
+        }, 180);
+      }
     }
 
     function updateReviewFooter() {
@@ -2571,8 +2606,8 @@
       if (e.key === 'Enter') sendChat();
     });
 
-    document.getElementById('reviewClose').addEventListener('click', closeReviewPane);
-    document.getElementById('reviewCancelBtn').addEventListener('click', closeReviewPane);
+    document.getElementById('reviewClose').addEventListener('click', () => closeReviewPane());
+    document.getElementById('reviewCancelBtn').addEventListener('click', () => closeReviewPane());
     document.getElementById('reviewSaveBtn').addEventListener('click', saveReviewedItems);
 
     document.getElementById('confirmOverlay').addEventListener('click', (e) => {
