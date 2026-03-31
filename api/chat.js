@@ -516,32 +516,6 @@ function projectLooksSimilar(a, b) {
   return normA === normB
 }
 
-function choosePreferredValue(existingValue, incomingValue) {
-  const existing = safeString(existingValue)
-  const incoming = safeString(incomingValue)
-
-  if (!existing && !incoming) return ''
-  if (!existing) return incoming
-  if (!incoming) return existing
-  if (existing === incoming) return existing
-
-  return incoming.length > existing.length ? incoming : existing
-}
-
-function mergeSourceText(existingValue, incomingValue) {
-  const existing = normalizeWhitespace(existingValue || '')
-  const incoming = normalizeWhitespace(incomingValue || '')
-
-  if (!existing && !incoming) return ''
-  if (!existing) return incoming
-  if (!incoming) return existing
-  if (existing === incoming) return existing
-  if (existing.includes(incoming)) return existing
-  if (incoming.includes(existing)) return incoming
-
-  return `${existing}\n\n${incoming}`
-}
-
 function buildDedupeKey(item) {
   return [
     normalizeType(item?.type),
@@ -850,7 +824,6 @@ async function findReviewDuplicateCandidates(items) {
     }
 
     const { data, error } = await query
-
     if (error) throw new Error(`duplicate_candidates_failed: ${error.message}`)
 
     for (const row of data || []) {
@@ -1338,4 +1311,115 @@ module.exports = async function handler(req, res) {
     const action = safeString(body.action)
 
     if (!message && !action) {
-      return res.status(400).
+      return res.status(400).json({ error: 'missing_input' })
+    }
+
+    if (!action) {
+      const aiResult = await parseWithOpenAI(message)
+      const normalized = await normalizeReviewPayload(aiResult)
+
+      return res.status(200).json(
+        buildResponse(body, {
+          ok: true,
+          mode: normalized.mode,
+          reply: normalized.reply,
+          question: normalized.question,
+          confirmation: normalized.confirmation,
+          review: normalized.review,
+          actions: normalized.actions,
+          meta: normalized.meta
+        })
+      )
+    }
+
+    if (action === 'confirm_review') {
+      const result = await confirmReview(body)
+      return res.status(200).json(result.response)
+    }
+
+    if (action === 'update_item') {
+      const updated = await updateItem(body)
+
+      return res.status(200).json(
+        buildResponse(body, {
+          ok: true,
+          mode: 'confirmation',
+          reply: 'Item bijgewerkt.',
+          confirmation: {
+            text: 'Item bijgewerkt.',
+            saved: [
+              {
+                id: updated.id,
+                type: updated.type,
+                title: updated.title
+              }
+            ]
+          },
+          review: null,
+          actions: [],
+          meta: {
+            needs_clarification: false,
+            confidence: 1,
+            can_save: false
+          }
+        })
+      )
+    }
+
+    if (action === 'delete_item') {
+      const result = await deleteItem(body)
+
+      if (!result.deleted) {
+        return res.status(404).json({
+          error: 'not_found',
+          details: 'Geen match gevonden om te verwijderen.'
+        })
+      }
+
+      return res.status(200).json(
+        buildResponse(body, {
+          ok: true,
+          mode: 'confirmation',
+          reply: `Verwijderd. ${result.deleted} item(s).`,
+          confirmation: {
+            text: `Verwijderd. ${result.deleted} item(s).`,
+            saved: []
+          },
+          review: null,
+          actions: [],
+          meta: {
+            needs_clarification: false,
+            confidence: 1,
+            can_save: false
+          }
+        })
+      )
+    }
+
+    return res.status(400).json({ error: 'unknown_action' })
+  } catch (error) {
+    const message = safeString(error?.message)
+    const stack = safeString(error?.stack)
+
+    if (message === 'no_items_to_save') {
+      return res.status(400).json({ error: 'no_items_to_save' })
+    }
+
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      mode: 'reply',
+      reply: `DEBUG ERROR: ${message || 'unknown error'}`,
+      debug: {
+        message,
+        stack
+      },
+      meta: {
+        needs_clarification: false,
+        confidence: 0,
+        can_save: false,
+        error_code: 'SERVER_ERROR'
+      }
+    })
+  }
+}
