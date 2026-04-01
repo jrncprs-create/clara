@@ -173,6 +173,12 @@
       z-index: 1;
     }
 
+    .chat-panel .panel-body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
     .review-pane {
       position: absolute;
       inset: 0;
@@ -237,6 +243,7 @@
       gap: 12px;
       align-items: start;
       padding: 16px;
+      min-height: 72px;
     }
 
     .item-main {
@@ -252,12 +259,13 @@
     }
 
     .item-meta {
-      margin-top: 4px;
+      margin-top: 6px;
       font-size: 13px;
       line-height: 1.35;
       color: var(--muted);
       word-break: break-word;
       white-space: pre-wrap;
+      min-height: 18px;
     }
 
     .item-sub {
@@ -606,6 +614,7 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
+      flex: 1;
     }
 
     .chat-messages {
@@ -680,6 +689,9 @@
       border-top: 1px solid var(--line);
       position: relative;
       z-index: 2;
+      margin-top: auto;
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(8px);
     }
 
     .review-head {
@@ -1054,7 +1066,7 @@
         <div class="panel-body">
           <div class="chat-shell">
             <div id="chatMessages" class="chat-messages">
-              <div class="bubble clara">Zeg iets als: morgen werkplaats opruimen, call met Sam morgen 14:00, of notitie voor LaLampe.</div>
+              <div class="bubble clara">Hi. Ik ben Clara... Wat wil je me vertellen?</div>
             </div>
             <div class="composer">
               <input id="chatInput" class="input" placeholder="Typ hier..." />
@@ -1122,7 +1134,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v5.1 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v5.2 • ${AUTO_VERSION}`;
 
     let dashboardRawData = { agenda: [], tasks: [], notes: [] };
     let dashboardEditIndex = new Map();
@@ -1395,6 +1407,30 @@
       if (item.status && String(item.type || '').toLowerCase() !== 'notitie') parts.push(item.status);
 
       return parts.filter(Boolean).join(' • ');
+    }
+
+    function getMinimalMeta(item, kind = '') {
+      const hasDate = !!item?.date;
+      const hasTime = !!item?.time;
+
+      if (kind === 'appointment') {
+        if (hasDate && hasTime) return formatShortDate(item.date, item.time);
+        if (hasDate) return formatShortDate(item.date, '');
+        return '';
+      }
+
+      if (kind === 'task') {
+        if (hasDate && hasTime) return formatShortDate(item.date, item.time);
+        if (hasDate) return formatShortDate(item.date, '');
+        if (hasTime) return item.time;
+        return '';
+      }
+
+      if (kind === 'note') {
+        return '';
+      }
+
+      return '';
     }
 
     function isReviewOpen() {
@@ -1674,7 +1710,7 @@
           <div class="item-row">
             <div class="item-main">
               <div class="item-title">${escapeHtml(item.title || 'Zonder titel')}</div>
-              ${meta ? `<div class="item-meta">${escapeHtml(meta)}</div>` : ''}
+              <div class="item-meta">${meta ? escapeHtml(meta) : '&nbsp;'}</div>
               ${sub ? `<div class="item-sub">${escapeHtml(sub)}</div>` : ''}
             </div>
             ${getActionButtonsHtml(item._editKey, item.title || 'Item')}
@@ -1816,8 +1852,8 @@
         <div class="list">
           ${items.map(item => renderListItem(
             item,
-            formatCompactMeta(item, formatShortDate(item.date, item.time)),
-            item.summary || ''
+            getMinimalMeta(item, 'task'),
+            ''
           )).join('')}
         </div>
       `;
@@ -1841,8 +1877,8 @@
         <div class="list">
           ${items.map(item => renderListItem(
             item,
-            formatCompactMeta(item, formatShortDate(item.date, item.time)),
-            item.summary || ''
+            getMinimalMeta(item, 'appointment'),
+            ''
           )).join('')}
         </div>
       `;
@@ -1864,8 +1900,8 @@
         <div class="list">
           ${items.map(item => renderListItem(
             item,
-            item.project || '',
-            item.summary || ''
+            '',
+            ''
           )).join('')}
         </div>
       `;
