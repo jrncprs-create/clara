@@ -86,6 +86,7 @@
       grid-template-columns: 1.08fr 1fr 1fr;
       grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
       gap: 14px;
+      transition: grid-template-rows var(--transition);
     }
 
     .panel {
@@ -98,6 +99,11 @@
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
       box-shadow: var(--shadow);
       overflow: hidden;
+      transition:
+        opacity var(--transition),
+        transform var(--transition),
+        filter var(--transition),
+        grid-row var(--transition);
     }
 
     .panel-header {
@@ -110,6 +116,7 @@
       border-bottom: 1px solid var(--line);
       position: relative;
       z-index: 2;
+      flex-shrink: 0;
     }
 
     .panel-title {
@@ -179,15 +186,21 @@
     }
 
     .chat-panel .panel-body {
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
       min-height: 0;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .notes-panel .panel-body {
       padding: 0;
     }
 
     .review-pane {
       position: absolute;
       inset: 0;
-      z-index: 5;
+      z-index: 8;
       border: 1px solid var(--line);
       border-radius: 22px;
       background: rgba(8,8,8,0.985);
@@ -203,6 +216,7 @@
 
     .app.review-mode .chat-panel {
       height: 100%;
+      z-index: 6;
     }
 
     .app.review-mode .notes-panel {
@@ -216,6 +230,43 @@
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
+    }
+
+    .app.panel-edit-tasks .tasks-panel {
+      grid-row: 1 / 3;
+      z-index: 6;
+    }
+
+    .app.panel-edit-tasks .appointments-panel {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(36px);
+      filter: blur(8px);
+    }
+
+    .app.panel-edit-appointments .appointments-panel {
+      grid-row: 1 / 3;
+      z-index: 6;
+    }
+
+    .app.panel-edit-appointments .tasks-panel {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-36px);
+      filter: blur(8px);
+    }
+
+    .app.panel-edit-notes .notes-panel {
+      top: 0;
+      height: 100%;
+      z-index: 6;
+    }
+
+    .app.panel-edit-notes .chat-panel {
+      transform: translateY(-36px);
+      opacity: 0;
+      pointer-events: none;
+      filter: blur(8px);
     }
 
     .empty {
@@ -381,7 +432,7 @@
     }
 
     .textarea {
-      min-height: 120px;
+      min-height: 140px;
       resize: vertical;
     }
 
@@ -601,7 +652,7 @@
     }
 
     .chat-shell {
-      height: 100%;
+      flex: 1;
       min-height: 0;
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
@@ -609,6 +660,7 @@
 
     .chat-messages {
       min-height: 0;
+      height: 100%;
       overflow: auto;
       display: flex;
       flex-direction: column;
@@ -730,7 +782,7 @@
       flex: 1;
       min-height: 0;
       overflow: auto;
-      padding: 16px 18px 18px;
+      padding: 16px 18px 24px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -747,6 +799,7 @@
 
     .panel-editor-actions {
       padding: 14px 18px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
       border-top: 1px solid var(--line);
       display: flex;
       justify-content: space-between;
@@ -1052,6 +1105,15 @@
         grid-row: 3;
         min-height: 740px;
       }
+
+      .app.panel-edit-tasks .tasks-panel,
+      .app.panel-edit-appointments .appointments-panel {
+        min-height: 700px;
+      }
+
+      .app.panel-edit-notes .right-stack {
+        min-height: 860px;
+      }
     }
 
     @media (max-width: 860px) {
@@ -1222,7 +1284,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v6.0 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v6.1 • ${AUTO_VERSION}`;
 
     let dashboardRawData = { agenda: [], tasks: [], notes: [] };
     let dashboardEditIndex = new Map();
@@ -1528,15 +1590,20 @@
       return !!currentReviewData;
     }
 
-    function syncReviewMode() {
+    function syncAppModes() {
       const app = document.getElementById('app');
       const meta = document.getElementById('chatModeMeta');
+
+      app.classList.remove('review-mode', 'panel-edit-tasks', 'panel-edit-appointments', 'panel-edit-notes');
+
+      if (dashboardPanelEdit?.panel === 'tasks') app.classList.add('panel-edit-tasks');
+      if (dashboardPanelEdit?.panel === 'appointments') app.classList.add('panel-edit-appointments');
+      if (dashboardPanelEdit?.panel === 'notes') app.classList.add('panel-edit-notes');
 
       if (isReviewOpen()) {
         app.classList.add('review-mode');
         meta.textContent = 'review';
       } else {
-        app.classList.remove('review-mode');
         meta.textContent = '';
       }
     }
@@ -1609,7 +1676,6 @@
         const panelBody = document.getElementById(panelName);
         if (panelBody) {
           panelBody.scrollTop = 0;
-          panelBody.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         setTimeout(() => {
@@ -1718,7 +1784,7 @@
       const title = draft.title || originalItem?.title || getPanelLabel(panelName);
       const subtitle = note
         ? 'Rustige notitie-editor. Tijd blijft hier bewust weg.'
-        : 'Rustige editor voor dit item. De knoppen blijven altijd bereikbaar.';
+        : 'Rustige editor voor dit item. De kolom gebruikt nu de volledige hoogte.';
 
       if (note) {
         return `
@@ -1868,7 +1934,7 @@
           </div>
 
           <div class="panel-editor-actions">
-            <div class="panel-editor-note">De editor neemt tijdelijk alleen dit paneel over.</div>
+            <div class="panel-editor-note">Na sluiten valt de kolom terug naar de normale hoogte.</div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
               <button class="btn ghost" ${disableAttr} type="button" onclick="closeDashboardInlineEdit()">Annuleren</button>
               <button class="btn primary" ${disableAttr} type="button" onclick="saveDashboardInlineEdit()">${dashboardPanelEdit.saving ? 'Opslaan...' : 'Opslaan'}</button>
@@ -2083,31 +2149,44 @@
       renderTasks(dashboardRawData);
       renderAppointments(dashboardRawData);
       renderNotes(dashboardRawData);
-      syncReviewMode();
+      syncAppModes();
+      requestAnimationFrame(scrollChatToBottomIfNearEnd);
     }
 
-    function scrollChatToBottom() {
-      const chatMessages = document.getElementById('chatMessages');
+    function getChatMessagesEl() {
+      return document.getElementById('chatMessages');
+    }
+
+    function scrollChatToBottom(force = false) {
+      const chatMessages = getChatMessagesEl();
       if (!chatMessages) return;
-      requestAnimationFrame(() => {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      });
+
+      const distanceFromBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight;
+      if (force || distanceFromBottom < 140) {
+        requestAnimationFrame(() => {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+      }
+    }
+
+    function scrollChatToBottomIfNearEnd() {
+      scrollChatToBottom(false);
     }
 
     function addChatBubble(text, sender) {
       if (!text) return;
-      const chatMessages = document.getElementById('chatMessages');
+      const chatMessages = getChatMessagesEl();
       const bubble = document.createElement('div');
       bubble.className = `bubble ${sender}`;
       bubble.textContent = text;
       chatMessages.appendChild(bubble);
-      scrollChatToBottom();
+      scrollChatToBottom(true);
     }
 
     function addChatOptions(options = []) {
       if (!Array.isArray(options) || !options.length) return;
 
-      const chatMessages = document.getElementById('chatMessages');
+      const chatMessages = getChatMessagesEl();
       const wrap = document.createElement('div');
       wrap.className = 'chat-options';
 
@@ -2126,18 +2205,18 @@
 
       if (wrap.childElementCount) {
         chatMessages.appendChild(wrap);
-        scrollChatToBottom();
+        scrollChatToBottom(true);
       }
     }
 
     function addChatMetaLine(text) {
       if (!text) return;
-      const chatMessages = document.getElementById('chatMessages');
+      const chatMessages = getChatMessagesEl();
       const meta = document.createElement('div');
       meta.className = 'chat-meta';
       meta.textContent = text;
       chatMessages.appendChild(meta);
-      scrollChatToBottom();
+      scrollChatToBottom(true);
     }
 
     function getReplyText(result, fallback = '') {
@@ -2281,8 +2360,8 @@
       document.getElementById('reviewSubtitle').textContent = reviewData?.reply || 'Controleer en pas aan waar nodig.';
       renderReviewItemsCompact();
       updateReviewFooter();
-      syncReviewMode();
-      scrollChatToBottom();
+      syncAppModes();
+      scrollChatToBottom(true);
     }
 
     function closeReviewPane(silent = false) {
@@ -2291,7 +2370,7 @@
       document.getElementById('reviewItems').innerHTML = '';
       document.getElementById('reviewSummaryText').textContent = '';
       document.getElementById('reviewFooterText').textContent = 'Nog niet opgeslagen.';
-      syncReviewMode();
+      syncAppModes();
 
       if (!silent) {
         setTimeout(() => {
@@ -2719,7 +2798,7 @@
           document.getElementById('reviewSummaryText').textContent = result?.review?.summary || '';
           renderReviewItemsCompact();
           updateReviewFooter();
-          syncReviewMode();
+          syncAppModes();
           return;
         }
 
@@ -2763,6 +2842,7 @@
       } finally {
         button.disabled = false;
         syncViewportHeight();
+        scrollChatToBottom(true);
       }
     }
 
@@ -2823,11 +2903,11 @@
 
     document.getElementById('chatInput').addEventListener('focus', () => {
       setTimeout(syncViewportHeight, 60);
-      setTimeout(scrollChatToBottom, 80);
+      setTimeout(() => scrollChatToBottom(true), 100);
     });
 
     document.getElementById('chatInput').addEventListener('blur', () => {
-      setTimeout(syncViewportHeight, 120);
+      setTimeout(syncViewportHeight, 140);
     });
 
     document.getElementById('reviewClose').addEventListener('click', () => closeReviewPane());
@@ -2842,12 +2922,24 @@
     document.getElementById('confirmOkBtn').addEventListener('click', runConfirmAction);
 
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', syncViewportHeight);
-      window.visualViewport.addEventListener('scroll', syncViewportHeight);
+      window.visualViewport.addEventListener('resize', () => {
+        syncViewportHeight();
+        scrollChatToBottomIfNearEnd();
+      });
+      window.visualViewport.addEventListener('scroll', () => {
+        syncViewportHeight();
+      });
     }
 
-    window.addEventListener('resize', syncViewportHeight);
-    window.addEventListener('orientationchange', syncViewportHeight);
+    window.addEventListener('resize', () => {
+      syncViewportHeight();
+      scrollChatToBottomIfNearEnd();
+    });
+
+    window.addEventListener('orientationchange', () => {
+      syncViewportHeight();
+      scrollChatToBottomIfNearEnd();
+    });
 
     window.openDashboardEdit = openDashboardEdit;
     window.closeDashboardInlineEdit = closeDashboardInlineEdit;
