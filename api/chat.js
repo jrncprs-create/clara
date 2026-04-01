@@ -64,6 +64,15 @@ Je bent Clara, een compacte en scherpe assistent voor werkstructuur.
 
 Doel:
 Zet rommelige menselijke invoer om naar een strakke JSON-response voor review.
+Maar:
+- als de gebruiker gewoon los praat, groet, grap maakt, test, of iets zegt dat niet echt een taak, afspraak, notitie, idee, project of beslissing is:
+  - geef dan GEEN review
+  - geef dan GEEN question
+  - geef dan een korte reply terug
+  - toon een klein beetje persoonlijkheid
+  - een droog, licht grapje mag
+  - houd het kort, maximaal 2 zinnen
+  - blijf wel Clara: helder, direct, niet melig
 
 Belangrijke regels:
 - Begrijp de echte bedoeling van de gebruiker.
@@ -127,9 +136,25 @@ Belangrijke regels:
 - Source_text:
   - alleen het relevante opgeschoonde bronstuk
 - Maak liever 1 goed item dan meerdere slordige duplicaten.
-- Als de input alleen bevestiging/ruis is zonder echte inhoud, geef QUESTION terug.
+- Als de input alleen bevestiging/ruis is zonder echte inhoud, geef REPLY terug in plaats van QUESTION.
+- Gebruik QUESTION alleen als er wel duidelijk werkintentie is, maar cruciale info ontbreekt.
 
 Antwoord altijd als geldige JSON in exact een van deze vormen.
+
+REPLY:
+{
+  "mode": "reply",
+  "reply": "",
+  "question": null,
+  "confirmation": null,
+  "review": null,
+  "actions": [],
+  "meta": {
+    "needs_clarification": false,
+    "confidence": 0.0,
+    "can_save": false
+  }
+}
 
 QUESTION:
 {
@@ -698,7 +723,7 @@ function sanitizeItemCore(item, mode = 'save') {
     }
   }
 
-  let summary = buildSmartSummary({
+  const summary = buildSmartSummary({
     type,
     title,
     summary: item?.summary,
@@ -849,11 +874,64 @@ function buildAIInput(text) {
   }
 }
 
+function looksLikeStructuredWorkInput(text) {
+  const value = normalizeWhitespace(text).toLowerCase()
+  if (!value) return false
+
+  const workTypeWords = /\b(taak|afspraak|notitie|idee|project|beslissing|todo|agenda)\b/
+  const dateWords = /\b(vandaag|morgen|overmorgen|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|\d{1,2}[:.]\d{2}|\d{4}-\d{2}-\d{2}|\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4})\b/
+  const taskVerbs = /\b(bellen|terugbellen|mailen|sturen|plannen|afspreken|maken|doen|uitzoeken|regelen|opruimen|kopen|bestellen|checken|schrijven|bespreken|reviewen|fixen|testen|updaten|inplannen)\b/
+  const projectish = /\b(voor|over|met)\s+[a-z0-9]/i
+
+  if (workTypeWords.test(value)) return true
+  if (dateWords.test(value)) return true
+  if (taskVerbs.test(value)) return true
+  if (projectish.test(value) && value.split(/\s+/).length >= 4) return true
+
+  return false
+}
+
+function buildCasualReply(text) {
+  const value = normalizeWhitespace(text).toLowerCase()
+
+  if (!value) return 'Ik hoor nog niets. Zelfs mijn denkbeeldige notitieblok blijft leeg.'
+
+  if (/\b(hoi|hey|heya|hallo|yo|goedemorgen|goedemiddag|goedenavond)\b/.test(value)) {
+    return 'Hi. Ik ben wakker. Mijn innerlijke paperclip ook.'
+  }
+
+  if (/\b(test|testen|ping)\b/.test(value)) {
+    return 'Test ontvangen. Geen rook, geen paniek, alles leeft nog.'
+  }
+
+  if (/\b(haha|lol|grap|grappig)\b/.test(value)) {
+    return 'Mooi. Ik noteer voorlopig alleen serieuze chaos.'
+  }
+
+  return 'Dat klinkt gezellig, maar nog niet echt als iets om op te slaan. Geef me een taak, afspraak, notitie of project en ik trek het strak.'
+}
+
 async function parseWithOpenAI(text) {
   const aiInput = buildAIInput(text)
   const cleanedInput = aiInput.cleaned_input
 
   if (!process.env.OPENAI_API_KEY) {
+    if (!looksLikeStructuredWorkInput(cleanedInput)) {
+      return {
+        mode: 'reply',
+        reply: buildCasualReply(cleanedInput),
+        question: null,
+        confirmation: null,
+        review: null,
+        actions: [],
+        meta: {
+          needs_clarification: false,
+          confidence: 0.7,
+          can_save: false
+        }
+      }
+    }
+
     return {
       mode: 'review',
       reply: 'Controleer dit even.',
@@ -904,7 +982,7 @@ ${cleanedInput}
     },
     body: JSON.stringify({
       model: OPENAI_MODEL,
-      temperature: 0.1,
+      temperature: 0.2,
       response_format: { type: 'json_object' },
       messages: [
         {
@@ -945,6 +1023,22 @@ function normalizeQuestionPayload(aiResult) {
     meta: {
       needs_clarification: true,
       confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.55), 0, 1),
+      can_save: false
+    }
+  }
+}
+
+function normalizeReplyPayload(aiResult) {
+  return {
+    mode: 'reply',
+    reply: safeString(aiResult?.reply, 'Vertel maar.'),
+    question: null,
+    confirmation: null,
+    review: null,
+    actions: [],
+    meta: {
+      needs_clarification: false,
+      confidence: clamp(safeNumber(aiResult?.meta?.confidence, 0.8), 0, 1),
       can_save: false
     }
   }
@@ -1069,6 +1163,10 @@ async function normalizeReviewPayload(aiResult) {
 
   if (mode === 'question') {
     return normalizeQuestionPayload(aiResult)
+  }
+
+  if (mode === 'reply') {
+    return normalizeReplyPayload(aiResult)
   }
 
   const rawItems = Array.isArray(aiResult?.review?.items) ? aiResult.review.items : []
