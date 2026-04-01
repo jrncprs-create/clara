@@ -111,9 +111,19 @@ Belangrijke regels:
   - geen datum vooraan
   - geen losse woorden zoals "a", "ja", "morgen"
 - Summary:
-  - 1 korte schone zin
-  - zonder meta
-  - zonder duplicatie
+  - maximaal 1 korte zin
+  - compact en betekenisvol
+  - geen meta
+  - geen duplicatie van de titel
+  - herhaal geen naam, onderwerp of formulering die al duidelijk in de titel zit
+  - voeg alleen context, bedoeling of planning toe die nog niet in de titel zit
+  - als er weinig extra context is: geef een ultrakorte samenvatting van planning of bedoeling, niet een herhaling van de titel
+  - slechte voorbeelden:
+    - Titel: "Afspraak met Joep" → Summary: "Afspraak met Joep op 2 april"
+    - Titel: "Werkplaats opruimen" → Summary: "Werkplaats opruimen morgen"
+  - betere voorbeelden:
+    - Titel: "Afspraak met Joep" → Summary: "2 april samenkomen"
+    - Titel: "Werkplaats opruimen" → Summary: "morgen oppakken"
 - Source_text:
   - alleen het relevante opgeschoonde bronstuk
 - Maak liever 1 goed item dan meerdere slordige duplicaten.
@@ -441,6 +451,17 @@ function extractTimeFromText(text) {
   return normalizeTime(match || '')
 }
 
+function hasExplicitTimeInText(text) {
+  const value = normalizeWhitespace(text).toLowerCase()
+  if (!value) return false
+
+  return (
+    /\b\d{1,2}:\d{2}\b/.test(value) ||
+    /\b\d{1,2}\.\d{2}\b/.test(value) ||
+    /\bom\s+\d{1,2}\b/.test(value)
+  )
+}
+
 function sanitizeNotitieFields(item) {
   return {
     ...item,
@@ -528,6 +549,119 @@ function buildDedupeKey(item) {
   ].join('|')
 }
 
+function formatHumanDate(dateStr) {
+  const normalized = normalizeDate(dateStr)
+  if (!normalized) return ''
+  const [year, month, day] = normalized.split('-').map(Number)
+  const monthName = Object.keys(DUTCH_MONTHS).find(key => DUTCH_MONTHS[key] === month) || ''
+  if (!day || !monthName) return normalized
+  return `${day} ${monthName}`
+}
+
+function stripLeadingLabelPhrases(text) {
+  return normalizeWhitespace(text)
+    .replace(/^(afspraak|taak|notitie|idee|project|beslissing)\s+(met|om|voor|over)\s+/i, '')
+    .replace(/^(afspraak|taak|notitie|idee|project|beslissing)\s+/i, '')
+    .trim()
+}
+
+function removeTitleFromSummary(summary, title) {
+  let result = normalizeWhitespace(summary)
+  const cleanTitle = normalizeWhitespace(title)
+  if (!result) return ''
+
+  if (cleanTitle) {
+    const escapedTitle = cleanTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    result = result.replace(new RegExp(escapedTitle, 'ig'), ' ')
+  }
+
+  const titleTokens = tokenizeForSimilarity(title)
+  if (titleTokens.length) {
+    const tokenRegex = new RegExp(`\\b(?:${titleTokens.map(token => token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'ig')
+    result = result.replace(tokenRegex, ' ')
+  }
+
+  result = result
+    .replace(/\b(op|voor|om|met|naar)\s*$/i, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .trim()
+
+  return stripLeadingLabelPhrases(result)
+}
+
+function cleanupSummarySentence(text) {
+  return normalizeWhitespace(text)
+    .replace(/^[,.;:!?\-–—\s]+/, '')
+    .replace(/[,.;:!?\-–—\s]+$/, '')
+    .replace(/\s{2,}/g, ' ')
+    .split(/(?<=[.!?])\s+/)[0]
+    .trim()
+}
+
+function buildFallbackSummary(type, date, time, project) {
+  const humanDate = formatHumanDate(date)
+  const projectPart = safeString(project)
+
+  if (type === 'afspraak') {
+    if (humanDate && time) return `${humanDate} ${time}`
+    if (humanDate) return `${humanDate} hele dag`
+    if (projectPart) return projectPart
+    return ''
+  }
+
+  if (type === 'taak') {
+    if (humanDate) return `${humanDate} oppakken`
+    if (projectPart) return `voor ${projectPart}`
+    return ''
+  }
+
+  if (type === 'idee') {
+    if (projectPart) return `voor ${projectPart}`
+    return ''
+  }
+
+  if (type === 'project') {
+    if (projectPart) return `onder ${projectPart}`
+    return ''
+  }
+
+  if (type === 'beslissing') {
+    if (projectPart) return `voor ${projectPart}`
+    return ''
+  }
+
+  return ''
+}
+
+function buildSmartSummary({ type, title, summary, sourceText, date, time, project }) {
+  const cleanTitle = normalizeWhitespace(title)
+  const rawSummary = normalizeWhitespace(summary)
+  const rawSource = normalizeWhitespace(sourceText)
+
+  let candidate = rawSummary || rawSource || ''
+  candidate = removeTitleFromSummary(candidate, cleanTitle)
+  candidate = cleanupSummarySentence(candidate)
+
+  const titleComparable = makeComparableText(cleanTitle)
+  const candidateComparable = makeComparableText(candidate)
+
+  const looksDuplicate =
+    !candidate ||
+    !candidateComparable ||
+    candidateComparable === titleComparable ||
+    candidateComparable.includes(titleComparable) ||
+    titleComparable.includes(candidateComparable) ||
+    titlesLookSimilar(candidate, cleanTitle) ||
+    summariesLookSimilar(candidate, cleanTitle)
+
+  if (!looksDuplicate) {
+    return candidate.slice(0, 160)
+  }
+
+  return buildFallbackSummary(type, date, time, project).slice(0, 160)
+}
+
 function sanitizeItemCore(item, mode = 'save') {
   const rawType = normalizeType(item?.type)
   const type = rawType || 'notitie'
@@ -537,15 +671,11 @@ function sanitizeItemCore(item, mode = 'save') {
     normalizeWhitespace(item?.summary).slice(0, 80) ||
     normalizeWhitespace(item?.source_text).slice(0, 80)
 
-  const summary =
-    normalizeWhitespace(item?.summary) ||
-    title
-
   const project = normalizeWhitespace(item?.project)
   const sourceText =
     normalizeWhitespace(item?.source_text) ||
     normalizeWhitespace(item?.raw) ||
-    summary ||
+    normalizeWhitespace(item?.summary) ||
     title
 
   let date = normalizeDate(item?.date)
@@ -556,8 +686,27 @@ function sanitizeItemCore(item, mode = 'save') {
 
   if (mode === 'save') {
     if (!date) date = extractDateFromText(sourceText)
-    if (!time && type === 'afspraak') time = extractTimeFromText(sourceText)
+
+    if (type === 'afspraak') {
+      const sourceHasTime = hasExplicitTimeInText(sourceText)
+
+      if (sourceHasTime) {
+        if (!time) time = extractTimeFromText(sourceText)
+      } else {
+        time = ''
+      }
+    }
   }
+
+  let summary = buildSmartSummary({
+    type,
+    title,
+    summary: item?.summary,
+    sourceText,
+    date,
+    time,
+    project
+  })
 
   let cleaned = {
     ...EMPTY_ITEM,
