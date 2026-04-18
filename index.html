@@ -463,20 +463,25 @@
     }
 
     .new-sidebar {
-      width: 236px;
+      width: 280px;
       flex-shrink: 0;
       min-height: 0;
-      padding: 22px 14px 14px;
+      padding: 20px 16px 12px;
       border-right: 1px solid var(--dash-card-border);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 0;
       background: #070707;
     }
 
-    .new-sidebar-spacer {
-      flex: 1;
-      min-height: 12px;
+    .new-sidebar-nav {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-bottom: 14px;
+      margin-bottom: 2px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .new-sidebar-brand {
@@ -484,7 +489,7 @@
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
 
     .new-sidebar-btn-inner {
@@ -537,7 +542,8 @@
       font-size: 10px;
       line-height: 1.45;
       color: rgba(255, 255, 255, 0.26);
-      padding: 8px 4px 0;
+      padding: 10px 2px 0;
+      margin-top: 2px;
     }
 
     .new-main-col {
@@ -552,16 +558,15 @@
 
     .new-chat-dock-slot {
       position: relative;
-      flex-shrink: 0;
-      z-index: 30;
+      flex: 1;
+      min-height: 0;
       width: 100%;
-      height: clamp(200px, 32vh, 340px);
-      min-height: 188px;
-      margin-top: 4px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: #0a0a0a;
-      box-shadow: inset 0 1px 0 rgba(212, 255, 74, 0.06);
+      z-index: 1;
+      margin-top: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
       overflow: hidden;
     }
 
@@ -571,18 +576,12 @@
 
     .new-chat-dock-slot:not(:has(#chatDock)) {
       display: none;
+      flex: 0 0 0;
       height: 0;
       min-height: 0;
       margin: 0;
       border: none;
       box-shadow: none;
-    }
-
-    @media (max-width: 860px) {
-      .new-chat-dock-slot {
-        height: clamp(168px, 30vh, 280px);
-        min-height: 150px;
-      }
     }
 
     .new-chat-dock-slot .chat-dock-inner {
@@ -591,21 +590,93 @@
       min-height: 0;
     }
 
-    .new-chat-dock-slot .stack-panel {
-      border-radius: 4px;
-      border-color: rgba(255, 255, 255, 0.07);
-    }
-
+    /* Sidebar dock: alleen chat; notitiespaneel verborgen (notities via route) */
     .new-chat-dock-slot .notes-panel {
-      top: 0;
-      height: calc(36% - 5px);
-      z-index: 2;
+      display: none !important;
     }
 
     .new-chat-dock-slot .chat-panel {
-      top: calc(36% + 5px);
-      height: calc(64% - 5px);
+      top: 0 !important;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 100% !important;
       z-index: 1;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .new-chat-dock-slot .chat-panel .panel-header {
+      height: auto;
+      min-height: 0;
+      padding: 6px 0 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: transparent;
+    }
+
+    .new-chat-dock-slot .chat-panel .panel-title {
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 0.14em;
+      color: rgba(255, 255, 255, 0.38);
+    }
+
+    .new-chat-dock-slot .chat-panel .panel-meta {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.28);
+    }
+
+    .new-chat-dock-slot .chat-messages {
+      gap: 7px;
+      padding: 8px 2px 10px 0;
+    }
+
+    .new-chat-dock-slot .bubble {
+      max-width: 100%;
+      padding: 8px 11px;
+      font-size: 13px;
+      line-height: 1.38;
+      border-radius: 12px;
+    }
+
+    .new-chat-dock-slot .bubble.clara {
+      background: rgba(255, 255, 255, 0.055);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .new-chat-dock-slot .bubble.user {
+      background: #e8e8e8;
+      color: #111;
+    }
+
+    .new-chat-dock-slot .composer {
+      padding: 8px 0 10px;
+      gap: 8px;
+      align-items: end;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .new-chat-dock-slot .composer .composer-input {
+      min-height: 40px;
+      max-height: 120px;
+      font-size: 13px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 9px 11px;
+    }
+
+    .new-chat-dock-slot .composer .btn.primary {
+      align-self: end;
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 10px;
     }
 
     .new-views {
@@ -645,7 +716,7 @@
       }
 
       .new-sidebar {
-        width: 212px;
+        width: 244px;
       }
     }
 
@@ -2328,65 +2399,66 @@
   <div class="version" id="version"></div>
 
   <div id="newAppShell" class="new-app-shell">
-    <aside class="new-sidebar" id="newSidebar" aria-label="Navigatie">
+    <aside class="new-sidebar" id="newSidebar" aria-label="Clara">
       <div class="new-sidebar-brand">Clara</div>
-      <button type="button" data-new-route="vandaag">
-        <span class="new-sidebar-btn-inner">
-          <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-          </svg>
-          Vandaag
-        </span>
-      </button>
-      <button type="button" data-new-route="inbox">
-        <span class="new-sidebar-btn-inner">
-          <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
-            <path d="M3 7l9 6 9-6"></path>
-          </svg>
-          Inbox
-        </span>
-      </button>
-      <button type="button" data-new-route="projecten">
-        <span class="new-sidebar-btn-inner">
-          <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-            <path d="M3 10h18"></path>
-          </svg>
-          Projecten
-        </span>
-      </button>
-      <button type="button" data-new-route="workshops">
-        <span class="new-sidebar-btn-inner">
-          <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-            <path d="M4 19h16M6 17V9l6-4 6 4v8"></path>
-            <path d="M10 9h4"></path>
-          </svg>
-          Workshops
-        </span>
-      </button>
-      <button type="button" data-new-route="communicatie">
-        <span class="new-sidebar-btn-inner">
-          <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-            <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8.5z"></path>
-          </svg>
-          Communicatie
-        </span>
-      </button>
-      <button type="button" data-new-route="notities">
-        <span class="new-sidebar-btn-inner">
-          <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
-            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path>
-          </svg>
-          Notities
-        </span>
-      </button>
-      <div class="new-sidebar-spacer" aria-hidden="true"></div>
-      <div id="newChatDockSlot" class="new-chat-dock-slot"></div>
+      <nav class="new-sidebar-nav" aria-label="Hoofdmenu">
+        <button type="button" data-new-route="vandaag">
+          <span class="new-sidebar-btn-inner">
+            <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            </svg>
+            Vandaag
+          </span>
+        </button>
+        <button type="button" data-new-route="inbox">
+          <span class="new-sidebar-btn-inner">
+            <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+              <path d="M3 7l9 6 9-6"></path>
+            </svg>
+            Inbox
+          </span>
+        </button>
+        <button type="button" data-new-route="projecten">
+          <span class="new-sidebar-btn-inner">
+            <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+              <path d="M3 10h18"></path>
+            </svg>
+            Projecten
+          </span>
+        </button>
+        <button type="button" data-new-route="workshops">
+          <span class="new-sidebar-btn-inner">
+            <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path d="M4 19h16M6 17V9l6-4 6 4v8"></path>
+              <path d="M10 9h4"></path>
+            </svg>
+            Workshops
+          </span>
+        </button>
+        <button type="button" data-new-route="communicatie">
+          <span class="new-sidebar-btn-inner">
+            <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8.5z"></path>
+            </svg>
+            Communicatie
+          </span>
+        </button>
+        <button type="button" data-new-route="notities">
+          <span class="new-sidebar-btn-inner">
+            <svg class="new-sidebar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path>
+            </svg>
+            Notities
+          </span>
+        </button>
+      </nav>
+      <div id="newChatDockSlot" class="new-chat-dock-slot" aria-label="Clara-chat"></div>
       <div class="new-sidebar-hint">
         Klassieke weergave: zet in de console
         <code style="color:var(--soft)">localStorage.setItem('clara_new_shell','0')</code>
