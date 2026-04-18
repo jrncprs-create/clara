@@ -803,7 +803,113 @@
     }
 
     .ws-page-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px 20px;
       margin-bottom: clamp(20px, 3vh, 28px);
+    }
+
+    .ws-page-head-main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .ws-page-action-btn {
+      flex-shrink: 0;
+      margin-top: 4px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 10px 16px;
+      border: 1px solid rgba(110, 231, 168, 0.35);
+      background: rgba(18, 22, 20, 0.95);
+      color: rgba(196, 255, 220, 0.95);
+    }
+
+    .ws-page-action-btn:hover {
+      border-color: rgba(110, 231, 168, 0.55);
+      background: rgba(24, 34, 30, 0.98);
+    }
+
+    .ws-modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 1100;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(12px);
+      padding: 18px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ws-modal-overlay.open {
+      display: flex;
+    }
+
+    .ws-modal-panel {
+      width: min(440px, calc(100vw - 32px));
+      max-height: min(90vh, 720px);
+      overflow: auto;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #121214;
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+    }
+
+    .ws-modal-panel .modal-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .ws-modal-panel .modal-footer {
+      padding: 14px 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      justify-content: flex-end;
+    }
+
+    .ws-modal-form {
+      padding: 16px 18px 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 14px;
+    }
+
+    .ws-modal-form .field-span-2 {
+      grid-column: 1 / -1;
+    }
+
+    .ws-modal-form .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.38);
+      margin-bottom: 4px;
+    }
+
+    .ws-modal-error {
+      margin: 0 18px 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: rgba(255, 180, 180, 0.95);
+      background: rgba(80, 24, 24, 0.45);
+      border: 1px solid rgba(255, 120, 120, 0.25);
+      display: none;
+    }
+
+    .ws-modal-error.is-visible {
+      display: block;
+    }
+
+    @media (max-width: 520px) {
+      .ws-modal-form {
+        grid-template-columns: 1fr;
+      }
     }
 
     .ws-page-title {
@@ -2795,10 +2901,70 @@
         </div>
         <div id="viewWorkshops" class="new-view ws-page" data-new-view="workshops" hidden>
           <header class="ws-page-head">
-            <h1 class="ws-page-title">Workshops</h1>
-            <p class="ws-page-lead">LaLampe — overzicht van geplande sessies</p>
+            <div class="ws-page-head-main">
+              <h1 class="ws-page-title">Workshops</h1>
+              <p class="ws-page-lead">LaLampe — overzicht van geplande sessies</p>
+            </div>
+            <button type="button" class="btn ws-page-action-btn" id="wsOpenCreateModalBtn">
+              Nieuwe workshop
+            </button>
           </header>
           <div id="wsWorkshopsGrid" class="ws-grid" aria-live="polite"></div>
+          <div class="ws-modal-overlay" id="wsCreateModalOverlay" aria-hidden="true">
+            <div
+              class="ws-modal-panel"
+              id="wsCreateModalPanel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="wsCreateModalTitle"
+            >
+              <div class="modal-header">
+                <div>
+                  <div class="modal-title" id="wsCreateModalTitle">Nieuwe workshop</div>
+                  <div class="modal-subtitle">LaLampe — velden met * zijn verplicht</div>
+                </div>
+              </div>
+              <div id="wsCreateModalError" class="ws-modal-error" role="alert"></div>
+              <div class="ws-modal-form">
+                <div class="field field-span-2">
+                  <div class="label">Titel *</div>
+                  <input class="input" id="wsCreateTitle" type="text" autocomplete="off" placeholder="Bijv. Avondworkshop lamp" />
+                </div>
+                <div class="field field-span-2">
+                  <div class="label">Datum *</div>
+                  <input class="input" id="wsCreateDate" type="date" />
+                </div>
+                <div class="field">
+                  <div class="label">Starttijd</div>
+                  <input class="input" id="wsCreateStart" type="time" />
+                </div>
+                <div class="field">
+                  <div class="label">Eindtijd</div>
+                  <input class="input" id="wsCreateEnd" type="time" />
+                </div>
+                <div class="field">
+                  <div class="label">Max. deelnemers *</div>
+                  <input class="input" id="wsCreateMax" type="number" min="1" max="99" value="4" />
+                </div>
+                <div class="field">
+                  <div class="label">Status *</div>
+                  <select class="select" id="wsCreateStatus"></select>
+                </div>
+                <div class="field field-span-2">
+                  <div class="label">Locatie</div>
+                  <input class="input" id="wsCreateLocation" type="text" autocomplete="off" placeholder="Optioneel" />
+                </div>
+                <div class="field field-span-2">
+                  <div class="label">Notities</div>
+                  <textarea class="textarea" id="wsCreateNotes" rows="2" placeholder="Optioneel"></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn ghost" id="wsCreateCancelBtn">Annuleren</button>
+                <button type="button" class="btn primary" id="wsCreateSaveBtn">Opslaan</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div id="viewCommunicatie" class="new-view" data-new-view="communicatie" hidden>
           <h1 class="new-page-title">Communicatie</h1>
@@ -4457,6 +4623,132 @@
       }
     }
 
+    function populateWsCreateStatusSelect() {
+      const sel = document.getElementById('wsCreateStatus');
+      if (!sel || sel.dataset.populated === '1') return;
+      sel.innerHTML = WORKSHOP_STATUS_OPTIONS.map((st) => {
+        const lab = WORKSHOP_STATUS_LABELS_NL[st] || st;
+        return `<option value="${escapeHtml(st)}">${escapeHtml(lab)}</option>`;
+      }).join('');
+      sel.value = 'planned';
+      sel.dataset.populated = '1';
+    }
+
+    function resetWsCreateWorkshopForm() {
+      wsCreateModalShowError('');
+      const t = document.getElementById('wsCreateTitle');
+      const d = document.getElementById('wsCreateDate');
+      const s = document.getElementById('wsCreateStart');
+      const e = document.getElementById('wsCreateEnd');
+      const m = document.getElementById('wsCreateMax');
+      const st = document.getElementById('wsCreateStatus');
+      const loc = document.getElementById('wsCreateLocation');
+      const notes = document.getElementById('wsCreateNotes');
+      if (t) t.value = '';
+      if (d) d.value = '';
+      if (s) s.value = '';
+      if (e) e.value = '';
+      if (m) m.value = '4';
+      if (st) st.value = 'planned';
+      if (loc) loc.value = '';
+      if (notes) notes.value = '';
+    }
+
+    function wsCreateModalShowError(msg) {
+      const err = document.getElementById('wsCreateModalError');
+      if (!err) return;
+      err.textContent = msg || '';
+      err.classList.toggle('is-visible', Boolean(msg));
+    }
+
+    function openWsCreateWorkshopModal() {
+      if (!useNewShell()) return;
+      populateWsCreateStatusSelect();
+      resetWsCreateWorkshopForm();
+      const o = document.getElementById('wsCreateModalOverlay');
+      if (!o) return;
+      o.classList.add('open');
+      o.setAttribute('aria-hidden', 'false');
+      setTimeout(() => document.getElementById('wsCreateTitle')?.focus(), 80);
+    }
+
+    function closeWsCreateWorkshopModal() {
+      const o = document.getElementById('wsCreateModalOverlay');
+      if (!o) return;
+      o.classList.remove('open');
+      o.setAttribute('aria-hidden', 'true');
+      wsCreateModalShowError('');
+    }
+
+    async function submitWsCreateWorkshopFromModal() {
+      const title = String(document.getElementById('wsCreateTitle')?.value || '').trim();
+      const workshopDate = String(document.getElementById('wsCreateDate')?.value || '').trim();
+      const startTime = String(document.getElementById('wsCreateStart')?.value || '').trim();
+      const endTime = String(document.getElementById('wsCreateEnd')?.value || '').trim();
+      const maxRaw = String(document.getElementById('wsCreateMax')?.value || '4').trim();
+      const maxParticipants = Math.max(1, Math.min(99, Number(maxRaw) || 4));
+      const status = String(document.getElementById('wsCreateStatus')?.value || 'planned').trim();
+      const location = String(document.getElementById('wsCreateLocation')?.value || '').trim();
+      const notesVal = String(document.getElementById('wsCreateNotes')?.value || '').trim();
+
+      wsCreateModalShowError('');
+      if (!title) {
+        wsCreateModalShowError('Vul een titel in.');
+        document.getElementById('wsCreateTitle')?.focus();
+        return;
+      }
+      if (!workshopDate) {
+        wsCreateModalShowError('Vul een datum in.');
+        document.getElementById('wsCreateDate')?.focus();
+        return;
+      }
+      if (!WORKSHOP_STATUS_OPTIONS.includes(status)) {
+        wsCreateModalShowError('Ongeldige status.');
+        return;
+      }
+
+      const saveBtn = document.getElementById('wsCreateSaveBtn');
+      if (saveBtn) saveBtn.disabled = true;
+
+      const pid = dashboardRawData.lalampe_project_id
+        ? String(dashboardRawData.lalampe_project_id).trim()
+        : '';
+
+      const body = {
+        op: 'create_workshop',
+        title,
+        workshop_date: workshopDate,
+        start_time: startTime || null,
+        end_time: endTime || null,
+        max_participants: maxParticipants,
+        status,
+        location: location || null,
+        notes: notesVal || null,
+        project_name: 'LaLampe'
+      };
+      if (pid) body.project_id = pid;
+
+      try {
+        const res = await fetch('/api/workshops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const hint = data?.hint ? ` ${data.hint}` : '';
+          wsCreateModalShowError((data?.error || 'Workshop aanmaken mislukt.') + hint);
+          return;
+        }
+        closeWsCreateWorkshopModal();
+        await loadDashboard();
+      } catch (e) {
+        wsCreateModalShowError(`Verbinding mislukt: ${e.message || 'unknown'}`);
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    }
+
     function renderWorkshops() {
       const host = document.getElementById('workshopsBlock');
       if (!host) return;
@@ -5805,6 +6097,18 @@
 
     document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmDialog);
     document.getElementById('confirmOkBtn').addEventListener('click', runConfirmAction);
+
+    document.getElementById('wsOpenCreateModalBtn')?.addEventListener('click', openWsCreateWorkshopModal);
+    document.getElementById('wsCreateCancelBtn')?.addEventListener('click', closeWsCreateWorkshopModal);
+    document.getElementById('wsCreateSaveBtn')?.addEventListener('click', submitWsCreateWorkshopFromModal);
+    document.getElementById('wsCreateModalOverlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'wsCreateModalOverlay') closeWsCreateWorkshopModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const mo = document.getElementById('wsCreateModalOverlay');
+      if (mo?.classList.contains('open')) closeWsCreateWorkshopModal();
+    });
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', () => {
