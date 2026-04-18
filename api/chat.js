@@ -1264,15 +1264,29 @@ async function normalizeReviewPayload(aiResult) {
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
+  const reviewItemsWithProjectMatch = enrichedItems.map(item => {
+    const rid = item.project_resolution?.resolved_id
+    if (!rid) return item
+    const top = item.project_resolution?.candidates?.[0]
+    if (!top) return item
+    return {
+      ...item,
+      project_match: {
+        name: top.name,
+        confidence: top.score
+      }
+    }
+  })
+
   const review = {
     summary: safeString(aiResult?.review?.summary, 'Ik heb dit alvast klaargezet.'),
-    items: enrichedItems
+    items: reviewItemsWithProjectMatch
   }
 
-  const actions = enrichedItems.length
+  const actions = reviewItemsWithProjectMatch.length
     ? [
         { type: 'confirm_review', label: 'Opslaan' },
-        ...enrichedItems.map(item => ({
+        ...reviewItemsWithProjectMatch.map(item => ({
           type: 'edit_review_item',
           label: 'Aanpassen',
           temp_id: item.temp_id
