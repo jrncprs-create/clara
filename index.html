@@ -1113,48 +1113,107 @@
       color: rgba(255, 255, 255, 0.36);
     }
 
-    .vd-week-mini {
+    .vd-agenda-strip {
       display: flex;
-      gap: 8px;
-      padding: 0 18px 12px;
-      flex-wrap: wrap;
+      gap: 6px;
+      padding: 2px 4px 14px;
+      margin: 0 14px 0 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .vd-agenda-strip::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .vd-agenda-strip::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
     }
 
     .vd-day-pill {
       flex: 0 0 auto;
-      min-width: 40px;
+      min-width: 46px;
       margin: 0;
-      padding: 8px 6px;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      background: rgba(0, 0, 0, 0.22);
-      color: rgba(255, 255, 255, 0.48);
+      padding: 8px 7px 7px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.28);
+      color: rgba(255, 255, 255, 0.52);
       font: inherit;
-      cursor: default;
+      cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
+      gap: 1px;
+      position: relative;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+
+    .vd-agenda-strip .vd-day-pill:focus-visible {
+      outline: 2px solid rgba(110, 231, 168, 0.45);
+      outline-offset: 2px;
     }
 
     .vd-day-pill.is-today {
-      background: rgba(139, 92, 246, 0.22);
-      border-color: rgba(110, 231, 168, 0.35);
+      border-color: rgba(110, 231, 168, 0.28);
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .vd-day-pill.is-selected {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: rgba(196, 168, 255, 0.35);
       color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .vd-day-pill.is-today.is-selected {
+      border-color: rgba(110, 231, 168, 0.42);
+      background: linear-gradient(145deg, rgba(139, 92, 246, 0.22), rgba(110, 231, 168, 0.12));
+    }
+
+    .vd-day-pill-count {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      min-width: 14px;
+      height: 14px;
+      padding: 0 4px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 14px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.88);
+      background: rgba(110, 231, 168, 0.85);
     }
 
     .vd-day-pill-d {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.85;
     }
 
     .vd-day-pill-n {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 800;
+      letter-spacing: -0.02em;
     }
 
-    .vd-agenda-feed,
+    .vd-agenda-mosaic {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 10px 16px 18px;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .vd-task-chips {
       flex: 1;
       min-height: 0;
@@ -1165,14 +1224,36 @@
       gap: 12px;
     }
 
+    .vd-agenda-mosaic-inner {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      align-content: start;
+    }
+
+    .vd-agenda-empty {
+      margin: 0;
+      padding: 12px 4px 4px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.34);
+      font-weight: 500;
+    }
+
     .vd-agenda-block {
       display: flex;
       align-items: stretch;
-      gap: 14px;
-      padding: 14px 14px;
+      gap: 12px;
+      padding: 12px 12px;
       border-radius: var(--vd-radius-inner);
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.22);
       border: 1px solid var(--vd-line-soft);
+      min-height: 0;
+    }
+
+    .vd-agenda-block--wide {
+      grid-column: 1 / -1;
+      padding: 14px 16px;
     }
 
     .vd-agenda-bar {
@@ -2442,8 +2523,8 @@
                 <div class="vd-block-head">
                   <h2 id="vdScheduleTitle" class="vd-block-title">Agenda</h2>
                 </div>
-                <div id="vdDayStrip" class="vd-week-mini" role="group" aria-label="Deze week"></div>
-                <div id="vdScheduleBody" class="vd-agenda-feed"></div>
+                <div id="vdDayStrip" class="vd-agenda-strip" role="radiogroup" aria-label="Aankomende dagen"></div>
+                <div id="vdScheduleBody" class="vd-agenda-mosaic"></div>
               </section>
               <section class="vd-subpanel" aria-labelledby="vdTodayTasksTitle">
                 <div class="vd-block-head">
@@ -2652,6 +2733,8 @@
     document.getElementById('version').textContent = `live • v6.5 • ${AUTO_VERSION}`;
 
     let dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [], all: [] };
+    /** Geselecteerde dag in Vandaag-agenda (yyyy-mm-dd); leeg = vandaag bij volgende render. */
+    let vandaagAgendaSelectedKey = '';
     let expandedWorkshopId = null;
     let expandedWorkshopLoading = false;
     let expandedWorkshopDetail = null;
@@ -3167,31 +3250,116 @@
       return 'Goedenavond!';
     }
 
-    function vandaagWeekStripHtml(anchorDate) {
-      const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
-      const dow = d.getDay();
-      const mondayOffset = dow === 0 ? -6 : 1 - dow;
-      const monday = new Date(d);
-      monday.setDate(d.getDate() + mondayOffset);
-      const todayKey = formatLocalDateKey(anchorDate);
-      const parts = [];
-      for (let i = 0; i < 7; i++) {
-        const x = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
-        const key = formatLocalDateKey(x);
-        const isToday = key === todayKey;
-        const dayNum = x.getDate();
-        const dayShort = new Intl.DateTimeFormat('nl-NL', { weekday: 'short' })
-          .format(x)
-          .replace('.', '')
-          .slice(0, 2)
-          .toLowerCase();
-        parts.push(
-          `<button type="button" class="vd-day-pill${isToday ? ' is-today' : ''}" disabled${
-            isToday ? ' aria-current="date"' : ''
-          }><span class="vd-day-pill-d">${escapeHtml(dayShort)}</span><span class="vd-day-pill-n">${dayNum}</span></button>`
-        );
+    const VD_AGENDA_STRIP_DAYS = 7;
+    const VD_AGENDA_HORIZON_DAYS = 21;
+
+    function vandaagAgendaDateKey(item) {
+      const raw = String(item?.date || '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+      const d = parseDate(raw);
+      if (!d) return '';
+      return formatLocalDateKey(startOfDay(d));
+    }
+
+    function vandaagParseYmdLocal(ymd) {
+      const m = String(ymd || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return null;
+      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    }
+
+    function vandaagForwardDayKeys(todayStart, count) {
+      const out = [];
+      for (let i = 0; i < count; i++) {
+        const x = new Date(todayStart);
+        x.setDate(x.getDate() + i);
+        out.push(formatLocalDateKey(x));
       }
-      return parts.join('');
+      return out;
+    }
+
+    function vandaagAgendaForwardItems(todayStart, horizonDays) {
+      const todayKey = formatLocalDateKey(todayStart);
+      const end = new Date(todayStart);
+      end.setDate(end.getDate() + horizonDays);
+      const endKey = formatLocalDateKey(end);
+      return (dashboardRawData.agenda || []).filter((item) => {
+        const t = String(item?.type || '').toLowerCase();
+        if (t !== 'afspraak' && t !== 'agenda') return false;
+        const dk = vandaagAgendaDateKey(item);
+        if (!dk) return false;
+        if (dk < todayKey || dk > endKey) return false;
+        return true;
+      });
+    }
+
+    function vandaagForwardDayStripHtml(todayStart, selectedKey, dayKeys, countsByDay) {
+      const todayKey = formatLocalDateKey(todayStart);
+      return dayKeys
+        .map((key) => {
+          const d = vandaagParseYmdLocal(key);
+          if (!d) return '';
+          const dayNum = d.getDate();
+          const dayShort = new Intl.DateTimeFormat('nl-NL', { weekday: 'short' })
+            .format(d)
+            .replace('.', '')
+            .slice(0, 2)
+            .toLowerCase();
+          const isToday = key === todayKey;
+          const isSelected = key === selectedKey;
+          const n = countsByDay.get(key) || 0;
+          const countHtml =
+            n > 0 ? `<span class="vd-day-pill-count" aria-hidden="true">${String(n)}</span>` : '';
+          const cls = ['vd-day-pill', isToday ? 'is-today' : '', isSelected ? 'is-selected' : '']
+            .filter(Boolean)
+            .join(' ');
+          const ariaDay = new Intl.DateTimeFormat('nl-NL', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+          }).format(d);
+          const ariaExtra = n > 0 ? `, ${n} ${n === 1 ? 'afspraak' : 'afspraken'}` : '';
+          return `<button type="button" class="${cls}" data-vd-agenda-day="${escapeHtml(
+            key
+          )}" role="radio" aria-checked="${isSelected ? 'true' : 'false'}" aria-label="${escapeHtml(
+            `${ariaDay}${ariaExtra}`
+          )}">${countHtml}<span class="vd-day-pill-d">${escapeHtml(dayShort)}</span><span class="vd-day-pill-n">${dayNum}</span></button>`;
+        })
+        .join('');
+    }
+
+    function vandaagAgendaMosaicHtml(sortedItems) {
+      if (!sortedItems.length) {
+        return '<p class="vd-agenda-empty">Geen afspraken op deze dag.</p>';
+      }
+      const inner = sortedItems
+        .map((it, i) => {
+          const timeLabel = String(it.time || '').trim() || 'Hele dag';
+          const wide = i === 0 || (i % 4 === 3 && sortedItems.length > 2);
+          const wClass = wide ? ' vd-agenda-block--wide' : '';
+          return `<article class="vd-agenda-block${wClass}">
+            <div class="vd-agenda-bar vd-agenda-bar--${i % 3}" aria-hidden="true"></div>
+            <div class="vd-agenda-body">
+              <div class="vd-agenda-title">${escapeHtml(it.title || 'Afspraak')}</div>
+              <div class="vd-agenda-time">${escapeHtml(timeLabel)}</div>
+            </div>
+          </article>`;
+        })
+        .join('');
+      return `<div class="vd-agenda-mosaic-inner">${inner}</div>`;
+    }
+
+    function initVandaagAgendaStripOnce() {
+      const view = document.getElementById('viewVandaag');
+      if (!view || view.dataset.vdAgendaStripInit === '1') return;
+      view.dataset.vdAgendaStripInit = '1';
+      view.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-vd-agenda-day]');
+        if (!btn || !useNewShell()) return;
+        const key = btn.getAttribute('data-vd-agenda-day');
+        if (!key) return;
+        vandaagAgendaSelectedKey = key;
+        renderVandaagDashboard();
+      });
     }
 
     function renderVandaagDashboard() {
@@ -3223,13 +3391,15 @@
         return;
       }
 
+      initVandaagAgendaStripOnce();
+
       const todayStart = getTodayStart();
       const todayKey = formatLocalDateKey(todayStart);
 
       const apptsTodayAll = (dashboardRawData.agenda || []).filter((item) => {
         const t = String(item?.type || '').toLowerCase();
         if (t !== 'afspraak' && t !== 'agenda') return false;
-        return String(item?.date || '').trim() === todayKey;
+        return vandaagAgendaDateKey(item) === todayKey;
       });
 
       const tasksTodayAll = (dashboardRawData.tasks || []).filter(
@@ -3281,35 +3451,42 @@
         }
       }
 
-      const apptsSorted = [...apptsTodayAll]
-        .sort((a, b) => {
-          const ma = parseTimeToMinutes(a.time) ?? 24 * 60;
-          const mb = parseTimeToMinutes(b.time) ?? 24 * 60;
-          return ma - mb;
-        })
-        .slice(0, 5);
-
-      if (apptsSorted.length) {
-        schedulePanel.hidden = false;
-        schedulePanel.removeAttribute('aria-hidden');
-        dayStrip.innerHTML = vandaagWeekStripHtml(todayStart);
-        scheduleBody.innerHTML = apptsSorted
-          .map((it, i) => {
-            const timeLabel = String(it.time || '').trim() || '—';
-            return `<article class="vd-agenda-block">
-            <div class="vd-agenda-bar vd-agenda-bar--${i % 3}" aria-hidden="true"></div>
-            <div class="vd-agenda-body">
-              <div class="vd-agenda-title">${escapeHtml(it.title || 'Afspraak')}</div>
-              <div class="vd-agenda-time">${escapeHtml(timeLabel)}</div>
-            </div>
-          </article>`;
-          })
-          .join('');
-      } else {
+      const forwardAppts = vandaagAgendaForwardItems(todayStart, VD_AGENDA_HORIZON_DAYS);
+      if (!forwardAppts.length) {
         schedulePanel.hidden = true;
         schedulePanel.setAttribute('aria-hidden', 'true');
         dayStrip.innerHTML = '';
         scheduleBody.innerHTML = '';
+        vandaagAgendaSelectedKey = '';
+      } else {
+        schedulePanel.hidden = false;
+        schedulePanel.removeAttribute('aria-hidden');
+        const stripKeys = vandaagForwardDayKeys(todayStart, VD_AGENDA_STRIP_DAYS);
+        if (!stripKeys.includes(vandaagAgendaSelectedKey)) {
+          vandaagAgendaSelectedKey = todayKey;
+        }
+        const countsByDay = new Map();
+        for (const it of forwardAppts) {
+          const dk = vandaagAgendaDateKey(it);
+          if (dk) {
+            countsByDay.set(dk, (countsByDay.get(dk) || 0) + 1);
+          }
+        }
+        dayStrip.innerHTML = vandaagForwardDayStripHtml(
+          todayStart,
+          vandaagAgendaSelectedKey,
+          stripKeys,
+          countsByDay
+        );
+        const dayAppts = forwardAppts
+          .filter((it) => vandaagAgendaDateKey(it) === vandaagAgendaSelectedKey)
+          .sort((a, b) => {
+            const ma = parseTimeToMinutes(a.time) ?? 24 * 60;
+            const mb = parseTimeToMinutes(b.time) ?? 24 * 60;
+            return ma - mb;
+          })
+          .slice(0, 8);
+        scheduleBody.innerHTML = vandaagAgendaMosaicHtml(dayAppts);
       }
 
       const tasksShow = tasksTodayAll.slice(0, 5);
