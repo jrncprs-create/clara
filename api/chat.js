@@ -227,6 +227,20 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback
 }
 
+const OPENAI_INPUT_MAX_CHARS = Math.max(5000, Math.floor(safeNumber(process.env.OPENAI_INPUT_MAX_CHARS, 16000)))
+
+function truncateForOpenAIInput(text) {
+  const t = String(text || '')
+  if (t.length <= OPENAI_INPUT_MAX_CHARS) return t
+  const noteReserve = 220
+  const budget = Math.max(2400, OPENAI_INPUT_MAX_CHARS - noteReserve)
+  const headChars = Math.floor(budget * 0.72)
+  const tailChars = budget - headChars
+  const head = t.slice(0, headChars)
+  const tail = t.slice(-tailChars)
+  return `${head}\n\n[--- Midden weggelaten (${t.length} tekens totaal); hieronder het slot van de invoer ---]\n\n${tail}`
+}
+
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n))
 }
@@ -539,11 +553,28 @@ function overlapScore(a, b) {
 function titleCore(value) {
   return makeComparableText(value)
     .replace(/\b(vandaag|morgen|overmorgen)\b/g, ' ')
+    .replace(
+      /\b(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)(ochtend|middag|avond)\b/g,
+      ' '
+    )
     .replace(/\b(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\b/g, ' ')
     .replace(/\b\d{1,2}[:.]\d{2}\b/g, ' ')
     .replace(/\b\d{1,2}\b/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function titlesShareSignificantInfix(a, b, minLen = 9) {
+  const ca = titleCore(a)
+  const cb = titleCore(b)
+  if (!ca || !cb || ca.length < minLen || cb.length < minLen) return false
+  const [shorter, longer] = ca.length <= cb.length ? [ca, cb] : [cb, ca]
+  for (let i = 0; i <= shorter.length - minLen; i++) {
+    const frag = shorter.slice(i, i + minLen)
+    if (/^vergadering/i.test(frag) && frag.length <= 14) continue
+    if (longer.includes(frag)) return true
+  }
+  return false
 }
 
 function titlesLookSimilar(a, b) {
@@ -979,7 +1010,7 @@ Datumcontext Amsterdam:
 - huidige tijd: ${aiInput.context.now_hhmm}
 
 Input:
-${cleanedInput}
+${truncateForOpenAIInput(cleanedInput)}
 `
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1103,12 +1134,17 @@ function detectDuplicateMatch(item, candidates) {
       }
     }
 
-    if (itemType === 'afspraak' && titleSimilar && sameDate && sameTime) {
-      return {
-        duplicate_warning: true,
-        duplicate_match_id: candidate.id,
-        duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'vergelijkbare afspraak op hetzelfde moment'
+    if (itemType === 'afspraak' && sameDate && sameTime) {
+      const slotTitleSimilar =
+        titleSimilar ||
+        titlesShareSignificantInfix(candidate.title, item.title, 9)
+      if (slotTitleSimilar) {
+        return {
+          duplicate_warning: true,
+          duplicate_match_id: candidate.id,
+          duplicate_match_title: candidate.title,
+          duplicate_match_reason: 'vergelijkbare afspraak op hetzelfde moment'
+        }
       }
     }
 
@@ -1264,11 +1300,10 @@ async function normalizeReviewPayload(aiResult) {
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
-  const reviewItemsWithProjectMatch = enrichedItems.map(item => {
-    const rid = item.project_resolution?.resolved_id
-    if (!rid) return item
+  const reviewItemsWithMatch = enrichedItems.map(item => {
     const top = item.project_resolution?.candidates?.[0]
-    if (!top) return item
+    const rid = item.project_resolution?.resolved_id ?? top?.id
+    if (!top || rid == null || rid === '') return { ...item }
     return {
       ...item,
       project_match: {
@@ -1280,13 +1315,13 @@ async function normalizeReviewPayload(aiResult) {
 
   const review = {
     summary: safeString(aiResult?.review?.summary, 'Ik heb dit alvast klaargezet.'),
-    items: reviewItemsWithProjectMatch
+    items: reviewItemsWithMatch
   }
 
-  const actions = reviewItemsWithProjectMatch.length
+  const actions = reviewItemsWithMatch.length
     ? [
         { type: 'confirm_review', label: 'Opslaan' },
-        ...reviewItemsWithProjectMatch.map(item => ({
+        ...reviewItemsWithMatch.map(item => ({
           type: 'edit_review_item',
           label: 'Aanpassen',
           temp_id: item.temp_id
