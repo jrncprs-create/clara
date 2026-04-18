@@ -629,31 +629,31 @@
     }
 
     .new-chat-dock-slot .chat-messages {
-      gap: 7px;
-      padding: 8px 2px 10px 0;
+      gap: 4px;
+      padding: 4px 0 6px 0;
     }
 
     .new-chat-dock-slot .bubble {
       max-width: 100%;
-      padding: 8px 11px;
-      font-size: 13px;
-      line-height: 1.38;
-      border-radius: 12px;
+      padding: 6px 9px;
+      font-size: 12px;
+      line-height: 1.36;
+      border-radius: 10px;
     }
 
     .new-chat-dock-slot .bubble.clara {
-      background: rgba(255, 255, 255, 0.055);
-      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.035);
+      color: rgba(255, 255, 255, 0.72);
     }
 
     .new-chat-dock-slot .bubble.user {
-      background: #e8e8e8;
-      color: #111;
+      background: rgba(255, 255, 255, 0.09);
+      color: rgba(255, 255, 255, 0.82);
     }
 
     .new-chat-dock-slot .composer {
-      padding: 8px 0 10px;
-      gap: 8px;
+      padding: 6px 0 8px;
+      gap: 6px;
       align-items: end;
       border-top: 1px solid rgba(255, 255, 255, 0.07);
       background: rgba(0, 0, 0, 0.2);
@@ -872,7 +872,7 @@
     }
 
     .vd-hero {
-      grid-column: 1 / span 8;
+      grid-column: 1 / -1;
       grid-row: 1;
       padding: clamp(26px, 3.5vh, 42px) clamp(24px, 3vw, 38px);
       background:
@@ -966,66 +966,15 @@
       transform: translateY(-1px);
     }
 
-    .vd-side-stats {
-      grid-column: 9 / span 4;
-      grid-row: 1;
-      padding: 22px 18px 24px;
-      gap: 14px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      background: var(--vd-card-b);
-    }
-
-    .vd-stat {
-      padding: 18px 16px 18px 20px;
-      border-radius: var(--vd-radius-inner);
-      background: rgba(0, 0, 0, 0.22);
-      border: 1px solid var(--vd-line-soft);
-      position: relative;
-    }
-
-    .vd-stat::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 12px;
-      bottom: 12px;
-      width: 3px;
-      border-radius: 2px;
-      background: var(--vd-g);
-    }
-
-    .vd-stat:nth-child(2)::before {
-      background: var(--vd-p);
-    }
-
-    .vd-stat:nth-child(3)::before {
-      background: linear-gradient(180deg, var(--vd-g), var(--vd-p));
-    }
-
-    .vd-stat-n {
-      display: block;
-      font-size: clamp(28px, 4vh, 40px);
-      font-weight: 800;
-      letter-spacing: -0.035em;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .vd-stat-l {
-      font-size: 11px;
-      font-weight: 650;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.36);
-    }
-
     .vd-wait {
       grid-column: 1 / span 7;
       grid-row: 2;
       min-height: 200px;
       background: var(--vd-card-a);
+    }
+
+    #vdWidgetWait .vd-block-head {
+      padding: 14px 20px 8px;
     }
 
     .vd-today-stack {
@@ -1122,14 +1071,14 @@
       flex: 1;
       min-height: 0;
       overflow: auto;
-      padding: 6px 20px 24px;
+      padding: 4px 18px 18px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 12px;
     }
 
     .vd-wait-card {
-      padding: 20px 18px 20px 22px;
+      padding: 14px 14px 14px 18px;
       border-radius: var(--vd-radius-inner);
       background: rgba(0, 0, 0, 0.24);
       border: 1px solid var(--vd-line-soft);
@@ -1140,23 +1089,23 @@
       content: '';
       position: absolute;
       left: 0;
-      top: 12px;
-      bottom: 12px;
+      top: 10px;
+      bottom: 10px;
       width: 3px;
       border-radius: 2px;
       background: linear-gradient(180deg, var(--vd-p), var(--vd-p-deep));
     }
 
     .vd-wait-card-inner {
-      padding-left: 16px;
+      padding-left: 14px;
     }
 
     .vd-wait-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.28;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     .vd-wait-meta {
@@ -2475,26 +2424,10 @@
                 <h1 id="vdGreetTitle" class="vd-hero-display">Vandaag</h1>
                 <p id="vdGreetSub" class="vd-hero-lead"></p>
                 <div class="vd-hero-actions">
-                  <a class="vd-chip vd-chip--ghost" href="#/inbox">Inbox</a>
                   <a class="vd-chip vd-chip--accent" href="#/projecten">Nieuwe taak</a>
                 </div>
               </div>
             </header>
-
-            <aside class="vd-cell vd-side-stats" aria-label="Kerncijfers vandaag">
-              <div class="vd-stat">
-                <span id="vdKpiTasks" class="vd-stat-n">0</span>
-                <span class="vd-stat-l">Taken vandaag</span>
-              </div>
-              <div class="vd-stat">
-                <span id="vdKpiAppts" class="vd-stat-n">0</span>
-                <span class="vd-stat-l">Afspraken</span>
-              </div>
-              <div class="vd-stat">
-                <span id="vdKpiWait" class="vd-stat-n">0</span>
-                <span class="vd-stat-l">Wacht op jou</span>
-              </div>
-            </aside>
 
             <section id="vdWidgetWait" class="vd-cell vd-wait" aria-labelledby="vdWaitTitle">
               <div class="vd-block-head">
@@ -2505,7 +2438,7 @@
             </section>
 
             <div class="vd-today-stack">
-              <section id="vdWidgetSchedule" class="vd-subpanel" aria-labelledby="vdScheduleTitle">
+              <section id="vdWidgetSchedule" class="vd-subpanel" aria-labelledby="vdScheduleTitle" hidden>
                 <div class="vd-block-head">
                   <h2 id="vdScheduleTitle" class="vd-block-title">Agenda</h2>
                 </div>
@@ -3267,9 +3200,7 @@
       const greetDate = document.getElementById('vdGreetDate');
       const greetTitle = document.getElementById('vdGreetTitle');
       const greetSub = document.getElementById('vdGreetSub');
-      const kpiTasks = document.getElementById('vdKpiTasks');
-      const kpiAppts = document.getElementById('vdKpiAppts');
-      const kpiWait = document.getElementById('vdKpiWait');
+      const schedulePanel = document.getElementById('vdWidgetSchedule');
       const dayStrip = document.getElementById('vdDayStrip');
       const scheduleBody = document.getElementById('vdScheduleBody');
       const waitingBody = document.getElementById('vdWaitingBody');
@@ -3282,9 +3213,7 @@
         !greetDate ||
         !greetTitle ||
         !greetSub ||
-        !kpiTasks ||
-        !kpiAppts ||
-        !kpiWait ||
+        !schedulePanel ||
         !dayStrip ||
         !scheduleBody ||
         !waitingBody ||
@@ -3331,10 +3260,6 @@
       }
       greetSub.textContent = `${g} — ${lead}`;
 
-      kpiTasks.textContent = String(taskCount);
-      kpiAppts.textContent = String(apptCount);
-      kpiWait.textContent = String(waitCount);
-
       if (insightHeading && insightValue && insightSub) {
         if (waitCount > 0) {
           insightHeading.textContent = 'Wachtrij';
@@ -3356,8 +3281,6 @@
         }
       }
 
-      dayStrip.innerHTML = vandaagWeekStripHtml(todayStart);
-
       const apptsSorted = [...apptsTodayAll]
         .sort((a, b) => {
           const ma = parseTimeToMinutes(a.time) ?? 24 * 60;
@@ -3367,6 +3290,9 @@
         .slice(0, 5);
 
       if (apptsSorted.length) {
+        schedulePanel.hidden = false;
+        schedulePanel.removeAttribute('aria-hidden');
+        dayStrip.innerHTML = vandaagWeekStripHtml(todayStart);
         scheduleBody.innerHTML = apptsSorted
           .map((it, i) => {
             const timeLabel = String(it.time || '').trim() || '—';
@@ -3380,7 +3306,10 @@
           })
           .join('');
       } else {
-        scheduleBody.innerHTML = '<p class="vd-muted">Geen afspraken vandaag.</p>';
+        schedulePanel.hidden = true;
+        schedulePanel.setAttribute('aria-hidden', 'true');
+        dayStrip.innerHTML = '';
+        scheduleBody.innerHTML = '';
       }
 
       const tasksShow = tasksTodayAll.slice(0, 5);
