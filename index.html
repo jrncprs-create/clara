@@ -641,6 +641,189 @@
       max-width: 42em;
     }
 
+    /* --- Vandaag dashboard (cockpit) — alleen #viewVandaag --- */
+    .vd-root {
+      max-width: 1080px;
+    }
+
+    .vd-hero {
+      background: linear-gradient(165deg, #141414 0%, #0e0e0e 100%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 26px;
+      padding: 32px 34px 28px;
+      margin-bottom: 32px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .vd-hero-eyebrow {
+      margin: 0 0 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.38);
+    }
+
+    .vd-hero-summary {
+      margin: 0;
+      font-size: clamp(22px, 2.6vw, 30px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.35;
+      color: rgba(255, 255, 255, 0.96);
+      max-width: 34em;
+    }
+
+    .vd-hero-detail {
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .vd-hero-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 15px;
+      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .vd-hero-line small {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.38);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .vd-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .vd-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .vd-panel {
+      border-radius: 22px;
+      padding: 24px 24px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.065);
+      background: #101010;
+    }
+
+    .vd-panel--waiting {
+      background: linear-gradient(180deg, #131313 0%, #0d0d0d 100%);
+      border-color: rgba(255, 255, 255, 0.09);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    }
+
+    .vd-panel--projects {
+      background: #0c0c0c;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .vd-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .vd-panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .vd-panel-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--dash-accent);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .vd-panel-link:hover {
+      text-decoration: underline;
+    }
+
+    .vd-wait-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .vd-wait-item {
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .vd-wait-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .vd-wait-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.94);
+      margin-bottom: 6px;
+    }
+
+    .vd-wait-meta {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .vd-muted-line {
+      margin: 4px 0 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.32);
+    }
+
+    .vd-project-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .vd-project-card {
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .vd-project-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .vd-project-stat {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
     .chat-dock-inner {
       position: absolute;
       inset: 0;
@@ -1708,38 +1891,32 @@
     </aside>
     <div class="new-main-col">
       <div class="new-views" id="newViews">
-        <div id="viewVandaag" class="new-view" data-new-view="vandaag">
-          <h1 class="new-page-title">Vandaag</h1>
-          <p class="new-page-sub">Rustig overzicht — maximaal vijf items per blok.</p>
-          <div class="dash-grid">
-            <article class="dash-card">
-              <div class="dash-card-head">
-                <div class="dash-card-title">Afspraken vandaag</div>
-                <a class="dash-card-link" href="#/communicatie">Naar chat</a>
-              </div>
-              <div id="dashAppointmentsToday" class="dash-rows"></div>
-            </article>
-            <article class="dash-card">
-              <div class="dash-card-head">
-                <div class="dash-card-title">Taken vandaag</div>
-                <a class="dash-card-link" href="#/inbox">Bekijk inbox</a>
-              </div>
-              <div id="dashTasksToday" class="dash-rows"></div>
-            </article>
-            <article class="dash-card">
-              <div class="dash-card-head">
-                <div class="dash-card-title">Wacht op</div>
-                <a class="dash-card-link" href="#/inbox">Alles in inbox</a>
-              </div>
-              <div id="dashWaiting" class="dash-rows"></div>
-            </article>
-            <article class="dash-card">
-              <div class="dash-card-head">
-                <div class="dash-card-title">Projecten</div>
-                <a class="dash-card-link" href="#/projecten">Alle projecten</a>
-              </div>
-              <div id="dashProjects" class="dash-rows"></div>
-            </article>
+        <div id="viewVandaag" class="new-view vd-root" data-new-view="vandaag">
+          <section class="vd-hero" aria-labelledby="vdHeroSummary">
+            <p class="vd-hero-eyebrow">Vandaag</p>
+            <p id="vdHeroSummary" class="vd-hero-summary"></p>
+            <div id="vdHeroDetail" class="vd-hero-detail" hidden></div>
+          </section>
+
+          <div class="vd-split">
+            <div class="vd-col vd-col-main">
+              <section class="vd-panel vd-panel--waiting" aria-labelledby="vdWaitingHeading">
+                <div class="vd-panel-head">
+                  <h2 id="vdWaitingHeading" class="vd-panel-title">Wacht op je</h2>
+                  <a class="vd-panel-link" href="#/inbox">Inbox</a>
+                </div>
+                <div id="vdWaitingBody" class="vd-wait-list"></div>
+              </section>
+            </div>
+            <div id="vdProjectsCol" class="vd-col vd-col-side" hidden>
+              <section class="vd-panel vd-panel--projects" aria-labelledby="vdProjectsHeading">
+                <div class="vd-panel-head">
+                  <h2 id="vdProjectsHeading" class="vd-panel-title">Projecten</h2>
+                  <a class="vd-panel-link" href="#/projecten">Alles</a>
+                </div>
+                <div id="vdProjectsBody" class="vd-project-cards"></div>
+              </section>
+            </div>
           </div>
         </div>
 
@@ -2394,105 +2571,146 @@
       if (!seg || !NEW_HASH_ROUTES.has(seg)) location.hash = '#/vandaag';
     }
 
-    function topProjectsFromDashboard(max = 3) {
+    function topProjectsOpenTasks(max = 3) {
       const counts = new Map();
-      const pool = Array.isArray(dashboardRawData.all) && dashboardRawData.all.length
-        ? dashboardRawData.all
-        : [...(dashboardRawData.tasks || []), ...(dashboardRawData.notes || [])];
-
-      for (const item of pool) {
+      for (const item of dashboardRawData.tasks || []) {
         const p = String(item?.project || '').trim();
         if (p.length < 2) continue;
+        const st = String(item?.status || '').toLowerCase();
+        if (st === 'klaar') continue;
         counts.set(p, (counts.get(p) || 0) + 1);
       }
 
       return Array.from(counts.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, max)
-        .map(([name, n]) => ({ name, count: n }));
+        .map(([name, n]) => ({ name, openCount: n }));
+    }
+
+    function vandaagFormatOpenTasks(n) {
+      if (n <= 0) return 'Geen open taken';
+      if (n === 1) return '1 open taak';
+      return `${n} open taken`;
+    }
+
+    function vandaagBuildHeroSummary(apptCount, taskCount) {
+      if (apptCount === 0 && taskCount === 0) {
+        return 'Vandaag is rustig — geen taken of afspraken met vandaag als datum.';
+      }
+      const bits = [];
+      if (taskCount > 0) {
+        bits.push(`${taskCount} ${taskCount === 1 ? 'taak' : 'taken'}`);
+      }
+      if (apptCount > 0) {
+        bits.push(`${apptCount} ${apptCount === 1 ? 'afspraak' : 'afspraken'}`);
+      }
+      return `Vandaag heb je ${bits.join(' en ')}.`;
     }
 
     function renderVandaagDashboard() {
       if (!useNewShell()) return;
 
+      const summaryEl = document.getElementById('vdHeroSummary');
+      const detailEl = document.getElementById('vdHeroDetail');
+      const waitingBody = document.getElementById('vdWaitingBody');
+      const projectsCol = document.getElementById('vdProjectsCol');
+      const projectsBody = document.getElementById('vdProjectsBody');
+      if (!summaryEl || !detailEl || !waitingBody || !projectsCol || !projectsBody) return;
+
       const todayKey = formatLocalDateKey(getTodayStart());
-      const apEl = document.getElementById('dashAppointmentsToday');
-      const tEl = document.getElementById('dashTasksToday');
-      const wEl = document.getElementById('dashWaiting');
-      const pEl = document.getElementById('dashProjects');
-      if (!apEl || !tEl || !wEl || !pEl) return;
 
-      const appts = (dashboardRawData.agenda || [])
-        .filter((item) => {
-          const t = String(item?.type || '').toLowerCase();
-          if (t !== 'afspraak' && t !== 'agenda') return false;
-          return String(item?.date || '').trim() === todayKey;
-        })
-        .slice(0, 5);
+      const apptsTodayAll = (dashboardRawData.agenda || []).filter((item) => {
+        const t = String(item?.type || '').toLowerCase();
+        if (t !== 'afspraak' && t !== 'agenda') return false;
+        return String(item?.date || '').trim() === todayKey;
+      });
 
-      const tasksToday = (dashboardRawData.tasks || [])
-        .filter((item) => String(item?.date || '').trim() === todayKey)
-        .slice(0, 5);
+      const tasksTodayAll = (dashboardRawData.tasks || []).filter(
+        (item) => String(item?.date || '').trim() === todayKey
+      );
+
+      const apptCount = apptsTodayAll.length;
+      const taskCount = tasksTodayAll.length;
+
+      summaryEl.textContent = vandaagBuildHeroSummary(apptCount, taskCount);
+
+      const detailLines = [];
+      for (const it of apptsTodayAll.slice(0, 3)) {
+        detailLines.push({
+          tag: 'Afspraak',
+          title: it.title || 'Afspraak',
+          meta: formatShortDate(it.date || '', it.time || '')
+        });
+      }
+      const room = Math.max(0, 5 - detailLines.length);
+      for (const it of tasksTodayAll.slice(0, room)) {
+        detailLines.push({
+          tag: 'Taak',
+          title: it.title || 'Taak',
+          meta: [it.status, it.priority].filter(Boolean).join(' · ') || '—'
+        });
+      }
+
+      if (apptCount === 0 && taskCount === 0) {
+        detailEl.hidden = true;
+        detailEl.innerHTML = '';
+      } else {
+        detailEl.hidden = false;
+        detailEl.innerHTML = detailLines
+          .map(
+            (row) => `
+          <div class="vd-hero-line">
+            <span>${escapeHtml(row.title)}</span>
+            <small>${escapeHtml(row.tag)} · ${escapeHtml(row.meta)}</small>
+          </div>
+        `
+          )
+          .join('');
+      }
 
       const waiting = (dashboardRawData.tasks || [])
         .filter((item) => {
           const s = String(item?.status || '').toLowerCase();
           return s === 'wacht' || s === 'open' || s === 'nieuw';
         })
-        .slice(0, 5);
+        .slice(0, 4);
 
-      const projects = topProjectsFromDashboard(3);
+      if (waiting.length) {
+        waitingBody.innerHTML = waiting
+          .map((it) => {
+            const meta = [it.status, it.date ? formatShortDate(it.date, it.time || '') : '']
+              .filter(Boolean)
+              .join(' · ');
+            return `
+            <div class="vd-wait-item">
+              <div class="vd-wait-title">${escapeHtml(it.title || 'Taak')}</div>
+              <div class="vd-wait-meta">${escapeHtml(meta || '—')}</div>
+            </div>
+          `;
+          })
+          .join('');
+      } else {
+        waitingBody.innerHTML =
+          '<p class="vd-muted-line">Geen taken die nu op een vervolg wachten.</p>';
+      }
 
-      const rowHtml = (title, meta) => `
-        <div class="dash-row">
-          <div>${escapeHtml(title)}</div>
-          <div class="dash-row-meta">${escapeHtml(meta)}</div>
-        </div>
-      `;
-
-      apEl.innerHTML = appts.length
-        ? appts
-            .map((it) =>
-              rowHtml(
-                it.title || 'Afspraak',
-                formatShortDate(it.date || '', it.time || '')
-              )
-            )
-            .join('')
-        : '<div class="dash-empty">Geen afspraken vandaag.</div>';
-
-      tEl.innerHTML = tasksToday.length
-        ? tasksToday
-            .map((it) =>
-              rowHtml(
-                it.title || 'Taak',
-                [it.status, it.priority].filter(Boolean).join(' · ')
-              )
-            )
-            .join('')
-        : '<div class="dash-empty">Geen taken met vandaag als datum.</div>';
-
-      wEl.innerHTML = waiting.length
-        ? waiting
-            .map((it) =>
-              rowHtml(
-                it.title || 'Taak',
-                it.status || '—'
-              )
-            )
-            .join('')
-        : '<div class="dash-empty">Niets dat op een vervolg wacht.</div>';
-
-      pEl.innerHTML = projects.length
-        ? projects
-            .map((pr) =>
-              rowHtml(
-                pr.name,
-                `${pr.count} item${pr.count === 1 ? '' : 's'}`
-              )
-            )
-            .join('')
-        : '<div class="dash-empty">Nog geen projectlabels in items.</div>';
+      const projects = topProjectsOpenTasks(3);
+      if (projects.length) {
+        projectsCol.hidden = false;
+        projectsBody.innerHTML = projects
+          .map(
+            (pr) => `
+          <div class="vd-project-card">
+            <span class="vd-project-name">${escapeHtml(pr.name)}</span>
+            <span class="vd-project-stat">${escapeHtml(vandaagFormatOpenTasks(pr.openCount))}</span>
+          </div>
+        `
+          )
+          .join('');
+      } else {
+        projectsCol.hidden = true;
+        projectsBody.innerHTML = '';
+      }
     }
 
     function supportsInlineEdit(item) {
