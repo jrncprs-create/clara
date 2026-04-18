@@ -641,71 +641,146 @@
       max-width: 42em;
     }
 
-    /* --- Vandaag dashboard (cockpit) — alleen #viewVandaag --- */
+    /* --- Vandaag dashboard — alleen #viewVandaag (referentie: zachte blobs, accentkleuren) --- */
     .vd-root {
-      max-width: 1080px;
+      max-width: 1180px;
+      --vd-pink: #e8487d;
+      --vd-lime: #c8f247;
+      --vd-purple: #7c5cff;
+      --vd-cyan: #3eb0e8;
+      --vd-amber: #f5b14a;
     }
 
     .vd-hero {
-      background: linear-gradient(165deg, #141414 0%, #0e0e0e 100%);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 26px;
-      padding: 32px 34px 28px;
-      margin-bottom: 32px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      position: relative;
+      border-radius: 36px;
+      padding: 36px 36px 32px;
+      margin-bottom: 36px;
+      background:
+        radial-gradient(120% 80% at 0% 0%, rgba(232, 72, 125, 0.14), transparent 55%),
+        radial-gradient(90% 70% at 100% 20%, rgba(124, 92, 255, 0.12), transparent 50%),
+        linear-gradient(165deg, #151515 0%, #0a0a0a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 24px 48px rgba(0, 0, 0, 0.35);
     }
 
     .vd-hero-eyebrow {
-      margin: 0 0 12px;
+      margin: 0 0 14px;
       font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.2em;
+      font-weight: 700;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.38);
+      color: rgba(255, 255, 255, 0.4);
     }
 
     .vd-hero-summary {
       margin: 0;
-      font-size: clamp(22px, 2.6vw, 30px);
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      line-height: 1.35;
-      color: rgba(255, 255, 255, 0.96);
-      max-width: 34em;
+      font-size: clamp(26px, 3.2vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.045em;
+      line-height: 1.2;
+      color: #fff;
+      max-width: min(100%, 22em);
     }
 
-    .vd-hero-detail {
-      margin-top: 22px;
-      padding-top: 22px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    .vd-hero-today {
+      margin-top: 28px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 20px;
     }
 
-    .vd-hero-line {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 16px;
-      font-size: 15px;
-      line-height: 1.4;
-      color: rgba(255, 255, 255, 0.88);
+    .vd-hero-block {
+      margin: 0;
     }
 
-    .vd-hero-line small {
-      font-size: 12px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.38);
-      letter-spacing: 0.06em;
+    .vd-hero-track-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      flex-shrink: 0;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 8px;
+    }
+
+    .vd-hero-track {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .vd-tile {
+      flex: 1 1 140px;
+      min-width: min(160px, 100%);
+      max-width: 220px;
+      border-radius: 28px;
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--tile-bg, rgba(255, 255, 255, 0.06));
+      color: var(--tile-fg, #fff);
+      border: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .vd-tile--appt-pink {
+      --tile-bg: var(--vd-pink);
+      --tile-fg: #fff;
+    }
+
+    .vd-tile--appt-purple {
+      --tile-bg: var(--vd-purple);
+      --tile-fg: #fff;
+    }
+
+    .vd-tile--appt-cyan {
+      --tile-bg: var(--vd-cyan);
+      --tile-fg: #fff;
+    }
+
+    .vd-tile--task-lime {
+      --tile-bg: var(--vd-lime);
+      --tile-fg: #12100e;
+    }
+
+    .vd-tile--task-amber {
+      --tile-bg: var(--vd-amber);
+      --tile-fg: #1a1208;
+    }
+
+    .vd-tile--task-muted {
+      --tile-bg: rgba(255, 255, 255, 0.08);
+      --tile-fg: rgba(255, 255, 255, 0.92);
+    }
+
+    .vd-tile-kicker {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    .vd-tile-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+
+    .vd-tile-meta {
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.82;
     }
 
     .vd-split {
       display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
-      gap: 28px;
+      grid-template-columns: minmax(0, 1.42fr) minmax(0, 0.78fr);
+      gap: 32px;
       align-items: start;
     }
 
@@ -713,115 +788,205 @@
       .vd-split {
         grid-template-columns: 1fr;
       }
+
+      .vd-hero {
+        border-radius: 28px;
+        padding: 28px 24px 24px;
+      }
     }
 
     .vd-panel {
-      border-radius: 22px;
-      padding: 24px 24px 20px;
-      border: 1px solid rgba(255, 255, 255, 0.065);
-      background: #101010;
+      border-radius: 32px;
+      padding: 0;
+      border: none;
+      background: transparent;
     }
 
     .vd-panel--waiting {
-      background: linear-gradient(180deg, #131313 0%, #0d0d0d 100%);
-      border-color: rgba(255, 255, 255, 0.09);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+      padding: 4px 0 8px;
     }
 
     .vd-panel--projects {
-      background: #0c0c0c;
-      border-color: rgba(255, 255, 255, 0.05);
+      padding: 8px 0;
+      border-radius: 28px;
+      padding: 22px 20px 20px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .vd-panel-head {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 16px;
+      margin-bottom: 22px;
     }
 
     .vd-panel-title {
       margin: 0;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      color: rgba(255, 255, 255, 0.92);
+      font-size: clamp(22px, 2.4vw, 28px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: #fff;
+    }
+
+    .vd-panel-title-count {
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 0.72em;
+      letter-spacing: -0.02em;
     }
 
     .vd-panel-link {
       font-size: 12px;
-      font-weight: 600;
-      color: var(--dash-accent);
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.55);
       text-decoration: none;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
     .vd-panel-link:hover {
-      text-decoration: underline;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .vd-wait-list {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
     }
 
-    .vd-wait-item {
-      padding-bottom: 18px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    .vd-focus-card {
+      --fc-bg: var(--vd-pink);
+      --fc-fg: #fff;
+      border-radius: 32px;
+      padding: 22px 24px 24px;
+      background: var(--fc-bg);
+      color: var(--fc-fg);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 12px 32px rgba(0, 0, 0, 0.25);
     }
 
-    .vd-wait-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
+    .vd-focus-card--0 {
+      --fc-bg: var(--vd-pink);
+      --fc-fg: #fff;
     }
 
-    .vd-wait-title {
-      font-size: 16px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.94);
-      margin-bottom: 6px;
+    .vd-focus-card--1 {
+      --fc-bg: var(--vd-lime);
+      --fc-fg: #14120e;
     }
 
-    .vd-wait-meta {
+    .vd-focus-card--2 {
+      --fc-bg: var(--vd-purple);
+      --fc-fg: #fff;
+    }
+
+    .vd-focus-card--3 {
+      --fc-bg: var(--vd-cyan);
+      --fc-fg: #fff;
+    }
+
+    .vd-focus-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .vd-focus-kicker {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.78;
+    }
+
+    .vd-focus-glyph {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: rgba(0, 0, 0, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .vd-focus-card--1 .vd-focus-glyph {
+      background: rgba(255, 255, 255, 0.35);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .vd-focus-title {
+      font-size: clamp(18px, 2vw, 22px);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .vd-focus-sub {
       font-size: 13px;
-      color: rgba(255, 255, 255, 0.45);
+      font-weight: 600;
+      opacity: 0.72;
     }
 
     .vd-muted-line {
-      margin: 4px 0 0;
+      margin: 8px 0 0;
       font-size: 14px;
-      line-height: 1.5;
-      color: rgba(255, 255, 255, 0.32);
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.28);
+      padding: 8px 4px 0;
     }
 
     .vd-project-cards {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .vd-project-card {
-      border-radius: 16px;
-      padding: 14px 16px;
+      border-radius: 22px;
+      padding: 14px 16px 14px 18px;
       border: 1px solid rgba(255, 255, 255, 0.06);
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(0, 0, 0, 0.35);
       display: flex;
       flex-direction: column;
       gap: 4px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .vd-project-card:nth-child(4n + 1) {
+      border-left: 3px solid var(--vd-pink);
+    }
+
+    .vd-project-card:nth-child(4n + 2) {
+      border-left: 3px solid var(--vd-lime);
+    }
+
+    .vd-project-card:nth-child(4n + 3) {
+      border-left: 3px solid var(--vd-purple);
     }
 
     .vd-project-name {
       font-size: 14px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.9);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: rgba(255, 255, 255, 0.94);
     }
 
     .vd-project-stat {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.45);
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.42);
     }
 
     .chat-dock-inner {
@@ -1895,14 +2060,25 @@
           <section class="vd-hero" aria-labelledby="vdHeroSummary">
             <p class="vd-hero-eyebrow">Vandaag</p>
             <p id="vdHeroSummary" class="vd-hero-summary"></p>
-            <div id="vdHeroDetail" class="vd-hero-detail" hidden></div>
+            <div id="vdHeroToday" class="vd-hero-today" hidden>
+              <div id="vdHeroApptBlock" class="vd-hero-block" hidden>
+                <div class="vd-hero-track-label">Afspraken</div>
+                <div id="vdHeroTrackAppts" class="vd-hero-track"></div>
+              </div>
+              <div id="vdHeroTaskBlock" class="vd-hero-block" hidden>
+                <div class="vd-hero-track-label">Taken vandaag</div>
+                <div id="vdHeroTrackTasks" class="vd-hero-track"></div>
+              </div>
+            </div>
           </section>
 
           <div class="vd-split">
             <div class="vd-col vd-col-main">
               <section class="vd-panel vd-panel--waiting" aria-labelledby="vdWaitingHeading">
                 <div class="vd-panel-head">
-                  <h2 id="vdWaitingHeading" class="vd-panel-title">Wacht op je</h2>
+                  <h2 id="vdWaitingHeading" class="vd-panel-title">
+                    Wacht op je<span id="vdWaitingCount" class="vd-panel-title-count" hidden></span>
+                  </h2>
                   <a class="vd-panel-link" href="#/inbox">Inbox</a>
                 </div>
                 <div id="vdWaitingBody" class="vd-wait-list"></div>
@@ -2607,15 +2783,43 @@
       return `Vandaag heb je ${bits.join(' en ')}.`;
     }
 
+    const VANDAAG_APPT_TILE_CLASSES = ['vd-tile--appt-pink', 'vd-tile--appt-purple', 'vd-tile--appt-cyan'];
+    const VANDAAG_TASK_TILE_CLASSES = ['vd-tile--task-lime', 'vd-tile--task-amber', 'vd-tile--task-muted'];
+
+    function vandaagHeroApptTileClass(i) {
+      return VANDAAG_APPT_TILE_CLASSES[i % VANDAAG_APPT_TILE_CLASSES.length];
+    }
+
+    function vandaagHeroTaskTileClass(i) {
+      return VANDAAG_TASK_TILE_CLASSES[i % VANDAAG_TASK_TILE_CLASSES.length];
+    }
+
     function renderVandaagDashboard() {
       if (!useNewShell()) return;
 
       const summaryEl = document.getElementById('vdHeroSummary');
-      const detailEl = document.getElementById('vdHeroDetail');
+      const heroToday = document.getElementById('vdHeroToday');
+      const apptBlock = document.getElementById('vdHeroApptBlock');
+      const taskBlock = document.getElementById('vdHeroTaskBlock');
+      const trackAppts = document.getElementById('vdHeroTrackAppts');
+      const trackTasks = document.getElementById('vdHeroTrackTasks');
       const waitingBody = document.getElementById('vdWaitingBody');
+      const waitingCountEl = document.getElementById('vdWaitingCount');
       const projectsCol = document.getElementById('vdProjectsCol');
       const projectsBody = document.getElementById('vdProjectsBody');
-      if (!summaryEl || !detailEl || !waitingBody || !projectsCol || !projectsBody) return;
+      if (
+        !summaryEl ||
+        !heroToday ||
+        !apptBlock ||
+        !taskBlock ||
+        !trackAppts ||
+        !trackTasks ||
+        !waitingBody ||
+        !projectsCol ||
+        !projectsBody
+      ) {
+        return;
+      }
 
       const todayKey = formatLocalDateKey(getTodayStart());
 
@@ -2634,38 +2838,56 @@
 
       summaryEl.textContent = vandaagBuildHeroSummary(apptCount, taskCount);
 
-      const detailLines = [];
-      for (const it of apptsTodayAll.slice(0, 3)) {
-        detailLines.push({
-          tag: 'Afspraak',
-          title: it.title || 'Afspraak',
-          meta: formatShortDate(it.date || '', it.time || '')
-        });
-      }
-      const room = Math.max(0, 5 - detailLines.length);
-      for (const it of tasksTodayAll.slice(0, room)) {
-        detailLines.push({
-          tag: 'Taak',
-          title: it.title || 'Taak',
-          meta: [it.status, it.priority].filter(Boolean).join(' · ') || '—'
-        });
-      }
+      const apptsHero = apptsTodayAll.slice(0, Math.min(3, apptsTodayAll.length));
+      const taskHeroCap = Math.max(0, 5 - apptsHero.length);
+      const tasksHero = tasksTodayAll.slice(0, taskHeroCap);
 
       if (apptCount === 0 && taskCount === 0) {
-        detailEl.hidden = true;
-        detailEl.innerHTML = '';
+        heroToday.hidden = true;
+        apptBlock.hidden = true;
+        taskBlock.hidden = true;
+        trackAppts.innerHTML = '';
+        trackTasks.innerHTML = '';
       } else {
-        detailEl.hidden = false;
-        detailEl.innerHTML = detailLines
-          .map(
-            (row) => `
-          <div class="vd-hero-line">
-            <span>${escapeHtml(row.title)}</span>
-            <small>${escapeHtml(row.tag)} · ${escapeHtml(row.meta)}</small>
-          </div>
-        `
-          )
-          .join('');
+        heroToday.hidden = false;
+
+        if (apptsHero.length) {
+          apptBlock.hidden = false;
+          trackAppts.innerHTML = apptsHero
+            .map((it, i) => {
+              const cls = vandaagHeroApptTileClass(i);
+              const meta = formatShortDate(it.date || '', it.time || '');
+              return `
+            <div class="vd-tile ${cls}">
+              <span class="vd-tile-kicker">Afspraak</span>
+              <span class="vd-tile-title">${escapeHtml(it.title || 'Afspraak')}</span>
+              <span class="vd-tile-meta">${escapeHtml(meta || '—')}</span>
+            </div>`;
+            })
+            .join('');
+        } else {
+          apptBlock.hidden = true;
+          trackAppts.innerHTML = '';
+        }
+
+        if (tasksHero.length) {
+          taskBlock.hidden = false;
+          trackTasks.innerHTML = tasksHero
+            .map((it, i) => {
+              const cls = vandaagHeroTaskTileClass(i);
+              const meta = [it.status, it.priority].filter(Boolean).join(' · ') || '—';
+              return `
+            <div class="vd-tile ${cls}">
+              <span class="vd-tile-kicker">Taak</span>
+              <span class="vd-tile-title">${escapeHtml(it.title || 'Taak')}</span>
+              <span class="vd-tile-meta">${escapeHtml(meta)}</span>
+            </div>`;
+            })
+            .join('');
+        } else {
+          taskBlock.hidden = true;
+          trackTasks.innerHTML = '';
+        }
       }
 
       const waiting = (dashboardRawData.tasks || [])
@@ -2675,18 +2897,33 @@
         })
         .slice(0, 4);
 
+      if (waitingCountEl) {
+        if (waiting.length) {
+          waitingCountEl.hidden = false;
+          waitingCountEl.textContent = ` (${waiting.length})`;
+        } else {
+          waitingCountEl.hidden = true;
+          waitingCountEl.textContent = '';
+        }
+      }
+
       if (waiting.length) {
         waitingBody.innerHTML = waiting
-          .map((it) => {
-            const meta = [it.status, it.date ? formatShortDate(it.date, it.time || '') : '']
+          .map((it, i) => {
+            const kicker = [it.status, it.date ? formatShortDate(it.date, it.time || '') : '']
               .filter(Boolean)
               .join(' · ');
+            const proj = String(it.project || '').trim();
+            const sub = proj ? proj : kicker || '—';
             return `
-            <div class="vd-wait-item">
-              <div class="vd-wait-title">${escapeHtml(it.title || 'Taak')}</div>
-              <div class="vd-wait-meta">${escapeHtml(meta || '—')}</div>
-            </div>
-          `;
+            <article class="vd-focus-card vd-focus-card--${i % 4}">
+              <div class="vd-focus-card-top">
+                <span class="vd-focus-kicker">${escapeHtml(kicker || 'Taak')}</span>
+                <span class="vd-focus-glyph" aria-hidden="true"></span>
+              </div>
+              <div class="vd-focus-title">${escapeHtml(it.title || 'Taak')}</div>
+              <div class="vd-focus-sub">${escapeHtml(sub)}</div>
+            </article>`;
           })
           .join('');
       } else {
