@@ -244,6 +244,14 @@ function normalizeWhitespace(str = '') {
     .trim()
 }
 
+function normalizeProjectMatchKey(raw) {
+  return normalizeWhitespace(
+    String(raw || '')
+      .toLowerCase()
+      .replace(/[-_]+/g, ' ')
+  )
+}
+
 function normalizeType(input) {
   const raw = safeString(input).toLowerCase()
 
@@ -1185,19 +1193,100 @@ async function normalizeReviewPayload(aiResult) {
   }
 
   const uniqueItems = Array.from(uniqueMap.values())
-  const validatedItems = enrichReviewItemsWithValidation(uniqueItems)
+  const itemsWithProjectPrep = uniqueItems.map(item => {
+    const projectNorm = normalizeWhitespace(item.project)
+    return {
+      ...item,
+      project_label: projectNorm || null,
+      project_resolution: { resolved_id: null, candidates: [] }
+    }
+  })
+
+  let itemsForValidation = itemsWithProjectPrep
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id, name')
+      .or('status.is.null,status.eq.active')
+
+    if (error) throw error
+
+    const rows = Array.isArray(data) ? data : []
+    itemsForValidation = itemsWithProjectPrep.map(item => {
+      if (!item.project_label || item.project_label.trim().length < 3) return item
+
+      const labelKey = normalizeProjectMatchKey(item.project_label)
+      if (!labelKey) return item
+
+      const matches = []
+      for (const row of rows) {
+        const nameKey = normalizeProjectMatchKey(row.name)
+        if (!nameKey) continue
+        if (nameKey === labelKey) {
+          matches.push({ row, kind: 'exact', score: 1 })
+        } else if (nameKey.includes(labelKey) || labelKey.includes(nameKey)) {
+          matches.push({ row, kind: 'contains', score: 0.7 })
+        }
+      }
+
+      if (!matches.length) return item
+
+      const hasExact = matches.some(m => m.kind === 'exact')
+      const pool = hasExact ? matches.filter(m => m.kind === 'exact') : matches
+
+      pool.sort((a, b) => {
+        const lenA = normalizeProjectMatchKey(a.row.name).length
+        const lenB = normalizeProjectMatchKey(b.row.name).length
+        if (lenA !== lenB) return lenA - lenB
+        return String(a.row.id).localeCompare(String(b.row.id))
+      })
+
+      const best = pool[0]
+      const winner = best.row
+
+      return {
+        ...item,
+        project_resolution: {
+          resolved_id: winner.id,
+          candidates: [{ id: winner.id, name: winner.name, score: best.score }]
+        }
+      }
+    })
+  } catch {
+    // leave itemsForValidation as itemsWithProjectPrep
+  }
+
+  for (const item of itemsForValidation) {
+    console.log('[clara review] project_resolution', item.temp_id, item.project_resolution)
+  }
+
+  const validatedItems = enrichReviewItemsWithValidation(itemsForValidation)
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
+  const reviewItemsWithProjectMatch = enrichedItems.map(item => {
+    const rid = item.project_resolution?.resolved_id
+    if (!rid) return item
+    const top = item.project_resolution?.candidates?.[0]
+    if (!top) return item
+    return {
+      ...item,
+      project_match: {
+        name: top.name,
+        confidence: top.score
+      }
+    }
+  })
+
   const review = {
     summary: safeString(aiResult?.review?.summary, 'Ik heb dit alvast klaargezet.'),
-    items: enrichedItems
+    items: reviewItemsWithProjectMatch
   }
 
-  const actions = enrichedItems.length
+  const actions = reviewItemsWithProjectMatch.length
     ? [
         { type: 'confirm_review', label: 'Opslaan' },
-        ...enrichedItems.map(item => ({
+        ...reviewItemsWithProjectMatch.map(item => ({
           type: 'edit_review_item',
           label: 'Aanpassen',
           temp_id: item.temp_id

@@ -2310,6 +2310,11 @@
       if (item.project) parts.push(item.project);
       if (item.priority) parts.push(`prio ${item.priority}`);
       if (item.status && String(item.type || '').toLowerCase() === 'taak') parts.push(item.status);
+      if (item.project_match && item.project_match.name) {
+        const c = item.project_match.confidence;
+        const scorePart = typeof c === 'number' && Number.isFinite(c) ? c.toFixed(2) : String(c ?? '');
+        parts.push(`Project: ${item.project_match.name} (confidence: ${scorePart})`);
+      }
       return parts;
     }
 
