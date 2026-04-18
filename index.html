@@ -196,8 +196,109 @@
       padding: 0;
     }
 
-    .notes-panel .panel-body {
+    .notes-panel .notes-panel-body.panel-body {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
       padding: 0;
+    }
+
+    .workshops-block {
+      flex-shrink: 0;
+      max-height: 46%;
+      overflow: auto;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px 12px;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .workshops-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .workshops-title {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .workshop-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .workshop-form .field-span-2 {
+      grid-column: 1 / -1;
+    }
+
+    .workshop-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 10px 8px;
+      margin-bottom: 8px;
+      background: var(--ghost);
+    }
+
+    .workshop-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .workshop-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .workshop-card-meta {
+      font-size: 11px;
+      color: var(--soft);
+      margin-top: 4px;
+    }
+
+    .workshop-card-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .workshop-expand {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+
+    .workshop-participant {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .workshop-participant:last-child {
+      border-bottom: none;
+    }
+
+    .notes-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     .review-pane {
@@ -1269,7 +1370,10 @@
           <div class="panel-title">Notities</div>
           <div class="panel-meta" id="notesMeta"></div>
         </div>
-        <div class="panel-body" id="notes"></div>
+        <div class="panel-body notes-panel-body">
+          <div id="workshopsBlock" class="workshops-block" aria-label="LaLampe workshops"></div>
+          <div id="notes" class="notes-scroll"></div>
+        </div>
       </section>
 
       <section class="stack-panel chat-panel">
@@ -1345,9 +1449,12 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v6.2 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v6.3 • ${AUTO_VERSION}`;
 
-    let dashboardRawData = { agenda: [], tasks: [], notes: [] };
+    let dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [] };
+    let expandedWorkshopId = null;
+    let expandedWorkshopLoading = false;
+    let expandedWorkshopDetail = null;
     let dashboardEditIndex = new Map();
 
     let selectedAgendaDayKey = null;
@@ -2175,6 +2282,397 @@
       `;
     }
 
+    const WORKSHOP_STATUS_OPTIONS = [
+      'draft', 'planned', 'open', 'full', 'completed', 'cancelled'
+    ];
+
+    const PARTICIPANT_STATUS_OPTIONS = [
+      'interested', 'invited', 'confirmed', 'paid', 'attended', 'cancelled', 'no_show'
+    ];
+
+    function formatWorkshopDate(value) {
+      const s = String(value || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || '—';
+      const [y, m, d] = s.split('-');
+      return `${d}-${m}-${y}`;
+    }
+
+    function renderWorkshops() {
+      const host = document.getElementById('workshopsBlock');
+      if (!host) return;
+
+      const workshops = Array.isArray(dashboardRawData.workshops) ? dashboardRawData.workshops : [];
+
+      const cardsHtml = workshops.map((w) => {
+        const isOpen = expandedWorkshopId === w.id;
+        const conf = Number(w.participant_confirmed || 0);
+        const tot = Number(w.participant_total || 0);
+        const max = Number(w.max_participants || 0);
+        let expandBlock = '';
+
+        if (isOpen) {
+          if (expandedWorkshopLoading) {
+            expandBlock = '<div class="workshop-expand">Laden…</div>';
+          } else if (
+            expandedWorkshopDetail &&
+            expandedWorkshopDetail.workshop &&
+            expandedWorkshopDetail.workshop.id === w.id
+          ) {
+            const parts = expandedWorkshopDetail.participants || [];
+            const partRows = parts
+              .map(
+                (p) => `
+              <div class="workshop-participant">
+                <span>${escapeHtml(p.name)}</span>
+                <span style="display:flex;align-items:center;gap:6px;">
+                  <select class="select" data-participant-id="${escapeHtml(p.id)}" onchange="onWorkshopParticipantStatusChange(this)">
+                    ${PARTICIPANT_STATUS_OPTIONS.map(
+                      (st) =>
+                        `<option value="${escapeHtml(st)}" ${
+                          String(p.participant_status) === st ? 'selected' : ''
+                        }>${escapeHtml(st)}</option>`
+                    ).join('')}
+                  </select>
+                  <button type="button" class="icon-btn" onclick="requestDeleteWorkshopParticipant('${escapeHtml(p.id)}')" aria-label="Verwijder deelnemer">
+                    ${deleteIconSvg()}
+                  </button>
+                </span>
+              </div>
+            `
+              )
+              .join('');
+
+            expandBlock = `
+              <div class="workshop-expand">
+                ${
+                  partRows ||
+                  '<div class="empty" style="padding:8px 0;">Nog geen deelnemers</div>'
+                }
+                <div class="field" style="margin-top:8px;">
+                  <div class="label">Nieuwe deelnemer</div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <input class="input" id="newParticipantName_${escapeHtml(w.id)}" placeholder="Naam" style="flex:1; min-width:120px;" />
+                    <button type="button" class="btn primary" onclick="submitWorkshopParticipant('${escapeHtml(w.id)}')">Toevoegen</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        }
+
+        return `
+          <div class="workshop-card" data-workshop-id="${escapeHtml(w.id)}">
+            <div class="workshop-card-head">
+              <div>
+                <div class="workshop-card-title">${escapeHtml(w.title)}</div>
+                <div class="workshop-card-meta">${escapeHtml(formatWorkshopDate(w.workshop_date))} · ${conf}/${max} bevestigd · ${tot} totaal</div>
+              </div>
+              <div class="workshop-card-actions">
+                <button type="button" class="btn ghost" onclick="toggleWorkshopExpand('${escapeHtml(w.id)}')">${isOpen ? 'Sluit' : 'Details'}</button>
+                <button type="button" class="icon-btn" onclick="requestDeleteWorkshop('${escapeHtml(w.id)}')" aria-label="Verwijder sessie">
+                  ${deleteIconSvg()}
+                </button>
+              </div>
+            </div>
+            <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+              <span class="label" style="font-size:10px; margin:0;">Status</span>
+              <select class="select" data-workshop-id="${escapeHtml(w.id)}" onchange="onWorkshopStatusChange(this)">
+                ${WORKSHOP_STATUS_OPTIONS.map(
+                  (st) =>
+                    `<option value="${escapeHtml(st)}" ${
+                      String(w.status) === st ? 'selected' : ''
+                    }>${escapeHtml(st)}</option>`
+                ).join('')}
+              </select>
+            </div>
+            ${expandBlock}
+          </div>
+        `;
+      }).join('');
+
+      host.innerHTML = `
+        <div class="workshops-head">
+          <div class="workshops-title">LaLampe · workshops</div>
+        </div>
+        <div class="workshop-form">
+          <div class="field field-span-2">
+            <div class="label">Nieuwe sessie</div>
+            <input class="input" id="workshopNewTitle" placeholder="Titel" />
+          </div>
+          <div class="field">
+            <div class="label">Datum</div>
+            <input class="input" id="workshopNewDate" type="date" />
+          </div>
+          <div class="field">
+            <div class="label">Max</div>
+            <input class="input" id="workshopNewMax" type="number" min="1" max="99" value="4" />
+          </div>
+          <div class="field-span-2">
+            <button type="button" class="btn primary" onclick="submitNewWorkshop()">Sessie aanmaken</button>
+          </div>
+        </div>
+        ${
+          cardsHtml ||
+          '<div class="empty" style="padding:8px 0;">Nog geen workshops.</div>'
+        }
+      `;
+    }
+
+    async function toggleWorkshopExpand(workshopId) {
+      const id = String(workshopId || '').trim();
+      if (!id) return;
+
+      if (expandedWorkshopId === id) {
+        expandedWorkshopId = null;
+        expandedWorkshopDetail = null;
+        expandedWorkshopLoading = false;
+        renderAllPanels();
+        return;
+      }
+
+      expandedWorkshopId = id;
+      expandedWorkshopDetail = null;
+      expandedWorkshopLoading = true;
+      renderAllPanels();
+
+      try {
+        const res = await fetch(`/api/workshops?id=${encodeURIComponent(id)}`, { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.workshop) {
+          expandedWorkshopDetail = {
+            workshop: data.workshop,
+            participants: data.participants || []
+          };
+        } else {
+          expandedWorkshopDetail = { workshop: { id }, participants: [] };
+        }
+      } catch {
+        expandedWorkshopDetail = { workshop: { id }, participants: [] };
+      }
+
+      expandedWorkshopLoading = false;
+      renderAllPanels();
+    }
+
+    async function refreshExpandedWorkshopIfNeeded() {
+      if (!expandedWorkshopId) return;
+
+      expandedWorkshopLoading = true;
+      renderAllPanels();
+
+      try {
+        const res = await fetch(`/api/workshops?id=${encodeURIComponent(expandedWorkshopId)}`, {
+          cache: 'no-store'
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.workshop) {
+          expandedWorkshopDetail = {
+            workshop: data.workshop,
+            participants: data.participants || []
+          };
+        }
+      } finally {
+        expandedWorkshopLoading = false;
+        renderAllPanels();
+      }
+    }
+
+    async function submitNewWorkshop() {
+      const title = String(document.getElementById('workshopNewTitle')?.value || '').trim();
+      const workshopDate = String(document.getElementById('workshopNewDate')?.value || '').trim();
+      const maxRaw = String(document.getElementById('workshopNewMax')?.value || '4').trim();
+      const maxParticipants = Math.max(1, Math.min(99, Number(maxRaw) || 4));
+
+      if (!title || !workshopDate) {
+        addChatBubble('Vul titel en datum in voor de nieuwe sessie.', 'clara');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/workshops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            workshop_date: workshopDate,
+            max_participants: maxParticipants,
+            status: 'planned',
+            project_name: 'LaLampe'
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          addChatBubble(data?.details || data?.error || 'Workshop aanmaken mislukt.', 'clara');
+          return;
+        }
+
+        document.getElementById('workshopNewTitle').value = '';
+        document.getElementById('workshopNewDate').value = '';
+        document.getElementById('workshopNewMax').value = '4';
+        await loadDashboard();
+      } catch (e) {
+        addChatBubble(`Verbinding mislukt: ${e.message || 'unknown'}`, 'clara');
+      }
+    }
+
+    async function submitWorkshopParticipant(workshopId) {
+      const id = String(workshopId || '').trim();
+      const name = String(document.getElementById(`newParticipantName_${id}`)?.value || '').trim();
+
+      if (!id || !name) {
+        addChatBubble('Vul een naam in voor de deelnemer.', 'clara');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/workshops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            op: 'add_participant',
+            workshop_id: id,
+            name,
+            participant_status: 'interested',
+            payment_status: 'unpaid'
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          addChatBubble(data?.details || data?.error || 'Deelnemer toevoegen mislukt.', 'clara');
+          return;
+        }
+
+        const input = document.getElementById(`newParticipantName_${id}`);
+        if (input) input.value = '';
+        await loadDashboard();
+        await refreshExpandedWorkshopIfNeeded();
+      } catch (e) {
+        addChatBubble(`Verbinding mislukt: ${e.message || 'unknown'}`, 'clara');
+      }
+    }
+
+    async function onWorkshopStatusChange(el) {
+      const workshopId = el?.dataset?.workshopId;
+      const status = String(el?.value || '').trim();
+      if (!workshopId || !status) return;
+
+      try {
+        const res = await fetch('/api/workshops', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            op: 'update_workshop',
+            id: workshopId,
+            fields: { status }
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          addChatBubble(data?.details || data?.error || 'Status bijwerken mislukt.', 'clara');
+          await loadDashboard();
+          return;
+        }
+
+        await loadDashboard();
+        await refreshExpandedWorkshopIfNeeded();
+      } catch (e) {
+        addChatBubble(`Verbinding mislukt: ${e.message || 'unknown'}`, 'clara');
+      }
+    }
+
+    async function onWorkshopParticipantStatusChange(el) {
+      const participantId = el?.dataset?.participantId;
+      const participant_status = String(el?.value || '').trim();
+      if (!participantId || !participant_status) return;
+
+      try {
+        const res = await fetch('/api/workshops', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            op: 'update_participant',
+            id: participantId,
+            fields: { participant_status }
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          addChatBubble(data?.details || data?.error || 'Deelnemerstatus mislukt.', 'clara');
+          await loadDashboard();
+          await refreshExpandedWorkshopIfNeeded();
+          return;
+        }
+
+        await loadDashboard();
+        await refreshExpandedWorkshopIfNeeded();
+      } catch (e) {
+        addChatBubble(`Verbinding mislukt: ${e.message || 'unknown'}`, 'clara');
+      }
+    }
+
+    function requestDeleteWorkshop(workshopId) {
+      const id = String(workshopId || '').trim();
+      const w = (dashboardRawData.workshops || []).find((x) => x.id === id);
+      const title = w?.title || 'Workshop';
+
+      openConfirmDialog({
+        title,
+        subtitle: 'Deze sessie en alle deelnemers worden verwijderd.',
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`/api/workshops?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              addChatBubble(data?.details || data?.error || 'Verwijderen mislukt.', 'clara');
+              return;
+            }
+
+            if (expandedWorkshopId === id) {
+              expandedWorkshopId = null;
+              expandedWorkshopDetail = null;
+              expandedWorkshopLoading = false;
+            }
+
+            await loadDashboard();
+          } catch (e) {
+            addChatBubble(`Verbinding mislukt: ${e.message || 'unknown'}`, 'clara');
+          }
+        }
+      });
+    }
+
+    function requestDeleteWorkshopParticipant(participantId) {
+      const id = String(participantId || '').trim();
+
+      openConfirmDialog({
+        title: 'Deelnemer',
+        subtitle: 'Deze deelnemer wordt van de sessie gehaald.',
+        onConfirm: async () => {
+          try {
+            const res = await fetch(`/api/workshops?participant_id=${encodeURIComponent(id)}`, {
+              method: 'DELETE'
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              addChatBubble(data?.details || data?.error || 'Verwijderen mislukt.', 'clara');
+              return;
+            }
+
+            await loadDashboard();
+            await refreshExpandedWorkshopIfNeeded();
+          } catch (e) {
+            addChatBubble(`Verbinding mislukt: ${e.message || 'unknown'}`, 'clara');
+          }
+        }
+      });
+    }
+
     function renderNotes(data = {}) {
       const el = document.getElementById('notes');
 
@@ -2209,6 +2707,7 @@
       renderAgenda(dashboardRawData);
       renderTasks(dashboardRawData);
       renderAppointments(dashboardRawData);
+      renderWorkshops();
       renderNotes(dashboardRawData);
       syncAppModes();
       requestAnimationFrame(scrollChatToBottomIfNearEnd);
@@ -2970,7 +3469,8 @@
         dashboardRawData = {
           agenda: Array.isArray(data?.agenda) ? data.agenda : [],
           tasks: Array.isArray(data?.tasks) ? data.tasks : [],
-          notes: Array.isArray(data?.notes) ? data.notes : []
+          notes: Array.isArray(data?.notes) ? data.notes : [],
+          workshops: Array.isArray(data?.workshops) ? data.workshops : []
         };
 
         buildDashboardEditIndex(dashboardRawData);
@@ -2981,7 +3481,7 @@
 
         renderAllPanels();
       } catch (error) {
-        dashboardRawData = { agenda: [], tasks: [], notes: [] };
+        dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [] };
         buildDashboardEditIndex(dashboardRawData);
         renderAllPanels();
       }
@@ -3048,6 +3548,13 @@
     window.requestReviewDelete = requestReviewDelete;
     window.selectAgendaDay = selectAgendaDay;
     window.sendChatWithText = sendChatWithText;
+    window.toggleWorkshopExpand = toggleWorkshopExpand;
+    window.submitNewWorkshop = submitNewWorkshop;
+    window.submitWorkshopParticipant = submitWorkshopParticipant;
+    window.onWorkshopStatusChange = onWorkshopStatusChange;
+    window.onWorkshopParticipantStatusChange = onWorkshopParticipantStatusChange;
+    window.requestDeleteWorkshop = requestDeleteWorkshop;
+    window.requestDeleteWorkshopParticipant = requestDeleteWorkshopParticipant;
 
     syncViewportHeight();
     setInterval(() => {
