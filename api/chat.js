@@ -1265,10 +1265,9 @@ async function normalizeReviewPayload(aiResult) {
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
   const reviewItemsWithProjectMatch = enrichedItems.map(item => {
-    const rid = item.project_resolution?.resolved_id
-    if (!rid) return item
     const top = item.project_resolution?.candidates?.[0]
-    if (!top) return item
+    const rid = item.project_resolution?.resolved_id ?? top?.id
+    if (!top || rid == null || rid === '') return item
     return {
       ...item,
       project_match: {
