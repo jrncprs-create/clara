@@ -26,6 +26,9 @@
       --error-bg: rgba(255,255,255,0.06);
       --transition: 280ms cubic-bezier(.2,.8,.2,1);
       --app-height: 100dvh;
+      --dash-accent: rgba(130, 200, 255, 0.75);
+      --dash-card: #121212;
+      --dash-card-border: rgba(255, 255, 255, 0.08);
     }
 
     html, body {
@@ -55,6 +58,8 @@
         #000;
       min-height: var(--app-height);
       height: var(--app-height);
+      display: flex;
+      flex-direction: column;
     }
 
     body, button, input, textarea, select {
@@ -78,15 +83,134 @@
       user-select: none;
     }
 
+    .app-shell {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .main-nav {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .main-nav button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--ghost);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition), border-color var(--transition);
+    }
+
+    .main-nav button:hover {
+      color: var(--text);
+      border-color: var(--line-strong);
+    }
+
+    .main-nav button.is-active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
     .app {
       width: 100%;
-      height: calc(var(--app-height) - 28px);
+      flex: 1;
       min-height: 0;
       display: grid;
       grid-template-columns: 1.08fr 1fr 1fr;
       grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
       gap: 14px;
-      transition: grid-template-rows var(--transition);
+      transition: grid-template-rows var(--transition), grid-template-columns var(--transition);
+    }
+
+    .app-shell[data-main-tab="overview"] .right-stack,
+    .app-shell[data-main-tab="overview"] .lalampe-panel {
+      display: none !important;
+    }
+
+    .app-shell[data-main-tab="overview"] .app {
+      grid-template-columns: 1.08fr 1fr;
+    }
+
+    .app-shell[data-main-tab="overview"] .agenda-panel {
+      grid-column: 1;
+      grid-row: 1 / 3;
+    }
+
+    .app-shell[data-main-tab="overview"] .tasks-panel {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .app-shell[data-main-tab="overview"] .appointments-panel {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .app-shell[data-main-tab="notes"] .agenda-panel,
+    .app-shell[data-main-tab="notes"] .tasks-panel,
+    .app-shell[data-main-tab="notes"] .appointments-panel,
+    .app-shell[data-main-tab="notes"] .lalampe-panel {
+      display: none !important;
+    }
+
+    .app-shell[data-main-tab="notes"] .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .app-shell[data-main-tab="notes"] .right-stack {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .app-shell[data-main-tab="lalampe"] .agenda-panel,
+    .app-shell[data-main-tab="lalampe"] .tasks-panel,
+    .app-shell[data-main-tab="lalampe"] .appointments-panel,
+    .app-shell[data-main-tab="lalampe"] .right-stack {
+      display: none !important;
+    }
+
+    .app-shell[data-main-tab="lalampe"] .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .app-shell[data-main-tab="lalampe"] .lalampe-panel {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .lalampe-panel {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .lalampe-panel .panel-body {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .lalampe-panel .workshops-block {
+      max-height: none;
+      flex: 1;
+      border-bottom: none;
     }
 
     .panel {
@@ -196,19 +320,13 @@
       padding: 0;
     }
 
-    .notes-panel .notes-panel-body.panel-body {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
+    .notes-panel .panel-body {
       padding: 0;
     }
 
     .workshops-block {
       flex-shrink: 0;
-      max-height: 46%;
       overflow: auto;
-      border-bottom: 1px solid var(--line);
       padding: 10px 12px 12px;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -293,18 +411,10 @@
       border-bottom: none;
     }
 
-    .notes-scroll {
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-    }
-
     .review-pane {
-      position: absolute;
-      inset: 0;
-      z-index: 8;
+      position: fixed;
+      inset: 14px;
+      z-index: 60;
       border: 1px solid var(--line);
       border-radius: 22px;
       background: rgba(8,8,8,0.985);
@@ -318,22 +428,253 @@
       transition: transform var(--transition), opacity var(--transition);
     }
 
-    .app.review-mode .chat-panel {
-      height: 100%;
-      z-index: 6;
-    }
-
-    .app.review-mode .notes-panel {
-      transform: translateY(36px);
-      opacity: 0;
+    body.review-mode #newAppShell,
+    body.review-mode #legacyAppShell {
+      filter: blur(10px);
+      opacity: 0.45;
       pointer-events: none;
-      filter: blur(8px);
     }
 
-    .app.review-mode .review-pane {
+    body.review-mode .review-pane {
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
+      filter: none;
+    }
+
+    body.clara-new-ui .legacy-app-shell[hidden] {
+      display: none !important;
+    }
+
+    body.clara-legacy-ui .new-app-shell[hidden] {
+      display: none !important;
+    }
+
+    .new-app-shell {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+      border: 1px solid var(--dash-card-border);
+      border-radius: 22px;
+      overflow: hidden;
+      background: #050505;
+    }
+
+    .new-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      padding: 22px 16px 20px;
+      border-right: 1px solid var(--dash-card-border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #080808;
+    }
+
+    .new-sidebar-brand {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .new-sidebar button {
+      appearance: none;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .new-sidebar button:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .new-sidebar button.is-active {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 0 0 1px var(--dash-card-border);
+    }
+
+    .new-sidebar-hint {
+      margin-top: auto;
+      font-size: 11px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.28);
+      padding: 10px 4px 0;
+    }
+
+    .new-main-col {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .new-views {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 28px 32px 32px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .new-view[hidden] {
+      display: none !important;
+    }
+
+    .new-page-title {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+
+    .new-page-sub {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 0 0 28px;
+    }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    @media (max-width: 980px) {
+      .dash-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .new-sidebar {
+        width: 200px;
+      }
+    }
+
+    .dash-card {
+      background: var(--dash-card);
+      border: 1px solid var(--dash-card-border);
+      border-radius: 18px;
+      padding: 22px 22px 18px;
+      min-height: 120px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .dash-card-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .dash-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .dash-card-link {
+      font-size: 12px;
+      color: var(--dash-accent);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .dash-card-link:hover {
+      text-decoration: underline;
+    }
+
+    .dash-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .dash-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .dash-row:last-child {
+      border-bottom: none;
+    }
+
+    .dash-row-meta {
+      font-size: 12px;
+      color: var(--soft);
+      flex-shrink: 0;
+    }
+
+    .dash-empty {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.28);
+      padding: 8px 0 4px;
+    }
+
+    .dash-placeholder {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 42em;
+    }
+
+    .chat-dock-inner {
+      position: absolute;
+      inset: 0;
+      min-height: 0;
+    }
+
+    .new-offscreen-chat {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .view-communicatie-inner {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(var(--app-height) - 220px);
+      height: 100%;
+      border: 1px solid var(--dash-card-border);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #0a0a0a;
+    }
+
+    .view-communicatie-inner .chat-dock-inner {
+      position: relative;
+      flex: 1;
+      min-height: min(520px, 55vh);
+    }
+
+    .view-communicatie-inner .stack-panel {
+      border-radius: 16px;
     }
 
     .app.panel-edit-tasks .tasks-panel {
@@ -1247,20 +1588,46 @@
         height: auto;
       }
 
-      .app {
+      .app-shell[data-main-tab="overview"] .app {
         height: auto;
         grid-template-columns: 1fr 1fr;
         grid-template-rows: auto auto auto;
       }
 
-      .agenda-panel { grid-column: 1 / 3; grid-row: 1; min-height: 520px; }
-      .tasks-panel { grid-column: 1; grid-row: 2; min-height: 340px; }
-      .appointments-panel { grid-column: 2; grid-row: 2; min-height: 340px; }
-
-      .right-stack {
+      .app-shell[data-main-tab="overview"] .agenda-panel {
         grid-column: 1 / 3;
-        grid-row: 3;
+        grid-row: 1;
+        min-height: 520px;
+      }
+
+      .app-shell[data-main-tab="overview"] .tasks-panel {
+        grid-column: 1;
+        grid-row: 2;
+        min-height: 340px;
+      }
+
+      .app-shell[data-main-tab="overview"] .appointments-panel {
+        grid-column: 2;
+        grid-row: 2;
+        min-height: 340px;
+      }
+
+      .app-shell[data-main-tab="notes"] .app {
+        height: auto;
+      }
+
+      .app-shell[data-main-tab="notes"] .right-stack {
+        grid-column: 1 / -1;
+        grid-row: 1;
         min-height: 740px;
+      }
+
+      .app-shell[data-main-tab="lalampe"] .app {
+        height: auto;
+      }
+
+      .app-shell[data-main-tab="lalampe"] .lalampe-panel {
+        min-height: 680px;
       }
 
       .app.panel-edit-tasks .tasks-panel,
@@ -1274,20 +1641,23 @@
     }
 
     @media (max-width: 860px) {
-      .app {
+      .app-shell[data-main-tab="overview"] .app {
         grid-template-columns: 1fr;
       }
 
-      .agenda-panel,
-      .tasks-panel,
-      .appointments-panel,
-      .right-stack {
+      .app-shell[data-main-tab="overview"] .agenda-panel,
+      .app-shell[data-main-tab="overview"] .tasks-panel,
+      .app-shell[data-main-tab="overview"] .appointments-panel {
         grid-column: auto;
         grid-row: auto;
       }
 
-      .right-stack {
+      .app-shell[data-main-tab="notes"] .right-stack {
         min-height: 860px;
+      }
+
+      .app-shell[data-main-tab="lalampe"] .lalampe-panel {
+        min-height: 720px;
       }
 
       .edit-grid,
@@ -1320,6 +1690,98 @@
 </head>
 <body>
   <div class="version" id="version"></div>
+
+  <div id="newAppShell" class="new-app-shell">
+    <aside class="new-sidebar" id="newSidebar" aria-label="Navigatie">
+      <div class="new-sidebar-brand">Clara</div>
+      <button type="button" data-new-route="vandaag">Vandaag</button>
+      <button type="button" data-new-route="inbox">Inbox</button>
+      <button type="button" data-new-route="projecten">Projecten</button>
+      <button type="button" data-new-route="workshops">Workshops</button>
+      <button type="button" data-new-route="communicatie">Communicatie</button>
+      <button type="button" data-new-route="notities">Notities</button>
+      <div class="new-sidebar-hint">
+        Klassieke weergave: zet in de console
+        <code style="color:var(--soft)">localStorage.setItem('clara_new_shell','0')</code>
+        en herlaad.
+      </div>
+    </aside>
+    <div class="new-main-col">
+      <div class="new-views" id="newViews">
+        <div id="viewVandaag" class="new-view" data-new-view="vandaag">
+          <h1 class="new-page-title">Vandaag</h1>
+          <p class="new-page-sub">Rustig overzicht — maximaal vijf items per blok.</p>
+          <div class="dash-grid">
+            <article class="dash-card">
+              <div class="dash-card-head">
+                <div class="dash-card-title">Afspraken vandaag</div>
+                <a class="dash-card-link" href="#/communicatie">Naar chat</a>
+              </div>
+              <div id="dashAppointmentsToday" class="dash-rows"></div>
+            </article>
+            <article class="dash-card">
+              <div class="dash-card-head">
+                <div class="dash-card-title">Taken vandaag</div>
+                <a class="dash-card-link" href="#/inbox">Bekijk inbox</a>
+              </div>
+              <div id="dashTasksToday" class="dash-rows"></div>
+            </article>
+            <article class="dash-card">
+              <div class="dash-card-head">
+                <div class="dash-card-title">Wacht op</div>
+                <a class="dash-card-link" href="#/inbox">Alles in inbox</a>
+              </div>
+              <div id="dashWaiting" class="dash-rows"></div>
+            </article>
+            <article class="dash-card">
+              <div class="dash-card-head">
+                <div class="dash-card-title">Projecten</div>
+                <a class="dash-card-link" href="#/projecten">Alle projecten</a>
+              </div>
+              <div id="dashProjects" class="dash-rows"></div>
+            </article>
+          </div>
+        </div>
+
+        <div id="viewInbox" class="new-view" data-new-view="inbox" hidden>
+          <h1 class="new-page-title">Inbox</h1>
+          <p class="new-page-sub">Volgt in een volgende stap.</p>
+          <p class="dash-placeholder">Hier komt je inbox — zonder backendwijziging.</p>
+        </div>
+        <div id="viewProjecten" class="new-view" data-new-view="projecten" hidden>
+          <h1 class="new-page-title">Projecten</h1>
+          <p class="new-page-sub">Volgt in een volgende stap.</p>
+          <p class="dash-placeholder">Grote projectkaarten — nog niet gebouwd.</p>
+        </div>
+        <div id="viewWorkshops" class="new-view" data-new-view="workshops" hidden>
+          <h1 class="new-page-title">Workshops</h1>
+          <p class="new-page-sub">LaLampe — aparte UI volgt.</p>
+          <p class="dash-placeholder">Geen workshoplijst in deze fase.</p>
+        </div>
+        <div id="viewCommunicatie" class="new-view" data-new-view="communicatie" hidden>
+          <h1 class="new-page-title">Communicatie</h1>
+          <p class="new-page-sub">Clara-chat</p>
+          <div id="viewCommunicatieInner" class="view-communicatie-inner">
+            <div id="communicatieMount"></div>
+          </div>
+        </div>
+        <div id="viewNotities" class="new-view" data-new-view="notities" hidden>
+          <h1 class="new-page-title">Notities</h1>
+          <p class="new-page-sub">Volgt in een volgende stap.</p>
+          <p class="dash-placeholder">Tijdloze notities — nog niet in dit scherm.</p>
+        </div>
+      </div>
+      <div id="newOffscreenChat" class="new-offscreen-chat" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div id="legacyAppShell" class="legacy-app-shell" hidden>
+  <div class="app-shell" id="appShell" data-main-tab="overview">
+    <nav class="main-nav" id="mainNav" aria-label="Hoofdnavigatie">
+      <button type="button" class="is-active" data-main-tab-btn="overview">Overzicht</button>
+      <button type="button" data-main-tab-btn="notes">Notities &amp; chat</button>
+      <button type="button" data-main-tab-btn="lalampe">LaLampe</button>
+    </nav>
 
   <div class="app" id="app">
     <section class="panel agenda-panel">
@@ -1364,67 +1826,78 @@
       <div class="panel-body" id="appointments"></div>
     </section>
 
-    <section class="right-stack">
-      <section class="stack-panel notes-panel">
-        <div class="panel-header">
-          <div class="panel-title">Notities</div>
-          <div class="panel-meta" id="notesMeta"></div>
-        </div>
-        <div class="panel-body notes-panel-body">
-          <div id="workshopsBlock" class="workshops-block" aria-label="LaLampe workshops"></div>
-          <div id="notes" class="notes-scroll"></div>
-        </div>
-      </section>
+    <div id="legacyChatDockSlot" class="right-stack">
+      <div id="chatDock" class="chat-dock-inner">
+        <section class="stack-panel notes-panel">
+          <div class="panel-header">
+            <div class="panel-title">Notities</div>
+            <div class="panel-meta" id="notesMeta"></div>
+          </div>
+          <div class="panel-body" id="notes"></div>
+        </section>
 
-      <section class="stack-panel chat-panel">
-        <div class="panel-header">
-          <div class="panel-title">Chat</div>
-          <div class="panel-meta" id="chatModeMeta"></div>
-        </div>
-        <div class="panel-body">
-          <div class="chat-shell">
-            <div id="chatMessages" class="chat-messages">
-              <div class="bubble clara">Hi. Ik ben Clara... Wat wil je me vertellen?</div>
-              <div id="chatThinking" class="chat-thinking" aria-hidden="true">
-                <span class="thinking-dot"></span>
-                <span class="thinking-dot"></span>
-                <span class="thinking-dot"></span>
+        <section class="stack-panel chat-panel">
+          <div class="panel-header">
+            <div class="panel-title">Chat</div>
+            <div class="panel-meta" id="chatModeMeta"></div>
+          </div>
+          <div class="panel-body">
+            <div class="chat-shell">
+              <div id="chatMessages" class="chat-messages">
+                <div class="bubble clara">Hi. Ik ben Clara... Wat wil je me vertellen?</div>
+                <div id="chatThinking" class="chat-thinking" aria-hidden="true">
+                  <span class="thinking-dot"></span>
+                  <span class="thinking-dot"></span>
+                  <span class="thinking-dot"></span>
+                </div>
+              </div>
+              <div class="composer">
+                <textarea id="chatInput" class="input composer-input" rows="1" placeholder="Typ hier…"></textarea>
+                <button id="chatSend" class="btn primary">OK</button>
               </div>
             </div>
-            <div class="composer">
-              <textarea id="chatInput" class="input composer-input" rows="1" placeholder="Typ hier…"></textarea>
-              <button id="chatSend" class="btn primary">OK</button>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+    </div>
 
-      <section class="review-pane" id="reviewPane">
-        <div class="review-head">
-          <div class="review-title-block">
-            <div class="review-title">Controle</div>
-            <div class="review-subtitle" id="reviewSubtitle">Controleer en pas aan waar nodig.</div>
-          </div>
-          <button class="btn ghost" id="reviewClose">Sluiten</button>
-        </div>
-
-        <div class="review-body">
-          <div class="review-summary" id="reviewSummary">
-            <div class="review-summary-text" id="reviewSummaryText"></div>
-          </div>
-          <div class="review-list" id="reviewItems"></div>
-        </div>
-
-        <div class="review-foot">
-          <div class="footer-note" id="reviewFooterText">Nog niet opgeslagen.</div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn ghost" id="reviewCancelBtn">Annuleren</button>
-            <button class="btn primary" id="reviewSaveBtn">Opslaan</button>
-          </div>
-        </div>
-      </section>
+    <section class="panel lalampe-panel" id="lalampePanel">
+      <div class="panel-header">
+        <div class="panel-title">LaLampe</div>
+        <div class="panel-meta" id="lalampeMeta"></div>
+      </div>
+      <div class="panel-body">
+        <div id="workshopsBlock" class="workshops-block" aria-label="LaLampe workshops"></div>
+      </div>
     </section>
   </div>
+  </div>
+</div>
+
+  <section class="review-pane" id="reviewPane">
+    <div class="review-head">
+      <div class="review-title-block">
+        <div class="review-title">Controle</div>
+        <div class="review-subtitle" id="reviewSubtitle">Controleer en pas aan waar nodig.</div>
+      </div>
+      <button class="btn ghost" id="reviewClose">Sluiten</button>
+    </div>
+
+    <div class="review-body">
+      <div class="review-summary" id="reviewSummary">
+        <div class="review-summary-text" id="reviewSummaryText"></div>
+      </div>
+      <div class="review-list" id="reviewItems"></div>
+    </div>
+
+    <div class="review-foot">
+      <div class="footer-note" id="reviewFooterText">Nog niet opgeslagen.</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn ghost" id="reviewCancelBtn">Annuleren</button>
+        <button class="btn primary" id="reviewSaveBtn">Opslaan</button>
+      </div>
+    </div>
+  </section>
 
   <div class="confirm-overlay" id="confirmOverlay">
     <div class="confirm-modal">
@@ -1449,9 +1922,9 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v6.3 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v6.5 • ${AUTO_VERSION}`;
 
-    let dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [] };
+    let dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [], all: [] };
     let expandedWorkshopId = null;
     let expandedWorkshopLoading = false;
     let expandedWorkshopDetail = null;
@@ -1762,18 +2235,264 @@
       const app = document.getElementById('app');
       const meta = document.getElementById('chatModeMeta');
 
-      app.classList.remove('review-mode', 'panel-edit-tasks', 'panel-edit-appointments', 'panel-edit-notes');
+      app.classList.remove('panel-edit-tasks', 'panel-edit-appointments', 'panel-edit-notes');
+      document.body.classList.remove('review-mode');
 
       if (dashboardPanelEdit?.panel === 'tasks') app.classList.add('panel-edit-tasks');
       if (dashboardPanelEdit?.panel === 'appointments') app.classList.add('panel-edit-appointments');
       if (dashboardPanelEdit?.panel === 'notes') app.classList.add('panel-edit-notes');
 
       if (isReviewOpen()) {
-        app.classList.add('review-mode');
+        document.body.classList.add('review-mode');
         meta.textContent = 'review';
       } else {
         meta.textContent = '';
       }
+    }
+
+    const MAIN_TAB_KEY = 'clara_main_tab';
+    const MAIN_TABS = new Set(['overview', 'notes', 'lalampe']);
+
+    function setMainTab(tab) {
+      const t = MAIN_TABS.has(tab) ? tab : 'overview';
+      const shell = document.getElementById('appShell');
+      if (!shell) return;
+
+      shell.dataset.mainTab = t;
+
+      try {
+        localStorage.setItem(MAIN_TAB_KEY, t);
+      } catch {
+        /* ignore */
+      }
+
+      document.querySelectorAll('[data-main-tab-btn]').forEach((btn) => {
+        const id = btn.getAttribute('data-main-tab-btn');
+        btn.classList.toggle('is-active', id === t);
+      });
+
+      syncViewportHeight();
+      requestAnimationFrame(() => renderAllPanels());
+    }
+
+    function initMainTabFromStorage() {
+      try {
+        const saved = localStorage.getItem(MAIN_TAB_KEY);
+        if (saved && MAIN_TABS.has(saved)) {
+          setMainTab(saved);
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
+
+      setMainTab('overview');
+    }
+
+    function useNewShell() {
+      try {
+        if (new URLSearchParams(window.location.search).get('legacy') === '1') return false;
+        return localStorage.getItem('clara_new_shell') !== '0';
+      } catch {
+        return true;
+      }
+    }
+
+    const NEW_HASH_ROUTES = new Set([
+      'vandaag',
+      'inbox',
+      'projecten',
+      'workshops',
+      'communicatie',
+      'notities'
+    ]);
+
+    function parseHashRoute() {
+      const raw = String(location.hash || '')
+        .replace(/^#/, '')
+        .replace(/^\//, '');
+      const seg = (raw.split('/')[0] || 'vandaag').toLowerCase();
+      return NEW_HASH_ROUTES.has(seg) ? seg : 'vandaag';
+    }
+
+    function setNewHashRoute(route) {
+      const r = NEW_HASH_ROUTES.has(route) ? route : 'vandaag';
+      const next = `#/${r}`;
+      if (location.hash !== next) location.hash = next;
+      else applyNewShellRoute();
+    }
+
+    function applyNewShellRoute() {
+      if (!useNewShell()) return;
+
+      const route = parseHashRoute();
+      const shell = document.getElementById('newAppShell');
+      if (shell) shell.dataset.route = route;
+
+      document.querySelectorAll('[data-new-route]').forEach((btn) => {
+        const id = btn.getAttribute('data-new-route');
+        btn.classList.toggle('is-active', id === route);
+      });
+
+      document.querySelectorAll('[data-new-view]').forEach((panel) => {
+        const id = panel.getAttribute('data-new-view');
+        panel.hidden = id !== route;
+      });
+
+      dockChatForShellLayout();
+      if (route === 'vandaag') renderVandaagDashboard();
+      syncViewportHeight();
+    }
+
+    function dockChatForShellLayout() {
+      const dock = document.getElementById('chatDock');
+      const legacySlot = document.getElementById('legacyChatDockSlot');
+      const mount = document.getElementById('communicatieMount');
+      const off = document.getElementById('newOffscreenChat');
+      if (!dock || !legacySlot) return;
+
+      if (!useNewShell()) {
+        if (dock.parentElement !== legacySlot) legacySlot.appendChild(dock);
+        return;
+      }
+
+      const route = parseHashRoute();
+      if (route === 'communicatie' && mount) {
+        if (dock.parentElement !== mount) mount.appendChild(dock);
+      } else if (off) {
+        if (dock.parentElement !== off) off.appendChild(dock);
+      }
+    }
+
+    function applyShellMode() {
+      const legacy = document.getElementById('legacyAppShell');
+      const novel = document.getElementById('newAppShell');
+      if (!legacy || !novel) return;
+
+      const nu = useNewShell();
+      legacy.hidden = nu;
+      novel.hidden = !nu;
+      document.body.classList.toggle('clara-new-ui', nu);
+      document.body.classList.toggle('clara-legacy-ui', !nu);
+
+      if (nu) {
+        dockChatForShellLayout();
+        applyNewShellRoute();
+      } else {
+        dockChatForShellLayout();
+        initMainTabFromStorage();
+      }
+
+      syncViewportHeight();
+      requestAnimationFrame(() => renderAllPanels());
+    }
+
+    function initNewShellHash() {
+      if (!useNewShell()) return;
+      const raw = String(location.hash || '').replace(/^#/, '').replace(/^\//, '');
+      const seg = (raw.split('/')[0] || '').toLowerCase();
+      if (!seg || !NEW_HASH_ROUTES.has(seg)) location.hash = '#/vandaag';
+    }
+
+    function topProjectsFromDashboard(max = 3) {
+      const counts = new Map();
+      const pool = Array.isArray(dashboardRawData.all) && dashboardRawData.all.length
+        ? dashboardRawData.all
+        : [...(dashboardRawData.tasks || []), ...(dashboardRawData.notes || [])];
+
+      for (const item of pool) {
+        const p = String(item?.project || '').trim();
+        if (p.length < 2) continue;
+        counts.set(p, (counts.get(p) || 0) + 1);
+      }
+
+      return Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, max)
+        .map(([name, n]) => ({ name, count: n }));
+    }
+
+    function renderVandaagDashboard() {
+      if (!useNewShell()) return;
+
+      const todayKey = formatLocalDateKey(getTodayStart());
+      const apEl = document.getElementById('dashAppointmentsToday');
+      const tEl = document.getElementById('dashTasksToday');
+      const wEl = document.getElementById('dashWaiting');
+      const pEl = document.getElementById('dashProjects');
+      if (!apEl || !tEl || !wEl || !pEl) return;
+
+      const appts = (dashboardRawData.agenda || [])
+        .filter((item) => {
+          const t = String(item?.type || '').toLowerCase();
+          if (t !== 'afspraak' && t !== 'agenda') return false;
+          return String(item?.date || '').trim() === todayKey;
+        })
+        .slice(0, 5);
+
+      const tasksToday = (dashboardRawData.tasks || [])
+        .filter((item) => String(item?.date || '').trim() === todayKey)
+        .slice(0, 5);
+
+      const waiting = (dashboardRawData.tasks || [])
+        .filter((item) => {
+          const s = String(item?.status || '').toLowerCase();
+          return s === 'wacht' || s === 'open' || s === 'nieuw';
+        })
+        .slice(0, 5);
+
+      const projects = topProjectsFromDashboard(3);
+
+      const rowHtml = (title, meta) => `
+        <div class="dash-row">
+          <div>${escapeHtml(title)}</div>
+          <div class="dash-row-meta">${escapeHtml(meta)}</div>
+        </div>
+      `;
+
+      apEl.innerHTML = appts.length
+        ? appts
+            .map((it) =>
+              rowHtml(
+                it.title || 'Afspraak',
+                formatShortDate(it.date || '', it.time || '')
+              )
+            )
+            .join('')
+        : '<div class="dash-empty">Geen afspraken vandaag.</div>';
+
+      tEl.innerHTML = tasksToday.length
+        ? tasksToday
+            .map((it) =>
+              rowHtml(
+                it.title || 'Taak',
+                [it.status, it.priority].filter(Boolean).join(' · ')
+              )
+            )
+            .join('')
+        : '<div class="dash-empty">Geen taken met vandaag als datum.</div>';
+
+      wEl.innerHTML = waiting.length
+        ? waiting
+            .map((it) =>
+              rowHtml(
+                it.title || 'Taak',
+                it.status || '—'
+              )
+            )
+            .join('')
+        : '<div class="dash-empty">Niets dat op een vervolg wacht.</div>';
+
+      pEl.innerHTML = projects.length
+        ? projects
+            .map((pr) =>
+              rowHtml(
+                pr.name,
+                `${pr.count} item${pr.count === 1 ? '' : 's'}`
+              )
+            )
+            .join('')
+        : '<div class="dash-empty">Nog geen projectlabels in items.</div>';
     }
 
     function supportsInlineEdit(item) {
@@ -2302,6 +3021,8 @@
       if (!host) return;
 
       const workshops = Array.isArray(dashboardRawData.workshops) ? dashboardRawData.workshops : [];
+      const lalampeMeta = document.getElementById('lalampeMeta');
+      if (lalampeMeta) lalampeMeta.textContent = workshops.length ? String(workshops.length) : '';
 
       const cardsHtml = workshops.map((w) => {
         const isOpen = expandedWorkshopId === w.id;
@@ -2711,6 +3432,7 @@
       renderNotes(dashboardRawData);
       syncAppModes();
       requestAnimationFrame(scrollChatToBottomIfNearEnd);
+      if (useNewShell() && parseHashRoute() === 'vandaag') renderVandaagDashboard();
     }
 
     function getChatMessagesEl() {
@@ -2940,6 +3662,8 @@
     }
 
     function openReviewPane(reviewData) {
+      if (useNewShell()) setNewHashRoute('communicatie');
+      else setMainTab('notes');
       currentReviewData = reviewData;
       currentReviewInlineEditTempId = null;
       document.getElementById('reviewSummaryText').textContent = reviewData?.review?.summary || '';
@@ -3378,6 +4102,8 @@
         }
 
         if (String(result.mode || '').toLowerCase() === 'review') {
+          if (useNewShell()) setNewHashRoute('communicatie');
+          else setMainTab('notes');
           currentReviewData = result;
           currentReviewInlineEditTempId = null;
           document.getElementById('reviewSubtitle').textContent = result?.reply || 'Controleer en pas aan waar nodig.';
@@ -3470,7 +4196,8 @@
           agenda: Array.isArray(data?.agenda) ? data.agenda : [],
           tasks: Array.isArray(data?.tasks) ? data.tasks : [],
           notes: Array.isArray(data?.notes) ? data.notes : [],
-          workshops: Array.isArray(data?.workshops) ? data.workshops : []
+          workshops: Array.isArray(data?.workshops) ? data.workshops : [],
+          all: Array.isArray(data?.all) ? data.all : []
         };
 
         buildDashboardEditIndex(dashboardRawData);
@@ -3480,10 +4207,12 @@
         }
 
         renderAllPanels();
+        if (useNewShell()) renderVandaagDashboard();
       } catch (error) {
-        dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [] };
+        dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [], all: [] };
         buildDashboardEditIndex(dashboardRawData);
         renderAllPanels();
+        if (useNewShell()) renderVandaagDashboard();
       }
     }
 
@@ -3555,6 +4284,26 @@
     window.onWorkshopParticipantStatusChange = onWorkshopParticipantStatusChange;
     window.requestDeleteWorkshop = requestDeleteWorkshop;
     window.requestDeleteWorkshopParticipant = requestDeleteWorkshopParticipant;
+
+    document.getElementById('mainNav')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-main-tab-btn]');
+      if (!btn) return;
+      setMainTab(btn.getAttribute('data-main-tab-btn'));
+    });
+
+    initNewShellHash();
+    applyShellMode();
+
+    if (useNewShell()) {
+      window.addEventListener('hashchange', () => {
+        applyNewShellRoute();
+      });
+      document.getElementById('newSidebar')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-new-route]');
+        if (!btn) return;
+        setNewHashRoute(btn.getAttribute('data-new-route'));
+      });
+    }
 
     syncViewportHeight();
     setInterval(() => {

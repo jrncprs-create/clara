@@ -1,3 +1,13 @@
+-- Vereist voor workshops; op sommige omgevingen bestond alleen clara_items nog zonder projects.
+create table if not exists public.projects (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  type text,
+  status text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- LaLampe main project (idempotent)
 insert into public.projects (name, type, status)
 select 'LaLampe', 'workshop_main', 'active'
