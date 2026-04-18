@@ -1205,7 +1205,7 @@ async function normalizeReviewPayload(aiResult) {
 
     const rows = Array.isArray(data) ? data : []
     itemsForValidation = itemsWithProjectPrep.map(item => {
-      if (!item.project_label || item.project_label.length < 3) return item
+      if (!item.project_label || item.project_label.trim().length < 3) return item
 
       const labelLower = item.project_label.toLowerCase()
       const match = rows.find(row => {
