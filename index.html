@@ -641,352 +641,448 @@
       max-width: 42em;
     }
 
-    /* --- Vandaag dashboard — alleen #viewVandaag (referentie: zachte blobs, accentkleuren) --- */
-    .vd-root {
-      max-width: 1180px;
-      --vd-pink: #e8487d;
-      --vd-lime: #c8f247;
-      --vd-purple: #7c5cff;
-      --vd-cyan: #3eb0e8;
-      --vd-amber: #f5b14a;
+    /* Vandaag: main pane vult viewport, geen page-scroll op desktop */
+    @media (min-width: 861px) {
+      .new-views:has(#viewVandaag:not([hidden])) {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(8px, 1.2vh, 18px) clamp(12px, 1.5vw, 24px) clamp(10px, 1.4vh, 20px);
+      }
     }
 
-    .vd-hero {
-      position: relative;
-      border-radius: 36px;
-      padding: 36px 36px 32px;
-      margin-bottom: 36px;
-      background:
-        radial-gradient(120% 80% at 0% 0%, rgba(232, 72, 125, 0.14), transparent 55%),
-        radial-gradient(90% 70% at 100% 20%, rgba(124, 92, 255, 0.12), transparent 50%),
-        linear-gradient(165deg, #151515 0%, #0a0a0a 100%);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.05),
-        0 24px 48px rgba(0, 0, 0, 0.35);
-    }
-
-    .vd-hero-eyebrow {
-      margin: 0 0 14px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.4);
-    }
-
-    .vd-hero-summary {
-      margin: 0;
-      font-size: clamp(26px, 3.2vw, 36px);
-      font-weight: 700;
-      letter-spacing: -0.045em;
-      line-height: 1.2;
-      color: #fff;
-      max-width: min(100%, 22em);
-    }
-
-    .vd-hero-today {
-      margin-top: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .vd-hero-block {
-      margin: 0;
-    }
-
-    .vd-hero-track-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.35);
-      margin-bottom: 8px;
-    }
-
-    .vd-hero-track {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .vd-tile {
-      flex: 1 1 140px;
-      min-width: min(160px, 100%);
-      max-width: 220px;
-      border-radius: 28px;
-      padding: 16px 18px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background: var(--tile-bg, rgba(255, 255, 255, 0.06));
-      color: var(--tile-fg, #fff);
-      border: none;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    }
-
-    .vd-tile--appt-pink {
-      --tile-bg: var(--vd-pink);
-      --tile-fg: #fff;
-    }
-
-    .vd-tile--appt-purple {
-      --tile-bg: var(--vd-purple);
-      --tile-fg: #fff;
-    }
-
-    .vd-tile--appt-cyan {
-      --tile-bg: var(--vd-cyan);
-      --tile-fg: #fff;
-    }
-
-    .vd-tile--task-lime {
-      --tile-bg: var(--vd-lime);
-      --tile-fg: #12100e;
-    }
-
-    .vd-tile--task-amber {
-      --tile-bg: var(--vd-amber);
-      --tile-fg: #1a1208;
-    }
-
-    .vd-tile--task-muted {
-      --tile-bg: rgba(255, 255, 255, 0.08);
-      --tile-fg: rgba(255, 255, 255, 0.92);
-    }
-
-    .vd-tile-kicker {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      opacity: 0.85;
-    }
-
-    .vd-tile-title {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1.25;
-    }
-
-    .vd-tile-meta {
-      font-size: 12px;
-      font-weight: 600;
-      opacity: 0.82;
-    }
-
-    .vd-split {
+    /* --- Vandaag (Mondays-bento) — alleen #viewVandaag --- */
+    #viewVandaag.vd-root {
+      --vd-bg: #121212;
+      --vd-surface: #262626;
+      --vd-surface2: #1e1e1e;
+      --vd-blue: #3d5afe;
+      --vd-orange: #ff7043;
+      --vd-mint: #69f0ae;
+      --vd-purple: #b388ff;
+      --vd-line: rgba(255, 255, 255, 0.06);
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      max-width: none;
       display: grid;
-      grid-template-columns: minmax(0, 1.42fr) minmax(0, 0.78fr);
-      gap: 32px;
-      align-items: start;
+      grid-template-rows: auto auto minmax(0, 1fr) minmax(0, 0.88fr);
+      gap: clamp(6px, 1vh, 12px);
+      overflow: hidden;
+      color: #fff;
     }
 
     @media (max-width: 860px) {
-      .vd-split {
-        grid-template-columns: 1fr;
+      #viewVandaag.vd-root {
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        height: auto;
+        min-height: 0;
+        gap: 14px;
       }
-
-      .vd-hero {
-        border-radius: 28px;
-        padding: 28px 24px 24px;
-      }
     }
 
-    .vd-panel {
-      border-radius: 32px;
-      padding: 0;
-      border: none;
-      background: transparent;
+    .vd-greet {
+      flex-shrink: 0;
     }
 
-    .vd-panel--waiting {
-      padding: 4px 0 8px;
+    .vd-greet-date {
+      margin: 0 0 4px;
+      font-size: clamp(11px, 1.1vh, 13px);
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.45);
     }
 
-    .vd-panel--projects {
-      padding: 8px 0;
-      border-radius: 28px;
-      padding: 22px 20px 20px;
-      background: rgba(255, 255, 255, 0.025);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .vd-panel-head {
+    .vd-greet-row {
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 22px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .vd-panel-title {
+    .vd-greet-title {
       margin: 0;
-      font-size: clamp(22px, 2.4vw, 28px);
-      font-weight: 800;
-      letter-spacing: -0.04em;
+      font-size: clamp(22px, 2.4vh + 1.5vw, 34px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .vd-greet-sub {
+      margin: 6px 0 0;
+      font-size: clamp(12px, 1.15vh, 14px);
+      color: rgba(255, 255, 255, 0.42);
+      line-height: 1.35;
+      max-width: min(52ch, 100%);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .vd-greet-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .vd-btn {
+      appearance: none;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: opacity 0.2s ease, background 0.2s ease;
+    }
+
+    .vd-btn-orange {
+      background: var(--vd-orange);
+      color: #1a0f0a;
+    }
+
+    .vd-btn-orange:hover {
+      opacity: 0.92;
+    }
+
+    .vd-btn-ghost {
+      background: var(--vd-surface);
+      color: rgba(255, 255, 255, 0.82);
+      border: 1px solid var(--vd-line);
+    }
+
+    .vd-btn-ghost:hover {
+      background: #2e2e2e;
+    }
+
+    .vd-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(8px, 1vw, 14px);
+      flex-shrink: 0;
+    }
+
+    .vd-kpi-card {
+      background: var(--vd-surface);
+      border-radius: clamp(12px, 1.2vh, 16px);
+      padding: clamp(10px, 1.4vh, 16px) clamp(12px, 1.6vw, 18px);
+      border: 1px solid var(--vd-line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .vd-kpi-label {
+      font-size: clamp(10px, 1vh, 12px);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.42);
+    }
+
+    .vd-kpi-value {
+      font-size: clamp(22px, 2.5vh + 1vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
       line-height: 1.1;
       color: #fff;
     }
 
-    .vd-panel-title-count {
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.35);
-      font-size: 0.72em;
-      letter-spacing: -0.02em;
+    .vd-mid-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: clamp(8px, 1vw, 14px);
+      min-height: 0;
     }
 
-    .vd-panel-link {
-      font-size: 12px;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.55);
-      text-decoration: none;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 10px 16px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: background 0.2s ease, color 0.2s ease;
+    @media (max-width: 860px) {
+      .vd-mid-row {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .vd-panel-link:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .vd-wait-list {
+    .vd-widget {
+      background: var(--vd-surface);
+      border-radius: clamp(12px, 1.2vh, 16px);
+      border: 1px solid var(--vd-line);
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      min-height: 0;
+      overflow: hidden;
     }
 
-    .vd-focus-card {
-      --fc-bg: var(--vd-pink);
-      --fc-fg: #fff;
-      border-radius: 32px;
-      padding: 22px 24px 24px;
-      background: var(--fc-bg);
-      color: var(--fc-fg);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.18),
-        0 12px 32px rgba(0, 0, 0, 0.25);
-    }
-
-    .vd-focus-card--0 {
-      --fc-bg: var(--vd-pink);
-      --fc-fg: #fff;
-    }
-
-    .vd-focus-card--1 {
-      --fc-bg: var(--vd-lime);
-      --fc-fg: #14120e;
-    }
-
-    .vd-focus-card--2 {
-      --fc-bg: var(--vd-purple);
-      --fc-fg: #fff;
-    }
-
-    .vd-focus-card--3 {
-      --fc-bg: var(--vd-cyan);
-      --fc-fg: #fff;
-    }
-
-    .vd-focus-card-top {
+    .vd-widget-head {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 10px;
+      padding: clamp(10px, 1.3vh, 14px) clamp(12px, 1.5vw, 16px);
+      border-bottom: 1px solid var(--vd-line);
     }
 
-    .vd-focus-kicker {
-      font-size: 11px;
+    .vd-widget-title {
+      margin: 0;
+      font-size: clamp(13px, 1.2vh, 15px);
       font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      opacity: 0.78;
+      letter-spacing: -0.02em;
     }
 
-    .vd-focus-glyph {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      background: rgba(0, 0, 0, 0.2);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-    }
-
-    .vd-focus-card--1 .vd-focus-glyph {
-      background: rgba(255, 255, 255, 0.35);
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-    }
-
-    .vd-focus-title {
-      font-size: clamp(18px, 2vw, 22px);
-      font-weight: 800;
-      letter-spacing: -0.035em;
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-
-    .vd-focus-sub {
-      font-size: 13px;
+    .vd-widget-meta {
+      font-size: 11px;
       font-weight: 600;
-      opacity: 0.72;
+      color: rgba(255, 255, 255, 0.38);
     }
 
-    .vd-muted-line {
-      margin: 8px 0 0;
-      font-size: 14px;
-      line-height: 1.55;
-      color: rgba(255, 255, 255, 0.28);
-      padding: 8px 4px 0;
-    }
-
-    .vd-project-cards {
+    .vd-widget-head-extra {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 10px;
     }
 
-    .vd-project-card {
-      border-radius: 22px;
-      padding: 14px 16px 14px 18px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      background: rgba(0, 0, 0, 0.35);
+    .vd-widget-link {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--vd-blue);
+      text-decoration: none;
+      opacity: 0.9;
+    }
+
+    .vd-widget-link:hover {
+      text-decoration: underline;
+    }
+
+    .vd-day-strip {
+      display: flex;
+      flex-shrink: 0;
+      gap: 6px;
+      padding: 8px clamp(10px, 1.2vw, 14px) 6px;
+      overflow: hidden;
+      justify-content: space-between;
+    }
+
+    .vd-day-pill {
+      flex: 1;
+      min-width: 0;
+      max-width: 52px;
+      margin: 0;
+      padding: 6px 4px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: rgba(0, 0, 0, 0.2);
+      color: rgba(255, 255, 255, 0.55);
+      font: inherit;
+      cursor: default;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      align-items: center;
+      gap: 2px;
     }
 
-    .vd-project-card:nth-child(4n + 1) {
-      border-left: 3px solid var(--vd-pink);
+    .vd-day-pill.is-today {
+      background: rgba(61, 90, 254, 0.35);
+      border-color: rgba(61, 90, 254, 0.55);
+      color: #fff;
     }
 
-    .vd-project-card:nth-child(4n + 2) {
-      border-left: 3px solid var(--vd-lime);
-    }
-
-    .vd-project-card:nth-child(4n + 3) {
-      border-left: 3px solid var(--vd-purple);
-    }
-
-    .vd-project-name {
-      font-size: 14px;
+    .vd-day-pill-d {
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: -0.02em;
-      color: rgba(255, 255, 255, 0.94);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
-    .vd-project-stat {
-      font-size: 12px;
+    .vd-day-pill-n {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .vd-widget-body {
+      flex: 1;
+      min-height: 0;
+      padding: clamp(6px, 1vh, 10px) clamp(10px, 1.3vw, 14px) clamp(8px, 1.1vh, 12px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .vd-sch-row {
+      display: grid;
+      grid-template-columns: 4px minmax(0, 1fr) auto;
+      gap: 10px 12px;
+      align-items: center;
+      padding: 8px 4px;
+      border-radius: 10px;
+      min-height: 0;
+    }
+
+    .vd-sch-bar {
+      width: 4px;
+      align-self: stretch;
+      border-radius: 4px;
+      min-height: 36px;
+    }
+
+    .vd-sch-bar--0 {
+      background: linear-gradient(180deg, var(--vd-orange), #ffb74d);
+    }
+
+    .vd-sch-bar--1 {
+      background: var(--vd-purple);
+    }
+
+    .vd-sch-bar--2 {
+      background: var(--vd-mint);
+    }
+
+    .vd-sch-title {
+      font-size: clamp(12px, 1.15vh, 14px);
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.42);
+      color: rgba(255, 255, 255, 0.92);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .vd-sch-time {
+      font-size: clamp(10px, 1vh, 12px);
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.38);
+      white-space: nowrap;
+    }
+
+    .vd-note-row {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 10px;
+      align-items: flex-start;
+      padding: 6px 2px;
+      border-radius: 10px;
+    }
+
+    .vd-note-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      margin-top: 2px;
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      flex-shrink: 0;
+    }
+
+    .vd-note-title {
+      font-size: clamp(12px, 1.12vh, 14px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.25;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .vd-note-meta {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.38);
+      margin-top: 2px;
+    }
+
+    .vd-empty {
+      margin: 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.32);
+      padding: 8px 4px;
+    }
+
+    .vd-table-widget {
+      min-height: 0;
+    }
+
+    .vd-table-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      padding: 0 clamp(10px, 1.3vw, 14px) clamp(8px, 1.1vh, 12px);
+    }
+
+    .vd-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: clamp(11px, 1.05vh, 13px);
+    }
+
+    .vd-table th,
+    .vd-table td {
+      padding: clamp(6px, 0.9vh, 9px) 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--vd-line);
+    }
+
+    .vd-table th {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.38);
+    }
+
+    .vd-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .vd-table td {
+      color: rgba(255, 255, 255, 0.88);
+      vertical-align: middle;
+    }
+
+    .vd-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .vd-pill--mint {
+      background: rgba(105, 240, 174, 0.18);
+      color: var(--vd-mint);
+    }
+
+    .vd-pill--purple {
+      background: rgba(179, 136, 255, 0.18);
+      color: var(--vd-purple);
+    }
+
+    .vd-pill--orange {
+      background: rgba(255, 112, 67, 0.18);
+      color: var(--vd-orange);
+    }
+
+    .vd-cell-name {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 36vw;
+    }
+
+    @media (min-width: 861px) {
+      .vd-cell-name {
+        max-width: none;
+      }
     }
 
     .chat-dock-inner {
@@ -2057,43 +2153,72 @@
     <div class="new-main-col">
       <div class="new-views" id="newViews">
         <div id="viewVandaag" class="new-view vd-root" data-new-view="vandaag">
-          <section class="vd-hero" aria-labelledby="vdHeroSummary">
-            <p class="vd-hero-eyebrow">Vandaag</p>
-            <p id="vdHeroSummary" class="vd-hero-summary"></p>
-            <div id="vdHeroToday" class="vd-hero-today" hidden>
-              <div id="vdHeroApptBlock" class="vd-hero-block" hidden>
-                <div class="vd-hero-track-label">Afspraken</div>
-                <div id="vdHeroTrackAppts" class="vd-hero-track"></div>
-              </div>
-              <div id="vdHeroTaskBlock" class="vd-hero-block" hidden>
-                <div class="vd-hero-track-label">Taken vandaag</div>
-                <div id="vdHeroTrackTasks" class="vd-hero-track"></div>
+          <header class="vd-greet" aria-labelledby="vdGreetTitle">
+            <p id="vdGreetDate" class="vd-greet-date"></p>
+            <div class="vd-greet-row">
+              <h1 id="vdGreetTitle" class="vd-greet-title"></h1>
+              <div class="vd-greet-actions">
+                <a class="vd-btn vd-btn-ghost" href="#/inbox">Inbox</a>
+                <a class="vd-btn vd-btn-orange" href="#/projecten">+ Taak</a>
               </div>
             </div>
-          </section>
+            <p id="vdGreetSub" class="vd-greet-sub"></p>
+          </header>
 
-          <div class="vd-split">
-            <div class="vd-col vd-col-main">
-              <section class="vd-panel vd-panel--waiting" aria-labelledby="vdWaitingHeading">
-                <div class="vd-panel-head">
-                  <h2 id="vdWaitingHeading" class="vd-panel-title">
-                    Wacht op je<span id="vdWaitingCount" class="vd-panel-title-count" hidden></span>
-                  </h2>
-                  <a class="vd-panel-link" href="#/inbox">Inbox</a>
-                </div>
-                <div id="vdWaitingBody" class="vd-wait-list"></div>
-              </section>
+          <div class="vd-kpi-row" role="list" aria-label="Kerncijfers vandaag">
+            <div class="vd-kpi-card" role="listitem">
+              <span class="vd-kpi-label">Taken vandaag</span>
+              <span id="vdKpiTasks" class="vd-kpi-value">0</span>
             </div>
-            <div id="vdProjectsCol" class="vd-col vd-col-side" hidden>
-              <section class="vd-panel vd-panel--projects" aria-labelledby="vdProjectsHeading">
-                <div class="vd-panel-head">
-                  <h2 id="vdProjectsHeading" class="vd-panel-title">Projecten</h2>
-                  <a class="vd-panel-link" href="#/projecten">Alles</a>
-                </div>
-                <div id="vdProjectsBody" class="vd-project-cards"></div>
-              </section>
+            <div class="vd-kpi-card" role="listitem">
+              <span class="vd-kpi-label">Afspraken vandaag</span>
+              <span id="vdKpiAppts" class="vd-kpi-value">0</span>
+            </div>
+            <div class="vd-kpi-card" role="listitem">
+              <span class="vd-kpi-label">Wacht op jou</span>
+              <span id="vdKpiWait" class="vd-kpi-value">0</span>
             </div>
           </div>
+
+          <div class="vd-mid-row">
+            <section class="vd-widget" aria-labelledby="vdScheduleTitle">
+              <div class="vd-widget-head">
+                <h2 id="vdScheduleTitle" class="vd-widget-title">Agenda</h2>
+                <span class="vd-widget-meta">Vandaag</span>
+              </div>
+              <div id="vdDayStrip" class="vd-day-strip" role="group" aria-label="Deze week"></div>
+              <div id="vdScheduleBody" class="vd-widget-body"></div>
+            </section>
+            <section class="vd-widget" aria-labelledby="vdWaitTitle">
+              <div class="vd-widget-head">
+                <h2 id="vdWaitTitle" class="vd-widget-title">Wacht op jou</h2>
+                <a class="vd-widget-link" href="#/inbox">Alles</a>
+              </div>
+              <div id="vdWaitingBody" class="vd-widget-body"></div>
+            </section>
+          </div>
+
+          <section class="vd-widget vd-table-widget" aria-labelledby="vdProjTableTitle">
+            <div class="vd-widget-head">
+              <h2 id="vdProjTableTitle" class="vd-widget-title">Mijn projecten</h2>
+              <div class="vd-widget-head-extra">
+                <span class="vd-widget-meta">Open taken</span>
+                <a class="vd-widget-link" href="#/projecten">Bekijk alles</a>
+              </div>
+            </div>
+            <div class="vd-table-wrap">
+              <table class="vd-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Project</th>
+                    <th scope="col">Open taken</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="vdProjectsTbody"></tbody>
+              </table>
+            </div>
+          </section>
         </div>
 
         <div id="viewInbox" class="new-view" data-new-view="inbox" hidden>
@@ -2783,45 +2908,76 @@
       return `Vandaag heb je ${bits.join(' en ')}.`;
     }
 
-    const VANDAAG_APPT_TILE_CLASSES = ['vd-tile--appt-pink', 'vd-tile--appt-purple', 'vd-tile--appt-cyan'];
-    const VANDAAG_TASK_TILE_CLASSES = ['vd-tile--task-lime', 'vd-tile--task-amber', 'vd-tile--task-muted'];
-
-    function vandaagHeroApptTileClass(i) {
-      return VANDAAG_APPT_TILE_CLASSES[i % VANDAAG_APPT_TILE_CLASSES.length];
+    function vandaagDutchGreeting() {
+      const h = new Date().getHours();
+      if (h < 12) return 'Goedemorgen!';
+      if (h < 18) return 'Goedemiddag!';
+      return 'Goedenavond!';
     }
 
-    function vandaagHeroTaskTileClass(i) {
-      return VANDAAG_TASK_TILE_CLASSES[i % VANDAAG_TASK_TILE_CLASSES.length];
+    function vandaagWeekStripHtml(anchorDate) {
+      const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+      const dow = d.getDay();
+      const mondayOffset = dow === 0 ? -6 : 1 - dow;
+      const monday = new Date(d);
+      monday.setDate(d.getDate() + mondayOffset);
+      const todayKey = formatLocalDateKey(anchorDate);
+      const parts = [];
+      for (let i = 0; i < 7; i++) {
+        const x = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+        const key = formatLocalDateKey(x);
+        const isToday = key === todayKey;
+        const dayNum = x.getDate();
+        const dayShort = new Intl.DateTimeFormat('nl-NL', { weekday: 'short' })
+          .format(x)
+          .replace('.', '')
+          .slice(0, 2)
+          .toLowerCase();
+        parts.push(
+          `<button type="button" class="vd-day-pill${isToday ? ' is-today' : ''}" disabled${
+            isToday ? ' aria-current="date"' : ''
+          }><span class="vd-day-pill-d">${escapeHtml(dayShort)}</span><span class="vd-day-pill-n">${dayNum}</span></button>`
+        );
+      }
+      return parts.join('');
+    }
+
+    function vandaagProjectPill(i) {
+      const labels = ['Actief', 'Open', 'Lopend'];
+      const cls = ['vd-pill--mint', 'vd-pill--purple', 'vd-pill--orange'];
+      return { label: labels[i % 3], cls: cls[i % 3] };
     }
 
     function renderVandaagDashboard() {
       if (!useNewShell()) return;
 
-      const summaryEl = document.getElementById('vdHeroSummary');
-      const heroToday = document.getElementById('vdHeroToday');
-      const apptBlock = document.getElementById('vdHeroApptBlock');
-      const taskBlock = document.getElementById('vdHeroTaskBlock');
-      const trackAppts = document.getElementById('vdHeroTrackAppts');
-      const trackTasks = document.getElementById('vdHeroTrackTasks');
+      const greetDate = document.getElementById('vdGreetDate');
+      const greetTitle = document.getElementById('vdGreetTitle');
+      const greetSub = document.getElementById('vdGreetSub');
+      const kpiTasks = document.getElementById('vdKpiTasks');
+      const kpiAppts = document.getElementById('vdKpiAppts');
+      const kpiWait = document.getElementById('vdKpiWait');
+      const dayStrip = document.getElementById('vdDayStrip');
+      const scheduleBody = document.getElementById('vdScheduleBody');
       const waitingBody = document.getElementById('vdWaitingBody');
-      const waitingCountEl = document.getElementById('vdWaitingCount');
-      const projectsCol = document.getElementById('vdProjectsCol');
-      const projectsBody = document.getElementById('vdProjectsBody');
+      const projectsTbody = document.getElementById('vdProjectsTbody');
       if (
-        !summaryEl ||
-        !heroToday ||
-        !apptBlock ||
-        !taskBlock ||
-        !trackAppts ||
-        !trackTasks ||
+        !greetDate ||
+        !greetTitle ||
+        !greetSub ||
+        !kpiTasks ||
+        !kpiAppts ||
+        !kpiWait ||
+        !dayStrip ||
+        !scheduleBody ||
         !waitingBody ||
-        !projectsCol ||
-        !projectsBody
+        !projectsTbody
       ) {
         return;
       }
 
-      const todayKey = formatLocalDateKey(getTodayStart());
+      const todayStart = getTodayStart();
+      const todayKey = formatLocalDateKey(todayStart);
 
       const apptsTodayAll = (dashboardRawData.agenda || []).filter((item) => {
         const t = String(item?.type || '').toLowerCase();
@@ -2833,120 +2989,85 @@
         (item) => String(item?.date || '').trim() === todayKey
       );
 
+      const waitingAll = (dashboardRawData.tasks || []).filter((item) => {
+        const s = String(item?.status || '').toLowerCase();
+        return s === 'wacht' || s === 'open' || s === 'nieuw';
+      });
+
       const apptCount = apptsTodayAll.length;
       const taskCount = tasksTodayAll.length;
+      const waitCount = waitingAll.length;
 
-      summaryEl.textContent = vandaagBuildHeroSummary(apptCount, taskCount);
+      greetDate.textContent = formatDayLong(todayStart);
+      greetTitle.textContent = vandaagDutchGreeting();
+      greetSub.textContent = vandaagBuildHeroSummary(apptCount, taskCount);
 
-      const apptsHero = apptsTodayAll.slice(0, Math.min(3, apptsTodayAll.length));
-      const taskHeroCap = Math.max(0, 5 - apptsHero.length);
-      const tasksHero = tasksTodayAll.slice(0, taskHeroCap);
+      kpiTasks.textContent = String(taskCount);
+      kpiAppts.textContent = String(apptCount);
+      kpiWait.textContent = String(waitCount);
 
-      if (apptCount === 0 && taskCount === 0) {
-        heroToday.hidden = true;
-        apptBlock.hidden = true;
-        taskBlock.hidden = true;
-        trackAppts.innerHTML = '';
-        trackTasks.innerHTML = '';
-      } else {
-        heroToday.hidden = false;
+      dayStrip.innerHTML = vandaagWeekStripHtml(todayStart);
 
-        if (apptsHero.length) {
-          apptBlock.hidden = false;
-          trackAppts.innerHTML = apptsHero
-            .map((it, i) => {
-              const cls = vandaagHeroApptTileClass(i);
-              const meta = formatShortDate(it.date || '', it.time || '');
-              return `
-            <div class="vd-tile ${cls}">
-              <span class="vd-tile-kicker">Afspraak</span>
-              <span class="vd-tile-title">${escapeHtml(it.title || 'Afspraak')}</span>
-              <span class="vd-tile-meta">${escapeHtml(meta || '—')}</span>
-            </div>`;
-            })
-            .join('');
-        } else {
-          apptBlock.hidden = true;
-          trackAppts.innerHTML = '';
-        }
-
-        if (tasksHero.length) {
-          taskBlock.hidden = false;
-          trackTasks.innerHTML = tasksHero
-            .map((it, i) => {
-              const cls = vandaagHeroTaskTileClass(i);
-              const meta = [it.status, it.priority].filter(Boolean).join(' · ') || '—';
-              return `
-            <div class="vd-tile ${cls}">
-              <span class="vd-tile-kicker">Taak</span>
-              <span class="vd-tile-title">${escapeHtml(it.title || 'Taak')}</span>
-              <span class="vd-tile-meta">${escapeHtml(meta)}</span>
-            </div>`;
-            })
-            .join('');
-        } else {
-          taskBlock.hidden = true;
-          trackTasks.innerHTML = '';
-        }
-      }
-
-      const waiting = (dashboardRawData.tasks || [])
-        .filter((item) => {
-          const s = String(item?.status || '').toLowerCase();
-          return s === 'wacht' || s === 'open' || s === 'nieuw';
+      const apptsSorted = [...apptsTodayAll]
+        .sort((a, b) => {
+          const ma = parseTimeToMinutes(a.time) ?? 24 * 60;
+          const mb = parseTimeToMinutes(b.time) ?? 24 * 60;
+          return ma - mb;
         })
-        .slice(0, 4);
+        .slice(0, 5);
 
-      if (waitingCountEl) {
-        if (waiting.length) {
-          waitingCountEl.hidden = false;
-          waitingCountEl.textContent = ` (${waiting.length})`;
-        } else {
-          waitingCountEl.hidden = true;
-          waitingCountEl.textContent = '';
-        }
+      if (apptsSorted.length) {
+        scheduleBody.innerHTML = apptsSorted
+          .map((it, i) => {
+            const timeLabel = String(it.time || '').trim() || '—';
+            return `<div class="vd-sch-row">
+            <div class="vd-sch-bar vd-sch-bar--${i % 3}" aria-hidden="true"></div>
+            <div class="vd-sch-title">${escapeHtml(it.title || 'Afspraak')}</div>
+            <div class="vd-sch-time">${escapeHtml(timeLabel)}</div>
+          </div>`;
+          })
+          .join('');
+      } else {
+        scheduleBody.innerHTML = '<p class="vd-empty">Geen afspraken vandaag.</p>';
       }
 
+      const waiting = waitingAll.slice(0, 5);
       if (waiting.length) {
         waitingBody.innerHTML = waiting
-          .map((it, i) => {
-            const kicker = [it.status, it.date ? formatShortDate(it.date, it.time || '') : '']
+          .map((it) => {
+            const meta = [it.status, it.date ? formatShortDate(it.date, it.time || '') : '']
               .filter(Boolean)
               .join(' · ');
             const proj = String(it.project || '').trim();
-            const sub = proj ? proj : kicker || '—';
-            return `
-            <article class="vd-focus-card vd-focus-card--${i % 4}">
-              <div class="vd-focus-card-top">
-                <span class="vd-focus-kicker">${escapeHtml(kicker || 'Taak')}</span>
-                <span class="vd-focus-glyph" aria-hidden="true"></span>
-              </div>
-              <div class="vd-focus-title">${escapeHtml(it.title || 'Taak')}</div>
-              <div class="vd-focus-sub">${escapeHtml(sub)}</div>
-            </article>`;
+            const sub = proj || meta;
+            return `<div class="vd-note-row">
+            <span class="vd-note-check" aria-hidden="true"></span>
+            <div>
+              <div class="vd-note-title">${escapeHtml(it.title || 'Taak')}</div>
+              ${sub ? `<div class="vd-note-meta">${escapeHtml(sub)}</div>` : ''}
+            </div>
+          </div>`;
           })
           .join('');
       } else {
         waitingBody.innerHTML =
-          '<p class="vd-muted-line">Geen taken die nu op een vervolg wachten.</p>';
+          '<p class="vd-empty">Niets dat nu op jou wacht.</p>';
       }
 
-      const projects = topProjectsOpenTasks(3);
+      const projects = topProjectsOpenTasks(5);
       if (projects.length) {
-        projectsCol.hidden = false;
-        projectsBody.innerHTML = projects
-          .map(
-            (pr) => `
-          <div class="vd-project-card">
-            <span class="vd-project-name">${escapeHtml(pr.name)}</span>
-            <span class="vd-project-stat">${escapeHtml(vandaagFormatOpenTasks(pr.openCount))}</span>
-          </div>
-        `
-          )
+        projectsTbody.innerHTML = projects
+          .map((pr, i) => {
+            const pill = vandaagProjectPill(i);
+            return `<tr>
+            <td><span class="vd-cell-name">${escapeHtml(pr.name)}</span></td>
+            <td>${escapeHtml(String(pr.openCount))}</td>
+            <td><span class="vd-pill ${pill.cls}">${escapeHtml(pill.label)}</span></td>
+          </tr>`;
+          })
           .join('');
       } else {
-        projectsCol.hidden = true;
-        projectsBody.innerHTML = '';
+        projectsTbody.innerHTML = `<tr><td colspan="3" class="vd-empty">Geen projecten met open taken.</td></tr>`;
       }
     }
 
