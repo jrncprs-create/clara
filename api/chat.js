@@ -1185,7 +1185,15 @@ async function normalizeReviewPayload(aiResult) {
   }
 
   const uniqueItems = Array.from(uniqueMap.values())
-  const validatedItems = enrichReviewItemsWithValidation(uniqueItems)
+  const itemsWithProjectPrep = uniqueItems.map(item => {
+    const projectNorm = normalizeWhitespace(item.project)
+    return {
+      ...item,
+      project_label: projectNorm || null,
+      project_resolution: { resolved_id: null, candidates: [] }
+    }
+  })
+  const validatedItems = enrichReviewItemsWithValidation(itemsWithProjectPrep)
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
