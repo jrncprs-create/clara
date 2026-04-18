@@ -227,6 +227,20 @@ function safeNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback
 }
 
+const OPENAI_INPUT_MAX_CHARS = Math.max(5000, Math.floor(safeNumber(process.env.OPENAI_INPUT_MAX_CHARS, 16000)))
+
+function truncateForOpenAIInput(text) {
+  const t = String(text || '')
+  if (t.length <= OPENAI_INPUT_MAX_CHARS) return t
+  const noteReserve = 220
+  const budget = Math.max(2400, OPENAI_INPUT_MAX_CHARS - noteReserve)
+  const headChars = Math.floor(budget * 0.72)
+  const tailChars = budget - headChars
+  const head = t.slice(0, headChars)
+  const tail = t.slice(-tailChars)
+  return `${head}\n\n[--- Midden weggelaten (${t.length} tekens totaal); hieronder het slot van de invoer ---]\n\n${tail}`
+}
+
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n))
 }
@@ -996,7 +1010,7 @@ Datumcontext Amsterdam:
 - huidige tijd: ${aiInput.context.now_hhmm}
 
 Input:
-${cleanedInput}
+${truncateForOpenAIInput(cleanedInput)}
 `
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
