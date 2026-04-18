@@ -1193,7 +1193,46 @@ async function normalizeReviewPayload(aiResult) {
       project_resolution: { resolved_id: null, candidates: [] }
     }
   })
-  const validatedItems = enrichReviewItemsWithValidation(itemsWithProjectPrep)
+
+  let itemsForValidation = itemsWithProjectPrep
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id, name')
+      .or('status.is.null,status.eq.active')
+
+    if (error) throw error
+
+    const rows = Array.isArray(data) ? data : []
+    itemsForValidation = itemsWithProjectPrep.map(item => {
+      if (!item.project_label || item.project_label.length < 3) return item
+
+      const labelLower = item.project_label.toLowerCase()
+      const match = rows.find(row => {
+        const nameLower = normalizeWhitespace(row.name).toLowerCase()
+        if (!nameLower || !labelLower) return false
+        return (
+          nameLower === labelLower ||
+          nameLower.includes(labelLower) ||
+          labelLower.includes(nameLower)
+        )
+      })
+
+      if (!match) return item
+
+      return {
+        ...item,
+        project_resolution: {
+          resolved_id: match.id,
+          candidates: [{ id: match.id, name: match.name, score: 1 }]
+        }
+      }
+    })
+  } catch {
+    // leave itemsForValidation as itemsWithProjectPrep
+  }
+
+  const validatedItems = enrichReviewItemsWithValidation(itemsForValidation)
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
