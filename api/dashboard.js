@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 )
 
 function normalizeType(type) {
@@ -113,6 +113,70 @@ function dedupeItems(items) {
   return result
 }
 
+async function resolveLalampeProjectId() {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, name')
+    .ilike('name', 'LaLampe')
+    .limit(8)
+
+  if (error) throw error
+  const rows = Array.isArray(data) ? data : []
+  const exact = rows.find((r) => String(r.name || '').trim().toLowerCase() === 'lalampe')
+  return exact?.id || rows[0]?.id || null
+}
+
+async function loadWorkshopsForDashboard() {
+  const projectId = await resolveLalampeProjectId()
+  if (!projectId) {
+    return { workshops: [], lalampe_project_id: null }
+  }
+
+  const { data: workshops, error } = await supabase
+    .from('workshops')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('workshop_date', { ascending: true })
+    .order('start_time', { ascending: true })
+
+  if (error) throw error
+
+  const list = Array.isArray(workshops) ? workshops : []
+  const ids = list.map((w) => w.id)
+  const byWorkshop = new Map()
+
+  if (ids.length) {
+    const { data: parts, error: pErr } = await supabase
+      .from('workshop_participants')
+      .select('workshop_id, participant_status')
+      .in('workshop_id', ids)
+
+    if (!pErr && Array.isArray(parts)) {
+      const countable = new Set(['confirmed', 'paid'])
+      for (const row of parts) {
+        const wid = row.workshop_id
+        if (!byWorkshop.has(wid)) {
+          byWorkshop.set(wid, { total: 0, confirmed: 0 })
+        }
+        const agg = byWorkshop.get(wid)
+        agg.total += 1
+        if (countable.has(String(row.participant_status || ''))) agg.confirmed += 1
+      }
+    }
+  }
+
+  const enriched = list.map((w) => {
+    const agg = byWorkshop.get(w.id) || { total: 0, confirmed: 0 }
+    return {
+      ...w,
+      participant_total: agg.total,
+      participant_confirmed: agg.confirmed
+    }
+  })
+
+  return { workshops: enriched, lalampe_project_id: projectId }
+}
+
 export default async function handler(req, res) {
   try {
     const { data, error } = await supabase
@@ -189,11 +253,20 @@ export default async function handler(req, res) {
       .sort((a, b) => toTimestamp(b) - toTimestamp(a))
       .slice(0, 12)
 
+    let workshopsPayload = { workshops: [], lalampe_project_id: null }
+    try {
+      workshopsPayload = await loadWorkshopsForDashboard()
+    } catch {
+      workshopsPayload = { workshops: [], lalampe_project_id: null }
+    }
+
     res.status(200).json({
       agenda,
       tasks,
       notes,
-      all: allItems
+      all: allItems,
+      workshops: workshopsPayload.workshops,
+      lalampe_project_id: workshopsPayload.lalampe_project_id
     })
   } catch (err) {
     res.status(500).json({
