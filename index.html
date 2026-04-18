@@ -457,20 +457,26 @@
       flex-direction: row;
       gap: 0;
       border: 1px solid var(--dash-card-border);
-      border-radius: 22px;
+      border-radius: 14px;
       overflow: hidden;
       background: #050505;
     }
 
     .new-sidebar {
-      width: 220px;
+      width: 236px;
       flex-shrink: 0;
-      padding: 24px 18px 22px;
+      min-height: 0;
+      padding: 22px 14px 14px;
       border-right: 1px solid var(--dash-card-border);
       display: flex;
       flex-direction: column;
       gap: 8px;
-      background: #080808;
+      background: #070707;
+    }
+
+    .new-sidebar-spacer {
+      flex: 1;
+      min-height: 12px;
     }
 
     .new-sidebar-brand {
@@ -504,21 +510,21 @@
       color: var(--muted);
       font-size: 14px;
       font-weight: 500;
-      padding: 11px 12px;
-      border-radius: 12px;
+      padding: 10px 10px;
+      border-radius: 6px;
       cursor: pointer;
       transition: background 0.2s ease, color 0.2s ease;
     }
 
     .new-sidebar button:hover {
       color: var(--text);
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .new-sidebar button.is-active {
       color: #fff;
-      background: rgba(61, 90, 254, 0.42);
-      box-shadow: none;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.55), rgba(124, 58, 237, 0.45));
+      box-shadow: inset 0 0 0 1px rgba(212, 255, 74, 0.22);
     }
 
     .new-sidebar button.is-active .new-sidebar-ico {
@@ -527,11 +533,11 @@
     }
 
     .new-sidebar-hint {
-      margin-top: auto;
-      font-size: 11px;
+      flex-shrink: 0;
+      font-size: 10px;
       line-height: 1.45;
-      color: rgba(255, 255, 255, 0.28);
-      padding: 10px 4px 0;
+      color: rgba(255, 255, 255, 0.26);
+      padding: 8px 4px 0;
     }
 
     .new-main-col {
@@ -541,17 +547,22 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      background: #080808;
     }
 
     .new-chat-dock-slot {
       position: relative;
       flex-shrink: 0;
       z-index: 30;
-      height: clamp(200px, 30vh, 320px);
-      min-height: 180px;
-      border-top: 1px solid var(--dash-card-border);
-      background: linear-gradient(180deg, rgba(8, 8, 8, 0.96), #060606);
-      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+      width: 100%;
+      height: clamp(200px, 32vh, 340px);
+      min-height: 188px;
+      margin-top: 4px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #0a0a0a;
+      box-shadow: inset 0 1px 0 rgba(212, 255, 74, 0.06);
+      overflow: hidden;
     }
 
     #newAppShell[data-route="communicatie"] .new-chat-dock-slot {
@@ -562,14 +573,15 @@
       display: none;
       height: 0;
       min-height: 0;
+      margin: 0;
       border: none;
       box-shadow: none;
     }
 
     @media (max-width: 860px) {
       .new-chat-dock-slot {
-        height: clamp(160px, 28vh, 260px);
-        min-height: 140px;
+        height: clamp(168px, 30vh, 280px);
+        min-height: 150px;
       }
     }
 
@@ -577,6 +589,23 @@
       position: absolute;
       inset: 0;
       min-height: 0;
+    }
+
+    .new-chat-dock-slot .stack-panel {
+      border-radius: 4px;
+      border-color: rgba(255, 255, 255, 0.07);
+    }
+
+    .new-chat-dock-slot .notes-panel {
+      top: 0;
+      height: calc(36% - 5px);
+      z-index: 2;
+    }
+
+    .new-chat-dock-slot .chat-panel {
+      top: calc(36% + 5px);
+      height: calc(64% - 5px);
+      z-index: 1;
     }
 
     .new-views {
@@ -616,7 +645,7 @@
       }
 
       .new-sidebar {
-        width: 200px;
+        width: 212px;
       }
     }
 
@@ -706,18 +735,21 @@
       }
     }
 
-    /* --- Vandaag (Mondays-bento) — alleen #viewVandaag --- */
+    /* --- Vandaag — vierkante kaarten, lime + paars (schets) --- */
     #viewVandaag.vd-root {
-      --vd-bg: #121212;
-      --vd-surface: #262626;
-      --vd-surface2: #1e1e1e;
-      --vd-blue: #3d5afe;
-      --vd-orange: #ff7043;
-      --vd-mint: #69f0ae;
-      --vd-purple: #b388ff;
-      --vd-line: rgba(255, 255, 255, 0.06);
+      --vd-bg: #0d0d0d;
+      --vd-surface: #1a1a1a;
+      --vd-surface2: #141414;
+      --vd-lime: #d4ff4a;
+      --vd-lime-dim: #9fcc2a;
+      --vd-purple: #c084fc;
+      --vd-purple-deep: #7c3aed;
+      --vd-mint: #86efac;
+      --vd-orange: #d4ff4a;
+      --vd-line: rgba(255, 255, 255, 0.08);
       --vd-ease: cubic-bezier(0.22, 1, 0.36, 1);
       --vd-block-gap: clamp(14px, 1.85vh, 20px);
+      --vd-radius: 6px;
       flex: 1;
       min-height: 0;
       width: 100%;
@@ -808,7 +840,7 @@
       font-size: 12px;
       font-weight: 600;
       padding: 11px 18px;
-      border-radius: 14px;
+      border-radius: var(--vd-radius);
       cursor: pointer;
       text-decoration: none;
       display: inline-flex;
@@ -818,12 +850,13 @@
     }
 
     .vd-btn-orange {
-      background: var(--vd-orange);
-      color: #1a0f0a;
+      background: linear-gradient(135deg, var(--vd-lime), var(--vd-lime-dim));
+      color: #0f1208;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
 
     .vd-btn-orange:hover {
-      opacity: 0.92;
+      opacity: 0.94;
     }
 
     .vd-btn-ghost {
@@ -845,7 +878,7 @@
 
     .vd-kpi-card {
       background: var(--vd-surface);
-      border-radius: clamp(14px, 1.4vh, 18px);
+      border-radius: var(--vd-radius);
       padding: clamp(16px, 2vh, 22px) clamp(16px, 2vw, 24px);
       border: 1px solid var(--vd-line);
       display: flex;
@@ -862,21 +895,21 @@
       justify-content: center;
       width: 40px;
       height: 40px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.22);
+      border-radius: var(--vd-radius);
+      background: rgba(0, 0, 0, 0.28);
       color: rgba(255, 255, 255, 0.82);
     }
 
     .vd-kpi-card:nth-child(1) .vd-kpi-ico {
-      color: var(--vd-mint);
+      color: var(--vd-lime);
     }
 
     .vd-kpi-card:nth-child(2) .vd-kpi-ico {
-      color: var(--vd-blue);
+      color: var(--vd-purple);
     }
 
     .vd-kpi-card:nth-child(3) .vd-kpi-ico {
-      color: var(--vd-orange);
+      color: var(--vd-purple-deep);
     }
 
     .vd-kpi-label {
@@ -1019,7 +1052,7 @@
       z-index: 30;
       width: 44px;
       height: 44px;
-      border-radius: 14px;
+      border-radius: var(--vd-radius);
       border: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(22, 22, 22, 0.92);
       backdrop-filter: blur(10px);
@@ -1044,7 +1077,7 @@
       font: inherit;
       font-size: 11px;
       font-weight: 700;
-      color: var(--vd-blue);
+      color: var(--vd-lime);
       cursor: pointer;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -1076,7 +1109,7 @@
       color: rgba(255, 255, 255, 0.72);
       text-decoration: none;
       padding: 8px 14px;
-      border-radius: 10px;
+      border-radius: var(--vd-radius);
       border: 1px solid var(--vd-line);
       transition: background 0.2s ease, color 0.2s ease;
     }
@@ -1107,7 +1140,7 @@
 
     .vd-widget {
       background: var(--vd-surface);
-      border-radius: clamp(12px, 1.2vh, 16px);
+      border-radius: var(--vd-radius);
       border: 1px solid var(--vd-line);
       display: flex;
       flex-direction: column;
@@ -1147,7 +1180,7 @@
     .vd-widget-link {
       font-size: 11px;
       font-weight: 700;
-      color: var(--vd-blue);
+      color: var(--vd-lime);
       text-decoration: none;
       opacity: 0.9;
     }
@@ -1171,7 +1204,7 @@
       max-width: 52px;
       margin: 0;
       padding: 6px 4px;
-      border-radius: 10px;
+      border-radius: 4px;
       border: 1px solid transparent;
       background: rgba(0, 0, 0, 0.2);
       color: rgba(255, 255, 255, 0.55);
@@ -1184,8 +1217,8 @@
     }
 
     .vd-day-pill.is-today {
-      background: rgba(61, 90, 254, 0.35);
-      border-color: rgba(61, 90, 254, 0.55);
+      background: rgba(168, 85, 247, 0.35);
+      border-color: rgba(212, 255, 74, 0.45);
       color: #fff;
     }
 
@@ -1217,7 +1250,7 @@
       gap: 12px 14px;
       align-items: center;
       padding: 10px 6px;
-      border-radius: 12px;
+      border-radius: var(--vd-radius);
       min-height: 0;
     }
 
@@ -1229,15 +1262,15 @@
     }
 
     .vd-sch-bar--0 {
-      background: linear-gradient(180deg, var(--vd-orange), #ffb74d);
+      background: linear-gradient(180deg, var(--vd-lime), var(--vd-lime-dim));
     }
 
     .vd-sch-bar--1 {
-      background: var(--vd-purple);
+      background: linear-gradient(180deg, var(--vd-purple), var(--vd-purple-deep));
     }
 
     .vd-sch-bar--2 {
-      background: var(--vd-mint);
+      background: linear-gradient(180deg, var(--vd-mint), #22c55e);
     }
 
     .vd-sch-title {
@@ -1262,7 +1295,7 @@
       gap: 12px;
       align-items: flex-start;
       padding: 8px 4px;
-      border-radius: 12px;
+      border-radius: var(--vd-radius);
     }
 
     .vd-note-check {
@@ -1344,7 +1377,7 @@
       display: inline-flex;
       align-items: center;
       padding: 4px 10px;
-      border-radius: 999px;
+      border-radius: 4px;
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.04em;
@@ -1352,18 +1385,18 @@
     }
 
     .vd-pill--mint {
-      background: rgba(105, 240, 174, 0.18);
-      color: var(--vd-mint);
+      background: rgba(212, 255, 74, 0.14);
+      color: var(--vd-lime);
     }
 
     .vd-pill--purple {
-      background: rgba(179, 136, 255, 0.18);
+      background: rgba(192, 132, 252, 0.16);
       color: var(--vd-purple);
     }
 
     .vd-pill--orange {
-      background: rgba(255, 112, 67, 0.18);
-      color: var(--vd-orange);
+      background: rgba(124, 58, 237, 0.2);
+      color: #e9d5ff;
     }
 
     .vd-cell-name {
@@ -1401,7 +1434,7 @@
       min-height: calc(var(--app-height) - 220px);
       height: 100%;
       border: 1px solid var(--dash-card-border);
-      border-radius: 18px;
+      border-radius: 6px;
       overflow: hidden;
       background: #0a0a0a;
     }
@@ -1413,7 +1446,7 @@
     }
 
     .view-communicatie-inner .stack-panel {
-      border-radius: 16px;
+      border-radius: 4px;
     }
 
     .app.panel-edit-tasks .tasks-panel {
@@ -2488,6 +2521,8 @@
           Notities
         </span>
       </button>
+      <div class="new-sidebar-spacer" aria-hidden="true"></div>
+      <div id="newChatDockSlot" class="new-chat-dock-slot"></div>
       <div class="new-sidebar-hint">
         Klassieke weergave: zet in de console
         <code style="color:var(--soft)">localStorage.setItem('clara_new_shell','0')</code>
@@ -2673,7 +2708,6 @@
           <p class="dash-placeholder">Tijdloze notities — nog niet in dit scherm.</p>
         </div>
       </div>
-      <div id="newChatDockSlot" class="new-chat-dock-slot"></div>
       <div id="newOffscreenChat" class="new-offscreen-chat" aria-hidden="true"></div>
     </div>
   </div>
