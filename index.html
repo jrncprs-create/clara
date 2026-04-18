@@ -173,13 +173,13 @@
         filter var(--transition);
     }
 
-    .chat-panel {
+    .notes-panel {
       top: 0;
       height: calc(50% - 7px);
       z-index: 2;
     }
 
-    .notes-panel {
+    .chat-panel {
       top: calc(50% + 7px);
       height: calc(50% - 7px);
       z-index: 1;
@@ -654,14 +654,15 @@
     .chat-shell {
       flex: 1;
       min-height: 0;
-      display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .chat-messages {
+      flex: 1;
       min-height: 0;
-      height: 100%;
-      overflow: auto;
+      overflow-y: auto;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -730,6 +731,7 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 8px;
+      align-items: end;
       padding: 12px;
       padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
       border-top: 1px solid var(--line);
@@ -739,6 +741,57 @@
       background: rgba(0,0,0,0.94);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+    }
+
+    .composer .composer-input {
+      min-height: 44px;
+      max-height: 132px;
+      resize: none;
+      overflow-y: auto;
+      font-family: inherit;
+    }
+
+    .chat-thinking {
+      display: none;
+      align-self: flex-start;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 11px;
+      margin-top: 2px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .chat-thinking.is-visible {
+      display: inline-flex;
+    }
+
+    .thinking-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.38);
+      animation: thinkingPulse 1.15s ease-in-out infinite;
+    }
+
+    .thinking-dot:nth-child(2) {
+      animation-delay: 0.14s;
+    }
+
+    .thinking-dot:nth-child(3) {
+      animation-delay: 0.28s;
+    }
+
+    @keyframes thinkingPulse {
+      0%, 70%, 100% {
+        opacity: 0.22;
+        transform: scale(0.92);
+      }
+      35% {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .panel-editor {
@@ -1208,6 +1261,14 @@
     </section>
 
     <section class="right-stack">
+      <section class="stack-panel notes-panel">
+        <div class="panel-header">
+          <div class="panel-title">Notities</div>
+          <div class="panel-meta" id="notesMeta"></div>
+        </div>
+        <div class="panel-body" id="notes"></div>
+      </section>
+
       <section class="stack-panel chat-panel">
         <div class="panel-header">
           <div class="panel-title">Chat</div>
@@ -1217,21 +1278,18 @@
           <div class="chat-shell">
             <div id="chatMessages" class="chat-messages">
               <div class="bubble clara">Hi. Ik ben Clara... Wat wil je me vertellen?</div>
+              <div id="chatThinking" class="chat-thinking" aria-hidden="true">
+                <span class="thinking-dot"></span>
+                <span class="thinking-dot"></span>
+                <span class="thinking-dot"></span>
+              </div>
             </div>
             <div class="composer">
-              <input id="chatInput" class="input" placeholder="Typ hier..." />
+              <textarea id="chatInput" class="input composer-input" rows="1" placeholder="Typ hier…"></textarea>
               <button id="chatSend" class="btn primary">OK</button>
             </div>
           </div>
         </div>
-      </section>
-
-      <section class="stack-panel notes-panel">
-        <div class="panel-header">
-          <div class="panel-title">Notities</div>
-          <div class="panel-meta" id="notesMeta"></div>
-        </div>
-        <div class="panel-body" id="notes"></div>
       </section>
 
       <section class="review-pane" id="reviewPane">
@@ -1284,7 +1342,7 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v6.1 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v6.2 • ${AUTO_VERSION}`;
 
     let dashboardRawData = { agenda: [], tasks: [], notes: [] };
     let dashboardEditIndex = new Map();
@@ -2173,6 +2231,24 @@
       scrollChatToBottom(false);
     }
 
+    function pinChatThinkingToEnd() {
+      const wrap = getChatMessagesEl();
+      const th = document.getElementById('chatThinking');
+      if (wrap && th) wrap.appendChild(th);
+    }
+
+    function setChatThinking(on) {
+      const el = document.getElementById('chatThinking');
+      if (!el) return;
+      if (on) {
+        pinChatThinkingToEnd();
+        el.classList.add('is-visible');
+        scrollChatToBottom(true);
+      } else {
+        el.classList.remove('is-visible');
+      }
+    }
+
     function addChatBubble(text, sender) {
       if (!text) return;
       const chatMessages = getChatMessagesEl();
@@ -2180,6 +2256,7 @@
       bubble.className = `bubble ${sender}`;
       bubble.textContent = text;
       chatMessages.appendChild(bubble);
+      pinChatThinkingToEnd();
       scrollChatToBottom(true);
     }
 
@@ -2205,6 +2282,7 @@
 
       if (wrap.childElementCount) {
         chatMessages.appendChild(wrap);
+        pinChatThinkingToEnd();
         scrollChatToBottom(true);
       }
     }
@@ -2216,6 +2294,7 @@
       meta.className = 'chat-meta';
       meta.textContent = text;
       chatMessages.appendChild(meta);
+      pinChatThinkingToEnd();
       scrollChatToBottom(true);
     }
 
@@ -2820,7 +2899,10 @@
 
     async function sendChatInternal(text) {
       const button = document.getElementById('chatSend');
+      const input = document.getElementById('chatInput');
       button.disabled = true;
+      if (input) input.disabled = true;
+      setChatThinking(true);
 
       try {
         const response = await fetch('/api/chat', {
@@ -2846,6 +2928,8 @@
         addChatBubble(`Verbinding mislukt: ${error.message || 'unknown error'}`, 'clara');
       } finally {
         button.disabled = false;
+        if (input) input.disabled = false;
+        setChatThinking(false);
         syncViewportHeight();
         scrollChatToBottom(true);
       }
@@ -2903,7 +2987,10 @@
     document.getElementById('chatSend').addEventListener('click', sendChat);
 
     document.getElementById('chatInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') sendChat();
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+      }
     });
 
     document.getElementById('chatInput').addEventListener('focus', () => {
