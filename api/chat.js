@@ -539,11 +539,28 @@ function overlapScore(a, b) {
 function titleCore(value) {
   return makeComparableText(value)
     .replace(/\b(vandaag|morgen|overmorgen)\b/g, ' ')
+    .replace(
+      /\b(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)(ochtend|middag|avond)\b/g,
+      ' '
+    )
     .replace(/\b(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\b/g, ' ')
     .replace(/\b\d{1,2}[:.]\d{2}\b/g, ' ')
     .replace(/\b\d{1,2}\b/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function titlesShareSignificantInfix(a, b, minLen = 9) {
+  const ca = titleCore(a)
+  const cb = titleCore(b)
+  if (!ca || !cb || ca.length < minLen || cb.length < minLen) return false
+  const [shorter, longer] = ca.length <= cb.length ? [ca, cb] : [cb, ca]
+  for (let i = 0; i <= shorter.length - minLen; i++) {
+    const frag = shorter.slice(i, i + minLen)
+    if (/^vergadering/i.test(frag) && frag.length <= 14) continue
+    if (longer.includes(frag)) return true
+  }
+  return false
 }
 
 function titlesLookSimilar(a, b) {
@@ -1103,12 +1120,17 @@ function detectDuplicateMatch(item, candidates) {
       }
     }
 
-    if (itemType === 'afspraak' && titleSimilar && sameDate && sameTime) {
-      return {
-        duplicate_warning: true,
-        duplicate_match_id: candidate.id,
-        duplicate_match_title: candidate.title,
-        duplicate_match_reason: 'vergelijkbare afspraak op hetzelfde moment'
+    if (itemType === 'afspraak' && sameDate && sameTime) {
+      const slotTitleSimilar =
+        titleSimilar ||
+        titlesShareSignificantInfix(candidate.title, item.title, 9)
+      if (slotTitleSimilar) {
+        return {
+          duplicate_warning: true,
+          duplicate_match_id: candidate.id,
+          duplicate_match_title: candidate.title,
+          duplicate_match_reason: 'vergelijkbare afspraak op hetzelfde moment'
+        }
       }
     }
 
