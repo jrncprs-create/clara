@@ -244,6 +244,14 @@ function normalizeWhitespace(str = '') {
     .trim()
 }
 
+function normalizeProjectMatchKey(raw) {
+  return normalizeWhitespace(
+    String(raw || '')
+      .toLowerCase()
+      .replace(/[-_]+/g, ' ')
+  )
+}
+
 function normalizeType(input) {
   const raw = safeString(input).toLowerCase()
 
@@ -1207,29 +1215,49 @@ async function normalizeReviewPayload(aiResult) {
     itemsForValidation = itemsWithProjectPrep.map(item => {
       if (!item.project_label || item.project_label.trim().length < 3) return item
 
-      const labelLower = item.project_label.toLowerCase()
-      const match = rows.find(row => {
-        const nameLower = normalizeWhitespace(row.name).toLowerCase()
-        if (!nameLower || !labelLower) return false
-        return (
-          nameLower === labelLower ||
-          nameLower.includes(labelLower) ||
-          labelLower.includes(nameLower)
-        )
+      const labelKey = normalizeProjectMatchKey(item.project_label)
+      if (!labelKey) return item
+
+      const matches = []
+      for (const row of rows) {
+        const nameKey = normalizeProjectMatchKey(row.name)
+        if (!nameKey) continue
+        if (nameKey === labelKey) {
+          matches.push({ row, kind: 'exact', score: 1 })
+        } else if (nameKey.includes(labelKey) || labelKey.includes(nameKey)) {
+          matches.push({ row, kind: 'contains', score: 0.7 })
+        }
+      }
+
+      if (!matches.length) return item
+
+      const hasExact = matches.some(m => m.kind === 'exact')
+      const pool = hasExact ? matches.filter(m => m.kind === 'exact') : matches
+
+      pool.sort((a, b) => {
+        const lenA = normalizeProjectMatchKey(a.row.name).length
+        const lenB = normalizeProjectMatchKey(b.row.name).length
+        if (lenA !== lenB) return lenA - lenB
+        return String(a.row.id).localeCompare(String(b.row.id))
       })
 
-      if (!match) return item
+      const best = pool[0]
+      const winner = best.row
 
       return {
         ...item,
         project_resolution: {
-          resolved_id: match.id,
-          candidates: [{ id: match.id, name: match.name, score: 1 }]
+          resolved_id: winner.id,
+          candidates: [{ id: winner.id, name: winner.name, score: best.score }]
         }
       }
     })
   } catch {
     // leave itemsForValidation as itemsWithProjectPrep
+  }
+
+  for (const item of itemsForValidation) {
+    console.log('[clara review] project_resolution', item.temp_id, item.project_resolution)
   }
 
   const validatedItems = enrichReviewItemsWithValidation(itemsForValidation)
