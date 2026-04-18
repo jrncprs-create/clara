@@ -2964,9 +2964,16 @@
 
   <script>
     const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v6.5 • ${AUTO_VERSION}`;
+    document.getElementById('version').textContent = `live • v6.6 • ${AUTO_VERSION}`;
 
-    let dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [], all: [] };
+    let dashboardRawData = {
+      agenda: [],
+      tasks: [],
+      notes: [],
+      workshops: [],
+      all: [],
+      lalampe_project_id: null
+    };
     /** Geselecteerde dag in Vandaag-agenda (yyyy-mm-dd); leeg = vandaag bij volgende render. */
     let vandaagAgendaSelectedKey = '';
     let expandedWorkshopId = null;
@@ -4410,13 +4417,33 @@
       grid.innerHTML = '<p class="ws-empty">Laden…</p>';
 
       try {
-        const res = await fetch('/api/workshops', { cache: 'no-store' });
-        const data = await res.json().catch(() => ({}));
-        const list = Array.isArray(data.workshops) ? data.workshops : [];
+        const pid = dashboardRawData.lalampe_project_id
+          ? String(dashboardRawData.lalampe_project_id).trim()
+          : '';
+        const qs = pid ? `?project_id=${encodeURIComponent(pid)}` : '';
+        const res = await fetch(`/api/workshops${qs}`, { cache: 'no-store' });
+        const ct = String(res.headers.get('content-type') || '');
+        const raw = await res.text();
+        let data = {};
+        if (ct.includes('application/json')) {
+          try {
+            data = raw ? JSON.parse(raw) : {};
+          } catch {
+            data = {};
+          }
+        }
+        let list = Array.isArray(data.workshops) ? data.workshops : [];
         if (!res.ok) {
           grid.innerHTML =
             '<p class="ws-empty">Workshops laden is mislukt. Controleer de verbinding en probeer opnieuw.</p>';
           return;
+        }
+        if (
+          !list.length &&
+          Array.isArray(dashboardRawData.workshops) &&
+          dashboardRawData.workshops.length
+        ) {
+          list = dashboardRawData.workshops;
         }
         if (!list.length) {
           grid.innerHTML = '<p class="ws-empty">Nog geen workshops gepland</p>';
@@ -5611,7 +5638,8 @@
           tasks: Array.isArray(data?.tasks) ? data.tasks : [],
           notes: Array.isArray(data?.notes) ? data.notes : [],
           workshops: Array.isArray(data?.workshops) ? data.workshops : [],
-          all: Array.isArray(data?.all) ? data.all : []
+          all: Array.isArray(data?.all) ? data.all : [],
+          lalampe_project_id: data?.lalampe_project_id ?? null
         };
 
         buildDashboardEditIndex(dashboardRawData);
@@ -5624,7 +5652,14 @@
         if (useNewShell()) renderVandaagDashboard();
         if (useNewShell() && parseHashRoute() === 'workshops') renderWorkshopsView();
       } catch (error) {
-        dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [], all: [] };
+        dashboardRawData = {
+          agenda: [],
+          tasks: [],
+          notes: [],
+          workshops: [],
+          all: [],
+          lalampe_project_id: null
+        };
         buildDashboardEditIndex(dashboardRawData);
         renderAllPanels();
         if (useNewShell()) renderVandaagDashboard();
