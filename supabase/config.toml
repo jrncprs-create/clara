@@ -1,0 +1,15 @@
+# Minimale Supabase CLI-config (lokaal: supabase start / db push).
+# project_id is een CLI-label, niet je Supabase-dashboard-projectref.
+project_id = "clara"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
