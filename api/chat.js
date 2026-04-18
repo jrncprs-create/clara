@@ -44,10 +44,16 @@ const EMPTY_ITEM = Object.freeze({
   date: '',
   end_date: '',
   time: '',
-  source_text: ''
+  source_text: '',
+  workshop_date: '',
+  start_time: '',
+  end_time: '',
+  max_participants: 4,
+  workshop_status: ''
 })
 
-const ALLOWED_TYPES = new Set(['taak', 'afspraak', 'notitie', 'idee', 'project', 'beslissing'])
+const ALLOWED_TYPES = new Set(['taak', 'afspraak', 'notitie', 'idee', 'project', 'beslissing', 'workshop'])
+const WORKSHOP_STATUSES = new Set(['draft', 'planned', 'open', 'full', 'completed', 'cancelled'])
 const TASK_STATUSES = new Set(['nieuw', 'open', 'bezig', 'wacht', 'klaar'])
 const TASK_PRIORITIES = new Set(['laag', 'middel', 'hoog'])
 
@@ -65,7 +71,7 @@ Je bent Clara, een compacte en scherpe assistent voor werkstructuur.
 Doel:
 Zet rommelige menselijke invoer om naar een strakke JSON-response voor review.
 Maar:
-- als de gebruiker gewoon los praat, groet, grap maakt, test, of iets zegt dat niet echt een taak, afspraak, notitie, idee, project of beslissing is:
+- als de gebruiker gewoon los praat, groet, grap maakt, test, of iets zegt dat niet echt een taak, afspraak, workshop, notitie, idee, project of beslissing is:
   - geef dan GEEN review
   - geef dan GEEN question
   - geef dan een korte reply terug
@@ -84,10 +90,12 @@ Belangrijke regels:
 - Gebruik alleen deze types:
   - taak
   - afspraak
+  - workshop (alleen bij duidelijke workshop-/sessie-intentie: bijv. "workshop", "avondworkshop", "LaLampe workshop", "plan een workshop", inschrijven met max deelnemers)
   - notitie
   - idee
   - project
   - beslissing
+- Gebruik NOOIT type "afspraak" voor een duidelijke workshop; gebruik dan "workshop".
 - Gebruik altijd exact deze keys per item:
   - type
   - title
@@ -99,6 +107,14 @@ Belangrijke regels:
   - end_date
   - time
   - source_text
+- Voor type "workshop" gebruik je daarnaast (vul ontbrekend met lege string of default hieronder):
+  - workshop_date (YYYY-MM-DD, verplicht als de datum duidelijk is)
+  - start_time (HH:MM of leeg)
+  - end_time (HH:MM of leeg)
+  - max_participants (getal; default 4 als niet genoemd)
+  - workshop_status ("planned", "open" of "draft"; default "planned")
+  - Zet project op "LaLampe" als de tekst duidelijk LaLampe/La Lampe betreft.
+  - Voor workshop: zet date, end_date, time, status (taak-status), priority op lege string.
 - Geef ontbrekende waarden als lege string.
 - Verzin geen datum of tijd als die niet duidelijk is.
 - Zet expliciete datums bij voorkeur direct om naar YYYY-MM-DD.
@@ -270,6 +286,7 @@ function normalizeType(input) {
   const raw = safeString(input).toLowerCase()
 
   if (['task', 'taak', 'todo', 'to-do'].includes(raw)) return 'taak'
+  if (['workshop', 'workshops'].includes(raw)) return 'workshop'
   if (['agenda', 'afspraak', 'event', 'appointment'].includes(raw)) return 'afspraak'
   if (['note', 'notitie', 'notes'].includes(raw)) return 'notitie'
   if (['idea', 'idee', 'ideen'].includes(raw)) return 'idee'
@@ -291,6 +308,21 @@ function normalizePriority(type, input) {
   const raw = safeString(input).toLowerCase()
   if (!raw) return 'middel'
   return TASK_PRIORITIES.has(raw) ? raw : 'middel'
+}
+
+function normalizeWorkshopStatus(input) {
+  const raw = safeString(input).toLowerCase()
+  if (WORKSHOP_STATUSES.has(raw)) return raw
+  return 'planned'
+}
+
+function textSuggestsWorkshopIntent(text) {
+  const v = ` ${normalizeWhitespace(text).toLowerCase()} `
+  if (!v.trim()) return false
+  if (/\bworkshops?\b/.test(v)) return true
+  if (/\b(avond|middag|ochtend)workshops?\b/.test(v)) return true
+  if (/\blalampe\b/.test(v) && /\b(workshop|sessie)\b/.test(v)) return true
+  return false
 }
 
 function getAmsterdamDateParts(baseDate = new Date()) {
@@ -516,7 +548,12 @@ function sanitizeNotitieFields(item) {
     priority: '',
     date: '',
     end_date: '',
-    time: ''
+    time: '',
+    workshop_date: '',
+    start_time: '',
+    end_time: '',
+    max_participants: 4,
+    workshop_status: ''
   }
 }
 
@@ -604,8 +641,18 @@ function projectLooksSimilar(a, b) {
 }
 
 function buildDedupeKey(item) {
+  const type = normalizeType(item?.type)
+  if (type === 'workshop') {
+    return [
+      type,
+      titleCore(item?.title),
+      safeString(item?.workshop_date),
+      safeString(item?.start_time),
+      makeComparableText(item?.project)
+    ].join('|')
+  }
   return [
-    normalizeType(item?.type),
+    type,
     titleCore(item?.title),
     safeString(item?.date),
     safeString(item?.time),
@@ -624,8 +671,8 @@ function formatHumanDate(dateStr) {
 
 function stripLeadingLabelPhrases(text) {
   return normalizeWhitespace(text)
-    .replace(/^(afspraak|taak|notitie|idee|project|beslissing)\s+(met|om|voor|over)\s+/i, '')
-    .replace(/^(afspraak|taak|notitie|idee|project|beslissing)\s+/i, '')
+    .replace(/^(afspraak|taak|notitie|idee|project|beslissing|workshop)\s+(met|om|voor|over)\s+/i, '')
+    .replace(/^(afspraak|taak|notitie|idee|project|beslissing|workshop)\s+/i, '')
     .trim()
 }
 
@@ -663,7 +710,7 @@ function cleanupSummarySentence(text) {
     .trim()
 }
 
-function buildFallbackSummary(type, date, time, project) {
+function buildFallbackSummary(type, date, time, project, maxParticipants = 0) {
   const humanDate = formatHumanDate(date)
   const projectPart = safeString(project)
 
@@ -695,10 +742,21 @@ function buildFallbackSummary(type, date, time, project) {
     return ''
   }
 
+  if (type === 'workshop') {
+    const humanDate = formatHumanDate(date)
+    const maxP = safeNumber(maxParticipants, 0)
+    const parts = []
+    if (humanDate) parts.push(humanDate)
+    if (time) parts.push(String(time))
+    if (maxP > 0) parts.push(`max ${maxP}`)
+    if (projectPart) parts.push(projectPart)
+    return parts.join(' · ')
+  }
+
   return ''
 }
 
-function buildSmartSummary({ type, title, summary, sourceText, date, time, project }) {
+function buildSmartSummary({ type, title, summary, sourceText, date, time, project, max_participants }) {
   const cleanTitle = normalizeWhitespace(title)
   const rawSummary = normalizeWhitespace(summary)
   const rawSource = normalizeWhitespace(sourceText)
@@ -723,12 +781,82 @@ function buildSmartSummary({ type, title, summary, sourceText, date, time, proje
     return candidate.slice(0, 160)
   }
 
-  return buildFallbackSummary(type, date, time, project).slice(0, 160)
+  return buildFallbackSummary(type, date, time, project, safeNumber(max_participants, 0)).slice(0, 160)
+}
+
+function sanitizeWorkshopItem(item, mode = 'save') {
+  const title =
+    normalizeWhitespace(item?.title) ||
+    normalizeWhitespace(item?.summary).slice(0, 80) ||
+    normalizeWhitespace(item?.source_text).slice(0, 80)
+
+  let project = normalizeWhitespace(item?.project)
+  const sourceText =
+    normalizeWhitespace(item?.source_text) ||
+    normalizeWhitespace(item?.raw) ||
+    normalizeWhitespace(item?.summary) ||
+    title
+
+  if (!project && /\blalampe\b/i.test(sourceText)) {
+    project = 'LaLampe'
+  }
+
+  let workshop_date = normalizeDate(item?.workshop_date) || normalizeDate(item?.date)
+  if (mode === 'save' && !workshop_date) {
+    workshop_date = extractDateFromText(sourceText)
+  }
+
+  let start_time = normalizeTime(item?.start_time) || normalizeTime(item?.time)
+  if (mode === 'save') {
+    const sourceHasTime = hasExplicitTimeInText(sourceText)
+    if (sourceHasTime && !start_time) {
+      start_time = extractTimeFromText(sourceText)
+    }
+  }
+
+  const end_time = normalizeTime(item?.end_time)
+
+  let max_participants = safeNumber(item?.max_participants, 0)
+  if (!max_participants || max_participants < 1) {
+    const capMatch = sourceText.match(/\b(?:max\.?|maximum)\s*(\d+)/i)
+    max_participants = capMatch ? Math.max(1, safeNumber(capMatch[1], 4)) : 4
+  }
+
+  const workshop_status = normalizeWorkshopStatus(item?.workshop_status || item?.status)
+
+  const summary = buildSmartSummary({
+    type: 'workshop',
+    title,
+    summary: item?.summary,
+    sourceText,
+    date: workshop_date,
+    time: start_time,
+    project,
+    max_participants
+  })
+
+  return {
+    ...EMPTY_ITEM,
+    type: 'workshop',
+    title,
+    summary,
+    project,
+    status: '',
+    priority: '',
+    date: '',
+    end_date: '',
+    time: '',
+    workshop_date,
+    start_time,
+    end_time,
+    max_participants,
+    workshop_status,
+    source_text: sourceText
+  }
 }
 
 function sanitizeItemCore(item, mode = 'save') {
   const rawType = normalizeType(item?.type)
-  const type = rawType || 'notitie'
 
   const title =
     normalizeWhitespace(item?.title) ||
@@ -741,6 +869,15 @@ function sanitizeItemCore(item, mode = 'save') {
     normalizeWhitespace(item?.raw) ||
     normalizeWhitespace(item?.summary) ||
     title
+
+  let type = rawType || 'notitie'
+  if (type === 'afspraak' && textSuggestsWorkshopIntent(sourceText)) {
+    type = 'workshop'
+  }
+
+  if (type === 'workshop') {
+    return sanitizeWorkshopItem({ ...item, title, project, source_text: sourceText }, mode)
+  }
 
   let date = normalizeDate(item?.date)
   let endDate = normalizeDate(item?.end_date)
@@ -810,6 +947,7 @@ function getItemValidationIssues(item) {
   const type = normalizeType(item.type)
   const title = safeString(item.title)
   const date = safeString(item.date)
+  const workshopDate = safeString(item.workshop_date)
 
   const issues = []
 
@@ -819,6 +957,17 @@ function getItemValidationIssues(item) {
       code: 'missing_title',
       reason: 'Titel ontbreekt.'
     })
+  }
+
+  if (type === 'workshop') {
+    if (!workshopDate) {
+      issues.push({
+        field: 'workshop_date',
+        code: 'missing_workshop_date',
+        reason: 'Workshop mist datum.'
+      })
+    }
+    return issues
   }
 
   if (type === 'afspraak' && !date) {
@@ -917,7 +1066,7 @@ function looksLikeStructuredWorkInput(text) {
   const value = normalizeWhitespace(text).toLowerCase()
   if (!value) return false
 
-  const workTypeWords = /\b(taak|afspraak|notitie|idee|project|beslissing|todo|agenda)\b/
+  const workTypeWords = /\b(taak|afspraak|notitie|idee|project|beslissing|todo|agenda|workshop)\b/
   const dateWords = /\b(vandaag|morgen|overmorgen|maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag|\d{1,2}[:.]\d{2}|\d{4}-\d{2}-\d{2}|\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4})\b/
   const taskVerbs = /\b(bellen|terugbellen|mailen|sturen|plannen|afspreken|maken|doen|uitzoeken|regelen|opruimen|kopen|bestellen|checken|schrijven|bespreken|reviewen|fixen|testen|updaten|inplannen)\b/
   const projectish = /\b(voor|over|met)\s+[a-z0-9]/i
@@ -947,7 +1096,7 @@ function buildCasualReply(text) {
     return 'Mooi. Ik noteer voorlopig alleen serieuze chaos.'
   }
 
-  return 'Dat klinkt gezellig, maar nog niet echt als iets om op te slaan. Geef me een taak, afspraak, notitie of project en ik trek het strak.'
+  return 'Dat klinkt gezellig, maar nog niet echt als iets om op te slaan. Geef me een taak, afspraak, workshop, notitie of project en ik trek het strak.'
 }
 
 async function parseWithOpenAI(text) {
@@ -1088,6 +1237,8 @@ async function findReviewDuplicateCandidates(items) {
   const candidates = []
 
   for (const item of items) {
+    if (normalizeType(item.type) === 'workshop') continue
+
     let query = supabase
       .from(TABLE_NAME)
       .select('id, type, title, summary, project, date, time')
@@ -1200,6 +1351,10 @@ async function addDuplicateWarningsToReviewItems(items) {
     ...item,
     ...detectDuplicateMatch(item, candidates)
   }))
+}
+
+function isWorkshopReviewItems(items) {
+  return items.length > 0 && items.every(it => normalizeType(it.type) === 'workshop')
 }
 
 async function normalizeReviewPayload(aiResult) {
@@ -1318,6 +1473,8 @@ async function normalizeReviewPayload(aiResult) {
     items: reviewItemsWithMatch
   }
 
+  const reviewMode = isWorkshopReviewItems(reviewItemsWithMatch) ? 'review_workshop' : 'review'
+
   const actions = reviewItemsWithMatch.length
     ? [
         { type: 'confirm_review', label: 'Opslaan' },
@@ -1332,7 +1489,7 @@ async function normalizeReviewPayload(aiResult) {
 
   if (blocked) {
     return {
-      mode: 'review',
+      mode: reviewMode,
       reply: 'Controleer dit even. Er ontbreekt nog iets.',
       question: null,
       confirmation: null,
@@ -1348,7 +1505,7 @@ async function normalizeReviewPayload(aiResult) {
   }
 
   return {
-    mode: 'review',
+    mode: reviewMode,
     reply: safeString(aiResult?.reply, 'Controleer dit even.'),
     question: null,
     confirmation: null,
@@ -1407,11 +1564,32 @@ async function deleteItem(body) {
   }
 }
 
+async function resolveProjectIdForWorkshopInsert(item) {
+  const rid = item?.project_resolution?.resolved_id
+  if (rid != null && rid !== '') return rid
+
+  const name =
+    safeString(item?.project_label) ||
+    safeString(item?.project_match?.name) ||
+    safeString(item?.project, 'LaLampe') ||
+    'LaLampe'
+
+  const { data, error } = await supabase.from('projects').select('id, name').ilike('name', name).limit(8)
+
+  if (error || !Array.isArray(data) || !data.length) return null
+
+  const exact = data.find(r => String(r.name || '').trim().toLowerCase() === name.toLowerCase())
+  return exact?.id || data[0]?.id || null
+}
+
 async function updateItem(body) {
   const itemId = safeString(body.id || body.item_id)
   if (!itemId) throw new Error('update_failed: missing id')
 
   const cleaned = sanitizeItemForUpdate(body)
+  if (normalizeType(cleaned.type) === 'workshop') {
+    throw new Error('update_failed: workshop_not_supported')
+  }
   const validation = validateItemForSave(cleaned)
 
   if (!validation.ok && cleaned.type === 'afspraak') {
@@ -1509,6 +1687,8 @@ async function confirmReview(body) {
       ...sanitizeItemForSave(item)
     }
     if (item?.project_match) base.project_match = item.project_match
+    if (item?.project_resolution) base.project_resolution = item.project_resolution
+    if (item?.project_label != null) base.project_label = item.project_label
     return base
   })
 
@@ -1524,11 +1704,12 @@ async function confirmReview(body) {
   const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
 
   if (blocked) {
+    const blockedReviewMode = isWorkshopReviewItems(enrichedItems) ? 'review_workshop' : 'review'
     return {
       blocked: true,
       response: buildResponse(body, {
         ok: true,
-        mode: 'review',
+        mode: blockedReviewMode,
         reply: 'Nog niet opgeslagen. Vul eerst de ontbrekende velden aan.',
         question: null,
         confirmation: null,
@@ -1555,14 +1736,17 @@ async function confirmReview(body) {
     }
   }
 
-  const exactExistingMatches = await findExactExistingMatches(uniqueItems)
+  const claraUnique = uniqueItems.filter(it => normalizeType(it.type) !== 'workshop')
+  const workshopUnique = uniqueItems.filter(it => normalizeType(it.type) === 'workshop')
+
+  const exactExistingMatches = await findExactExistingMatches(claraUnique)
   const smartDuplicateMatches = await findSmartDuplicateMatches(uniqueItems)
 
   const skippedDuplicates = []
   const inserts = []
   const now = new Date().toISOString()
 
-  for (const item of uniqueItems) {
+  for (const item of claraUnique) {
     const key = buildDedupeKey(item)
 
     if (exactExistingMatches.has(key)) {
@@ -1607,8 +1791,45 @@ async function confirmReview(body) {
     })
   }
 
-  if (!inserts.length) {
-    const text = summarizeSavedResult(0, skippedDuplicates.length)
+  const savedWorkshops = []
+  for (const item of workshopUnique) {
+    const projectId = await resolveProjectIdForWorkshopInsert(item)
+    if (!projectId) {
+      throw new Error('save_failed: workshop_project_not_found')
+    }
+
+    const row = {
+      project_id: projectId,
+      title: item.title,
+      workshop_type: 'lalampe',
+      workshop_date: item.workshop_date,
+      start_time: safeString(item.start_time) || null,
+      end_time: safeString(item.end_time) || null,
+      location: null,
+      max_participants: Math.max(1, safeNumber(item.max_participants, 4)),
+      status: normalizeWorkshopStatus(item.workshop_status),
+      notes: null,
+      created_at: now,
+      updated_at: now
+    }
+
+    const { data: wrow, error: werr } = await supabase.from('workshops').insert([row]).select().single()
+    if (werr) throw new Error(`save_failed: ${werr.message}`)
+    savedWorkshops.push(wrow)
+  }
+
+  let itemRows = []
+  if (inserts.length) {
+    const { data, error } = await supabase.from(TABLE_NAME).insert(inserts).select()
+    if (error) throw new Error(`save_failed: ${error.message}`)
+    itemRows = Array.isArray(data) ? data : []
+  }
+
+  const savedCount = itemRows.length + savedWorkshops.length
+  const skippedCount = skippedDuplicates.length
+
+  if (!savedCount) {
+    const text = summarizeSavedResult(0, skippedCount)
     return {
       blocked: false,
       response: buildResponse(body, {
@@ -1631,16 +1852,19 @@ async function confirmReview(body) {
     }
   }
 
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .insert(inserts)
-    .select()
-
-  if (error) throw new Error(`save_failed: ${error.message}`)
-
-  const savedCount = Array.isArray(data) ? data.length : 0
-  const skippedCount = skippedDuplicates.length
   const confirmationText = summarizeSavedResult(savedCount, skippedCount)
+  const savedPayload = [
+    ...itemRows.map(r => ({
+      id: r.id,
+      type: r.type,
+      title: r.title
+    })),
+    ...savedWorkshops.map(w => ({
+      id: w.id,
+      type: 'workshop',
+      title: w.title
+    }))
+  ]
 
   return {
     blocked: false,
@@ -1650,11 +1874,7 @@ async function confirmReview(body) {
       reply: null,
       confirmation: {
         text: confirmationText,
-        saved: (data || []).map(item => ({
-          id: item.id,
-          type: item.type,
-          title: item.title
-        })),
+        saved: savedPayload,
         skipped_duplicates: skippedDuplicates
       },
       review: null,

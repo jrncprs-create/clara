@@ -4984,6 +4984,7 @@
       }
 
       if (meta?.blocked_by === 'missing_date') addChatMetaLine('Datum ontbreekt.');
+      if (meta?.blocked_by === 'missing_workshop_date') addChatMetaLine('Workshopdatum ontbreekt.');
       if (meta?.blocked_by === 'missing_time') addChatMetaLine('Tijd ontbreekt.');
     }
 
@@ -4992,11 +4993,11 @@
 
       const mode = String(result.mode || '').toLowerCase();
 
-      if (mode !== 'review' && currentReviewData) {
+      if (mode !== 'review' && mode !== 'review_workshop' && currentReviewData) {
         closeReviewPane(true);
       }
 
-      if (mode === 'review' && result.review) {
+      if ((mode === 'review' || mode === 'review_workshop') && result.review) {
         openReviewPane(result);
         addChatBubble(getReplyText(result, 'Controleer dit even.'), 'clara');
         return;
@@ -5048,9 +5049,23 @@
 
     function getMetaParts(item) {
       const parts = [];
+      const t = String(item.type || '').toLowerCase();
+      if (t === 'workshop') {
+        if (item.workshop_date) parts.push(item.workshop_date);
+        if (item.start_time) parts.push(item.start_time + (item.end_time ? '–' + item.end_time : ''));
+        if (item.max_participants) parts.push(`max ${item.max_participants}`);
+        if (item.workshop_status) parts.push(item.workshop_status);
+        if (item.project) parts.push(item.project);
+        if (item.project_match && item.project_match.name) {
+          const c = item.project_match.confidence;
+          const scorePart = typeof c === 'number' && Number.isFinite(c) ? c.toFixed(2) : String(c ?? '');
+          parts.push(`Project: ${item.project_match.name} (confidence: ${scorePart})`);
+        }
+        return parts;
+      }
       if (item.date) parts.push(item.date);
       if (item.time) parts.push(item.time);
-      else if (String(item.type || '').toLowerCase() === 'afspraak' && item.date) parts.push('hele dag');
+      else if (t === 'afspraak' && item.date) parts.push('hele dag');
       if (item.project) parts.push(item.project);
       if (item.priority) parts.push(`prio ${item.priority}`);
       if (item.status && String(item.type || '').toLowerCase() === 'taak') parts.push(item.status);
@@ -5255,6 +5270,100 @@
                 <div class="label">Samenvatting</div>
                 <textarea class="textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
                 ${renderReviewFieldHelp(item, 'summary')}
+              </div>
+            </div>
+
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="${reviewFieldClass(item, 'source_text')}">
+                <div class="label">Brontekst</div>
+                <input class="input" value="${escapeHtml(item.source_text || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'source_text', this.value)" />
+                ${renderReviewFieldHelp(item, 'source_text')}
+              </div>
+            </div>
+
+            <div class="edit-actions">
+              <button class="btn ghost" type="button" onclick="closeReviewInlineEdit()">Terug</button>
+              <button class="btn primary" type="button" onclick="saveReviewInlineEdit('${escapeHtml(item.temp_id || '')}')">Bewaren</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const isWorkshop = String(item.type || '').toLowerCase() === 'workshop';
+      if (isWorkshop) {
+        const ws = String(item.workshop_status || 'planned');
+        const wsOpts = ['draft', 'planned', 'open', 'full', 'completed', 'cancelled'];
+        const wsOptionsHtml = wsOpts
+          .map(
+            (v) =>
+              `<option value="${escapeHtml(v)}" ${ws === v ? 'selected' : ''}>${escapeHtml(v)}</option>`
+          )
+          .join('');
+        return `
+          <div class="review-edit">
+            <div class="edit-grid">
+              <div class="${reviewFieldClass(item, 'type')}">
+                <div class="label">Type</div>
+                <select class="select" disabled aria-readonly="true">
+                  <option>workshop</option>
+                </select>
+              </div>
+              <div class="${reviewFieldClass(item, 'project')}">
+                <div class="label">Project</div>
+                <input class="input" value="${escapeHtml(item.project || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'project', this.value)" />
+                ${renderReviewFieldHelp(item, 'project')}
+              </div>
+            </div>
+
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="${reviewFieldClass(item, 'title')}">
+                <div class="label">Titel</div>
+                <input class="input" value="${escapeHtml(item.title || '')}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'title', this.value)" />
+                ${renderReviewFieldHelp(item, 'title')}
+              </div>
+            </div>
+
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="${reviewFieldClass(item, 'summary')}">
+                <div class="label">Samenvatting</div>
+                <textarea class="textarea" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'summary', this.value)">${escapeHtml(item.summary || '')}</textarea>
+                ${renderReviewFieldHelp(item, 'summary')}
+              </div>
+            </div>
+
+            <div class="edit-grid" style="margin-top:12px;">
+              <div class="${reviewFieldClass(item, 'workshop_date')}">
+                <div class="label">Datum (workshop)</div>
+                <input class="input" value="${escapeHtml(item.workshop_date || '')}" placeholder="2026-04-23" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'workshop_date', this.value)" />
+                ${renderReviewFieldHelp(item, 'workshop_date')}
+              </div>
+              <div class="${reviewFieldClass(item, 'max_participants')}">
+                <div class="label">Max. deelnemers</div>
+                <input class="input" type="number" min="1" value="${escapeHtml(String(item.max_participants != null ? item.max_participants : 4))}" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'max_participants', Number(this.value) || 4)" />
+                ${renderReviewFieldHelp(item, 'max_participants')}
+              </div>
+            </div>
+
+            <div class="edit-grid" style="margin-top:12px;">
+              <div class="${reviewFieldClass(item, 'start_time')}">
+                <div class="label">Starttijd</div>
+                <input class="input" value="${escapeHtml(item.start_time || '')}" placeholder="19:00" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'start_time', this.value)" />
+                ${renderReviewFieldHelp(item, 'start_time')}
+              </div>
+              <div class="${reviewFieldClass(item, 'end_time')}">
+                <div class="label">Eindtijd</div>
+                <input class="input" value="${escapeHtml(item.end_time || '')}" placeholder="21:30" oninput="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'end_time', this.value)" />
+                ${renderReviewFieldHelp(item, 'end_time')}
+              </div>
+            </div>
+
+            <div class="edit-grid single" style="margin-top:12px;">
+              <div class="${reviewFieldClass(item, 'workshop_status')}">
+                <div class="label">Workshopstatus</div>
+                <select class="select" onchange="updateReviewInlineField('${escapeHtml(item.temp_id || '')}', 'workshop_status', this.value)">
+                  ${wsOptionsHtml}
+                </select>
+                ${renderReviewFieldHelp(item, 'workshop_status')}
               </div>
             </div>
 
@@ -5542,7 +5651,8 @@
           return;
         }
 
-        if (String(result.mode || '').toLowerCase() === 'review') {
+        const rMode = String(result.mode || '').toLowerCase();
+        if (rMode === 'review' || rMode === 'review_workshop') {
           if (useNewShell()) setNewHashRoute('communicatie');
           else setMainTab('notes');
           currentReviewData = result;
