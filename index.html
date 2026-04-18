@@ -796,6 +796,238 @@
       max-width: 42em;
     }
 
+    /* Workshops (#/workshops) — donker, kaart-grid */
+    .ws-page {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .ws-page-head {
+      margin-bottom: clamp(20px, 3vh, 28px);
+    }
+
+    .ws-page-title {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 2.4vh + 1.5vw, 32px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .ws-page-lead {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.42);
+      font-weight: 500;
+    }
+
+    .ws-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(16px, 2.2vw, 22px);
+      align-content: start;
+    }
+
+    @media (max-width: 720px) {
+      .ws-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .ws-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: #121214;
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.34);
+      padding: 22px 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      width: 100%;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .ws-card:hover {
+      border-color: rgba(110, 231, 168, 0.28);
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.42);
+      transform: translateY(-2px);
+    }
+
+    .ws-card:focus-visible {
+      outline: 2px solid rgba(196, 168, 255, 0.55);
+      outline-offset: 3px;
+    }
+
+    .ws-card--full {
+      opacity: 0.88;
+    }
+
+    .ws-card--full:hover {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .ws-card-top {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ws-card-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.25;
+      color: #fff;
+    }
+
+    .ws-card-date {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.44);
+    }
+
+    .ws-card-stat {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 4px 10px;
+      padding: 4px 0 2px;
+    }
+
+    .ws-card-stat-num {
+      font-size: clamp(30px, 4vh, 40px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: #6ee7a8;
+    }
+
+    .ws-card-stat-sep {
+      font-size: 22px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.22);
+    }
+
+    .ws-card-stat-max {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .ws-card-stat-label {
+      width: 100%;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.32);
+    }
+
+    .ws-status {
+      align-self: flex-start;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.25);
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .ws-status--open {
+      border-color: rgba(110, 231, 168, 0.35);
+      background: rgba(110, 231, 168, 0.12);
+      color: #6ee7a8;
+    }
+
+    .ws-status--planned {
+      border-color: rgba(196, 168, 255, 0.35);
+      background: rgba(139, 92, 246, 0.12);
+      color: #c4a8ff;
+    }
+
+    .ws-status--draft {
+      color: rgba(255, 255, 255, 0.42);
+    }
+
+    .ws-status--full {
+      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .ws-status--completed,
+    .ws-status--cancelled {
+      opacity: 0.75;
+    }
+
+    .ws-card-roster {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      align-items: center;
+      min-height: 1.25em;
+    }
+
+    .ws-roster-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.78);
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ws-roster-more {
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(196, 168, 255, 0.95);
+    }
+
+    .ws-card-roster--muted {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.34);
+    }
+
+    .ws-card-action {
+      margin-top: auto;
+      padding-top: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(196, 168, 255, 0.85);
+      letter-spacing: 0.04em;
+    }
+
+    .ws-empty {
+      margin: 0;
+      padding: 28px 8px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.36);
+      font-weight: 500;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+
     /* Vandaag: compositie-grid (asymmetrisch), desktop zonder page-scroll */
     @media (min-width: 861px) {
       .new-views:has(#viewVandaag:not([hidden])) {
@@ -2561,10 +2793,12 @@
           <p class="new-page-sub">Volgt in een volgende stap.</p>
           <p class="dash-placeholder">Grote projectkaarten — nog niet gebouwd.</p>
         </div>
-        <div id="viewWorkshops" class="new-view" data-new-view="workshops" hidden>
-          <h1 class="new-page-title">Workshops</h1>
-          <p class="new-page-sub">LaLampe — aparte UI volgt.</p>
-          <p class="dash-placeholder">Geen workshoplijst in deze fase.</p>
+        <div id="viewWorkshops" class="new-view ws-page" data-new-view="workshops" hidden>
+          <header class="ws-page-head">
+            <h1 class="ws-page-title">Workshops</h1>
+            <p class="ws-page-lead">LaLampe — overzicht van geplande sessies</p>
+          </header>
+          <div id="wsWorkshopsGrid" class="ws-grid" aria-live="polite"></div>
         </div>
         <div id="viewCommunicatie" class="new-view" data-new-view="communicatie" hidden>
           <h1 class="new-page-title">Communicatie</h1>
@@ -3151,6 +3385,7 @@
 
       dockChatForShellLayout();
       if (route === 'vandaag') renderVandaagDashboard();
+      if (route === 'workshops') renderWorkshopsView();
       syncViewportHeight();
     }
 
@@ -4058,6 +4293,141 @@
       if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || '—';
       const [y, m, d] = s.split('-');
       return `${d}-${m}-${y}`;
+    }
+
+    const WORKSHOP_STATUS_LABELS_NL = {
+      draft: 'Concept',
+      planned: 'Gepland',
+      open: 'Open',
+      full: 'Vol',
+      completed: 'Afgerond',
+      cancelled: 'Geannuleerd'
+    };
+
+    const WS_ROSTER_FETCH_MAX = 8;
+
+    function workshopsFormatCardDate(value) {
+      const s = String(value || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || '—';
+      const [y, m, d] = s.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      return new Intl.DateTimeFormat('nl-NL', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+        .format(dt)
+        .replace(/\.$/, '');
+    }
+
+    async function workshopsFetchParticipantPreviews(list) {
+      const map = new Map();
+      if (!Array.isArray(list) || !list.length) return map;
+      if (list.length > WS_ROSTER_FETCH_MAX) {
+        for (const w of list) {
+          map.set(w.id, { names: [], extra: 0, skipped: true });
+        }
+        return map;
+      }
+      await Promise.all(
+        list.map(async (w) => {
+          const id = String(w.id || '').trim();
+          if (!id) {
+            map.set(w.id, { names: [], extra: 0 });
+            return;
+          }
+          try {
+            const res = await fetch(`/api/workshops?id=${encodeURIComponent(id)}`, { cache: 'no-store' });
+            const data = await res.json().catch(() => ({}));
+            const parts = Array.isArray(data.participants) ? data.participants : [];
+            const names = parts.map((p) => String(p.name || '').trim()).filter(Boolean);
+            map.set(w.id, {
+              names: names.slice(0, 4),
+              extra: Math.max(0, names.length - 4)
+            });
+          } catch {
+            map.set(w.id, { names: [], extra: 0 });
+          }
+        })
+      );
+      return map;
+    }
+
+    function workshopsCardRosterHtml(preview, tot) {
+      if (preview?.names?.length) {
+        const chips = preview.names.map((n) => `<span class="ws-roster-name">${escapeHtml(n)}</span>`).join('');
+        const more =
+          preview.extra > 0 ? `<span class="ws-roster-more">+${String(preview.extra)}</span>` : '';
+        return `<div class="ws-card-roster">${chips}${more}</div>`;
+      }
+      if (preview?.skipped && tot > 0) {
+        return `<div class="ws-card-roster ws-card-roster--muted">${String(tot)} ingeschreven</div>`;
+      }
+      if (tot > 0) {
+        return `<div class="ws-card-roster ws-card-roster--muted">${String(tot)} ingeschreven</div>`;
+      }
+      return '<div class="ws-card-roster ws-card-roster--muted">Nog geen inschrijvingen</div>';
+    }
+
+    function workshopsViewCardHtml(w, preview) {
+      const id = String(w.id || '').trim();
+      const title = escapeHtml(w.title || 'Workshop');
+      const dateLine = escapeHtml(workshopsFormatCardDate(w.workshop_date));
+      const max = Math.max(0, Number(w.max_participants) || 0);
+      const conf = Math.max(0, Number(w.participant_confirmed) || 0);
+      const tot = Math.max(0, Number(w.participant_total) || 0);
+      const status = String(w.status || 'open').toLowerCase();
+      const stKey = WORKSHOP_STATUS_LABELS_NL[status] !== undefined ? status : 'open';
+      const nl = WORKSHOP_STATUS_LABELS_NL[stKey] || stKey;
+      const isFull = stKey === 'full' || (max > 0 && conf >= max);
+      const cardClass = `ws-card${isFull ? ' ws-card--full' : ''}`;
+      const pillClass = `ws-status ws-status--${stKey}`;
+      const roster = workshopsCardRosterHtml(preview, tot);
+      return `
+        <button type="button" class="${cardClass}" data-ws-card="1" data-workshop-id="${escapeHtml(id)}">
+          <div class="ws-card-top">
+            <h2 class="ws-card-title">${title}</h2>
+            <p class="ws-card-date">${dateLine}</p>
+          </div>
+          <div class="ws-card-stat" aria-label="Bevestigde deelnemers ten opzichte van maximum">
+            <span class="ws-card-stat-num">${String(conf)}</span>
+            <span class="ws-card-stat-sep" aria-hidden="true">/</span>
+            <span class="ws-card-stat-max">${max > 0 ? String(max) : '—'}</span>
+            <span class="ws-card-stat-label">deelnemers bevestigd</span>
+          </div>
+          <span class="${pillClass}">${escapeHtml(nl)}</span>
+          ${roster}
+          <div class="ws-card-action">Details</div>
+        </button>`;
+    }
+
+    async function renderWorkshopsView() {
+      if (!useNewShell()) return;
+      const grid = document.getElementById('wsWorkshopsGrid');
+      if (!grid) return;
+
+      grid.innerHTML = '<p class="ws-empty">Laden…</p>';
+
+      try {
+        const res = await fetch('/api/workshops', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        const list = Array.isArray(data.workshops) ? data.workshops : [];
+        if (!res.ok) {
+          grid.innerHTML =
+            '<p class="ws-empty">Workshops laden is mislukt. Controleer de verbinding en probeer opnieuw.</p>';
+          return;
+        }
+        if (!list.length) {
+          grid.innerHTML = '<p class="ws-empty">Nog geen workshops gepland</p>';
+          return;
+        }
+        const rosterMap = await workshopsFetchParticipantPreviews(list);
+        grid.innerHTML = list.map((w) => workshopsViewCardHtml(w, rosterMap.get(w.id))).join('');
+      } catch {
+        grid.innerHTML =
+          '<p class="ws-empty">Workshops laden is mislukt. Controleer de verbinding en probeer opnieuw.</p>';
+      }
     }
 
     function renderWorkshops() {
@@ -5252,11 +5622,13 @@
 
         renderAllPanels();
         if (useNewShell()) renderVandaagDashboard();
+        if (useNewShell() && parseHashRoute() === 'workshops') renderWorkshopsView();
       } catch (error) {
         dashboardRawData = { agenda: [], tasks: [], notes: [], workshops: [], all: [] };
         buildDashboardEditIndex(dashboardRawData);
         renderAllPanels();
         if (useNewShell()) renderVandaagDashboard();
+        if (useNewShell() && parseHashRoute() === 'workshops') renderWorkshopsView();
       }
     }
 
