@@ -1468,10 +1468,14 @@ async function confirmReview(body) {
   const items = Array.isArray(body.items) ? body.items : []
   if (!items.length) throw new Error('no_items_to_save')
 
-  const cleanedItems = items.map((item, index) => ({
-    temp_id: safeString(item?.temp_id, `item_${index + 1}`),
-    ...sanitizeItemForSave(item)
-  }))
+  const cleanedItems = items.map((item, index) => {
+    const base = {
+      temp_id: safeString(item?.temp_id, `item_${index + 1}`),
+      ...sanitizeItemForSave(item)
+    }
+    if (item?.project_match) base.project_match = item.project_match
+    return base
+  })
 
   const uniqueMap = new Map()
   for (const item of cleanedItems) {
