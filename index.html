@@ -850,34 +850,93 @@
     }
 
     .ws-modal-panel {
-      width: min(440px, calc(100vw - 32px));
+      width: min(560px, calc(100vw - 32px));
       max-height: min(90vh, 720px);
       overflow: auto;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: #121214;
-      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: radial-gradient(120% 140% at 10% 0%, rgba(196, 168, 255, 0.08) 0%, rgba(18, 18, 20, 0) 55%),
+        linear-gradient(180deg, rgba(18, 18, 20, 0.98) 0%, rgba(14, 14, 16, 0.98) 100%);
+      box-shadow: 0 28px 64px rgba(0, 0, 0, 0.52);
     }
 
     .ws-modal-panel .modal-header {
-      padding: 16px 18px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     }
 
     .ws-modal-panel .modal-footer {
-      padding: 14px 18px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      justify-content: flex-end;
+      padding: 14px 20px 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ws-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .ws-modal-title {
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin: 0;
+    }
+
+    .ws-modal-sub {
+      margin: 6px 0 0;
+      font-size: 13px;
+      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.46);
+      font-weight: 500;
+      max-width: 46ch;
     }
 
     .ws-modal-form {
-      padding: 16px 18px 8px;
+      padding: 16px 20px 10px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px 14px;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px 14px;
     }
 
     .ws-modal-form .field-span-2 {
+      grid-column: 1 / -1;
+    }
+
+    .ws-modal-form .ws-field-title {
+      grid-column: 1 / -1;
+    }
+
+    .ws-modal-form .ws-field-date {
+      grid-column: 1 / span 3;
+    }
+
+    .ws-modal-form .ws-field-status {
+      grid-column: 4 / span 3;
+    }
+
+    .ws-modal-form .ws-field-start {
+      grid-column: 1 / span 2;
+    }
+
+    .ws-modal-form .ws-field-end {
+      grid-column: 3 / span 2;
+    }
+
+    .ws-modal-form .ws-field-max {
+      grid-column: 5 / span 2;
+    }
+
+    .ws-modal-form .ws-field-location {
+      grid-column: 1 / -1;
+    }
+
+    .ws-modal-form .ws-field-notes {
       grid-column: 1 / -1;
     }
 
@@ -887,18 +946,40 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: rgba(255, 255, 255, 0.38);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+    }
+
+    .ws-modal-form .input,
+    .ws-modal-form .select,
+    .ws-modal-form .textarea {
+      border-color: rgba(255, 255, 255, 0.08);
+      background: rgba(6, 6, 8, 0.35);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      min-height: 44px;
+    }
+
+    .ws-modal-form .textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    .ws-modal-form .input:focus,
+    .ws-modal-form .select:focus,
+    .ws-modal-form .textarea:focus {
+      outline: none;
+      border-color: rgba(196, 168, 255, 0.55);
+      box-shadow: 0 0 0 3px rgba(196, 168, 255, 0.16);
     }
 
     .ws-modal-error {
-      margin: 0 18px 12px;
+      margin: 0 20px 10px;
       padding: 10px 12px;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 13px;
       line-height: 1.4;
-      color: rgba(255, 180, 180, 0.95);
-      background: rgba(80, 24, 24, 0.45);
-      border: 1px solid rgba(255, 120, 120, 0.25);
+      color: rgba(255, 210, 210, 0.95);
+      background: rgba(40, 12, 12, 0.45);
+      border: 1px solid rgba(255, 130, 130, 0.18);
       display: none;
     }
 
@@ -909,6 +990,17 @@
     @media (max-width: 520px) {
       .ws-modal-form {
         grid-template-columns: 1fr;
+      }
+
+      .ws-modal-form .ws-field-title,
+      .ws-modal-form .ws-field-date,
+      .ws-modal-form .ws-field-status,
+      .ws-modal-form .ws-field-start,
+      .ws-modal-form .ws-field-end,
+      .ws-modal-form .ws-field-max,
+      .ws-modal-form .ws-field-location,
+      .ws-modal-form .ws-field-notes {
+        grid-column: 1 / -1;
       }
     }
 
@@ -2919,42 +3011,44 @@
               aria-labelledby="wsCreateModalTitle"
             >
               <div class="modal-header">
-                <div>
-                  <div class="modal-title" id="wsCreateModalTitle">Nieuwe workshop</div>
-                  <div class="modal-subtitle">LaLampe — velden met * zijn verplicht</div>
+                <div class="ws-modal-head">
+                  <div>
+                    <div class="ws-modal-title" id="wsCreateModalTitle">Nieuwe workshop</div>
+                    <p class="ws-modal-sub">Rustig invullen. Velden met * zijn verplicht.</p>
+                  </div>
                 </div>
               </div>
               <div id="wsCreateModalError" class="ws-modal-error" role="alert"></div>
               <div class="ws-modal-form">
-                <div class="field field-span-2">
+                <div class="field ws-field-title">
                   <div class="label">Titel *</div>
                   <input class="input" id="wsCreateTitle" type="text" autocomplete="off" placeholder="Bijv. Avondworkshop lamp" />
                 </div>
-                <div class="field field-span-2">
+                <div class="field ws-field-date">
                   <div class="label">Datum *</div>
                   <input class="input" id="wsCreateDate" type="date" />
                 </div>
-                <div class="field">
-                  <div class="label">Starttijd</div>
-                  <input class="input" id="wsCreateStart" type="time" />
-                </div>
-                <div class="field">
-                  <div class="label">Eindtijd</div>
-                  <input class="input" id="wsCreateEnd" type="time" />
-                </div>
-                <div class="field">
-                  <div class="label">Max. deelnemers *</div>
-                  <input class="input" id="wsCreateMax" type="number" min="1" max="99" value="4" />
-                </div>
-                <div class="field">
+                <div class="field ws-field-status">
                   <div class="label">Status *</div>
                   <select class="select" id="wsCreateStatus"></select>
                 </div>
-                <div class="field field-span-2">
+                <div class="field ws-field-start">
+                  <div class="label">Starttijd</div>
+                  <input class="input" id="wsCreateStart" type="time" />
+                </div>
+                <div class="field ws-field-end">
+                  <div class="label">Eindtijd</div>
+                  <input class="input" id="wsCreateEnd" type="time" />
+                </div>
+                <div class="field ws-field-max">
+                  <div class="label">Max. deelnemers *</div>
+                  <input class="input" id="wsCreateMax" type="number" min="1" max="99" value="4" />
+                </div>
+                <div class="field ws-field-location">
                   <div class="label">Locatie</div>
                   <input class="input" id="wsCreateLocation" type="text" autocomplete="off" placeholder="Optioneel" />
                 </div>
-                <div class="field field-span-2">
+                <div class="field ws-field-notes">
                   <div class="label">Notities</div>
                   <textarea class="textarea" id="wsCreateNotes" rows="2" placeholder="Optioneel"></textarea>
                 </div>
