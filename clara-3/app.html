@@ -369,10 +369,23 @@
       if(/\b(notitie|note|onthouden|memo|logboek)\b/.test(t))return 'note';
       return 'task';
     }
+    function escapeRegex(value=''){return String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
     function detectProjectFromText(text=''){
-      const raw=String(text||'').toLowerCase();
-      const projects=appData?.projects||[];
-      return projects.find(p=>raw.includes(String(p.name||'').toLowerCase()))||null;
+      const raw=String(text||'');
+      const normalizedRaw=normalizeText(raw);
+      const projects=(appData?.projects||[])
+        .map(project=>({project,name:normalizeText(project?.name||'').trim()}))
+        .filter(item=>item.name)
+        .sort((a,b)=>b.name.length-a.name.length);
+
+      const exact=projects.find(item=>normalizedRaw.trim()===item.name);
+      if(exact)return exact.project;
+
+      const boundaryMatch=projects.find(item=>new RegExp(`(^|\\W)${escapeRegex(item.name)}($|\\W)`).test(normalizedRaw));
+      if(boundaryMatch)return boundaryMatch.project;
+
+      const partial=projects.find(item=>normalizedRaw.includes(item.name));
+      return partial?.project||null;
     }
     function startOfToday(){const d=new Date();d.setHours(0,0,0,0);return d}
     function parseDutchDate(text=''){
