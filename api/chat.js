@@ -1453,9 +1453,7 @@ async function normalizeReviewPayload(aiResult) {
 
   const validatedItems = enrichReviewItemsWithValidation(itemsForValidation)
   const enrichedItems = await addDuplicateWarningsToReviewItems(validatedItems)
-  const blocked = enrichedItems.find(item => item.invalid_fields.length > 0)
-
-  const reviewItemsWithMatch = enrichedItems.map(item => {
+  const enrichedReviewItems = enrichedItems.map(item => {
     const top = item.project_resolution?.candidates?.[0]
     const rid = item.project_resolution?.resolved_id ?? top?.id
     if (!top || rid == null || rid === '') return { ...item }
@@ -1467,18 +1465,19 @@ async function normalizeReviewPayload(aiResult) {
       }
     }
   })
+  const blocked = enrichedReviewItems.find(item => item.invalid_fields.length > 0)
 
   const review = {
     summary: safeString(aiResult?.review?.summary, 'Ik heb dit alvast klaargezet.'),
-    items: reviewItemsWithMatch
+    items: enrichedReviewItems
   }
 
-  const reviewMode = isWorkshopReviewItems(reviewItemsWithMatch) ? 'review_workshop' : 'review'
+  const reviewMode = isWorkshopReviewItems(enrichedReviewItems) ? 'review_workshop' : 'review'
 
-  const actions = reviewItemsWithMatch.length
+  const actions = enrichedReviewItems.length
     ? [
         { type: 'confirm_review', label: 'Opslaan' },
-        ...reviewItemsWithMatch.map(item => ({
+        ...enrichedReviewItems.map(item => ({
           type: 'edit_review_item',
           label: 'Aanpassen',
           temp_id: item.temp_id
