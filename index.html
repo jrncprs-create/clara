@@ -3223,8 +3223,10 @@
   </div>
 
   <script>
-    const AUTO_VERSION = new Date(document.lastModified).toLocaleString('nl-NL');
-    document.getElementById('version').textContent = `live • v6.6 • ${AUTO_VERSION}`;
+    const lastChangeDate = new Date(document.lastModified);
+    const AUTO_VERSION = lastChangeDate.toLocaleString('nl-NL');
+    const CHANGE_VERSION = `${String(lastChangeDate.getFullYear()).slice(-2)}.${String(lastChangeDate.getMonth() + 1).padStart(2, '0')}.${String(lastChangeDate.getDate()).padStart(2, '0')}-${String(lastChangeDate.getHours()).padStart(2, '0')}${String(lastChangeDate.getMinutes()).padStart(2, '0')}`;
+    document.getElementById('version').textContent = `live • v${CHANGE_VERSION} • ${AUTO_VERSION}`;
 
     let dashboardRawData = {
       agenda: [],
