@@ -61,6 +61,13 @@
     .span-2{grid-column:1/-1}
     .empty{color:var(--soft);font-size:14px;padding:10px 0}
     .status-line{color:var(--muted);font-size:13px;min-height:19px;margin-top:12px}
+
+    .intake-card{padding:18px}
+    .intake-input-row{display:grid;grid-template-columns:1fr auto;gap:10px}
+    .intake-review{margin-top:12px;padding:12px;border:1px solid rgba(180,140,255,.2);border-radius:14px;background:rgba(180,140,255,.08)}
+    .intake-review-text{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .intake-meta{display:flex;flex-wrap:wrap;gap:8px}
+    .intake-actions{display:flex;gap:10px;margin-top:12px}
     @media(max-width:1080px){body{padding:14px}.app{grid-template-columns:1fr}.grid,.form-grid,.quick-actions{grid-template-columns:1fr}.span-2{grid-column:auto}.header{flex-direction:column}.space-card{max-width:none}}
   </style>
 </head>
@@ -81,7 +88,7 @@
     <aside class="sidebar">
       <div>
         <div class="brand">Clara 3.0</div>
-        <div class="build-label">BUILD 002</div>
+        <div class="build-label">BUILD 003</div>
         <div class="space-select-wrap">
           <label class="label" for="spaceSelector">Space</label>
           <select id="spaceSelector" class="select"></select>
@@ -100,6 +107,16 @@
 
     <main class="content">
       <section id="dashboard" class="view active">
+        <section class="card intake-card">
+          <div class="card-title">AI Intake</div>
+          <div class="intake-input-row">
+            <input id="aiIntakeInput" class="input" placeholder="Typ iets voor Clara..." />
+            <button id="aiIntakeSend" class="btn primary">Analyseer</button>
+          </div>
+          <div id="aiIntakeReview" class="intake-review" hidden></div>
+          <div id="aiIntakeStatus" class="status-line"></div>
+        </section>
+
         <div class="header">
           <div><div class="kicker">Begeister cockpit</div><h1 class="title">Clara Dashboard</h1><p class="subtitle">Gedeelde werklaag voor projecten, acties, besluiten en open lussen.</p></div>
           <div class="space-card"><div class="space-title">Focus nu</div><div id="spaceFocus" class="space-text">Laden...</div></div>
@@ -254,6 +271,102 @@
       await reload();
     }
 
+    function normalizeText(v=''){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+    function detectIntakeType(text=''){
+      const t=normalizeText(text);
+      if(/\b(besluit|keuze|beslissen|decision)\b/.test(t))return 'decision';
+      if(/\b(wachten op|waiting|afwachten|in afwachting|follow-up)\b/.test(t))return 'waiting';
+      if(/\b(notitie|note|onthouden|memo|logboek)\b/.test(t))return 'note';
+      return 'task';
+    }
+    function detectProjectFromText(text=''){
+      const raw=String(text||'').toLowerCase();
+      const projects=appData?.projects||[];
+      return projects.find(p=>raw.includes(String(p.name||'').toLowerCase()))||null;
+    }
+    function startOfToday(){const d=new Date();d.setHours(0,0,0,0);return d}
+    function parseDutchDate(text=''){
+      const t=normalizeText(text);
+      const map={zondag:0,maandag:1,dinsdag:2,woensdag:3,donderdag:4,vrijdag:5,zaterdag:6};
+      for(const [name,day] of Object.entries(map)){
+        if(t.includes(name)){
+          const now=startOfToday();
+          const delta=(day-now.getDay()+7)%7||7;
+          const d=new Date(now);
+          d.setDate(now.getDate()+delta);
+          return d.toISOString().slice(0,10);
+        }
+      }
+      const m=t.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+      if(m)return m[1];
+      return null;
+    }
+    function parseAiIntake(text=''){
+      const type=detectIntakeType(text);
+      const project=detectProjectFromText(text);
+      const due_date=parseDutchDate(text);
+      const space=appData?.space?.name||'Onbekende space';
+      return {type,project_id:project?.id||null,project_name:project?.name||'Geen match',space,due_date,title:text.trim()};
+    }
+    function renderAiReview(parsed){
+      const box=$('aiIntakeReview');
+      if(!parsed){box.hidden=true;box.innerHTML='';return}
+      box.hidden=false;
+      box.innerHTML=`<div class="intake-review-text">Ik denk dat dit een ${esc(parsed.type)} is binnen ${esc(parsed.project_name)}.</div>
+        <div class="intake-meta">
+          <span class="tag">Type: ${esc(parsed.type)}</span>
+          <span class="tag">Project: ${esc(parsed.project_name)}</span>
+          <span class="tag">Space: ${esc(parsed.space)}</span>
+          <span class="tag">Datum: ${esc(parsed.due_date||'niet gevonden')}</span>
+        </div>
+        <div class="intake-actions">
+          <button id="aiIntakeSave" class="btn primary">Opslaan</button>
+          <button id="aiIntakeCancel" class="btn ghost">Annuleren</button>
+        </div>`;
+      $('aiIntakeSave').onclick=saveAiIntakeParsed;
+      $('aiIntakeCancel').onclick=cancelAiIntake;
+    }
+    let aiIntakeParsed=null;
+    function cancelAiIntake(){
+      aiIntakeParsed=null;
+      renderAiReview(null);
+      msg('aiIntakeStatus','Geannuleerd.');
+    }
+    async function runAiIntake(){
+      msg('aiIntakeStatus','');
+      const text=$('aiIntakeInput').value.trim();
+      if(!text){msg('aiIntakeStatus','Typ eerst iets voor Clara.');return}
+      aiIntakeParsed=parseAiIntake(text);
+      renderAiReview(aiIntakeParsed);
+      msg('aiIntakeStatus','Controleer de interpretatie en kies Opslaan of Annuleren.');
+    }
+    async function saveAiIntakeParsed(){
+      if(!aiIntakeParsed)return;
+      if(appData?.isDemo){msg('aiIntakeStatus','Demo-modus: log in met echte Supabase-data om op te slaan.');return}
+      const project_id=aiIntakeParsed.project_id||$('quickProject')?.value||null;
+      if(!project_id){msg('aiIntakeStatus','Geen project gevonden. Kies eerst een project via snelle invoer.');return}
+      const title=aiIntakeParsed.title;
+      let error=null;
+      if(aiIntakeParsed.type==='task'){
+        ({error}=await sb.from('clara_tasks').insert({project_id,title,description:'Aangemaakt via AI intake.',priority:'medium',status:'open',due_date:aiIntakeParsed.due_date,created_by:sessionUser?.id,assigned_to:sessionUser?.id}));
+        if(!error)await addTimeline(project_id,`AI intake taak: ${title}`);
+      } else if(aiIntakeParsed.type==='waiting'){
+        ({error}=await sb.from('clara_waiting_for').insert({project_id,waiting_on:title,reason:'Aangemaakt via AI intake.',follow_up_date:aiIntakeParsed.due_date||null,owner_id:sessionUser?.id,status:'open'}));
+        if(!error)await addTimeline(project_id,`AI intake waiting-for: ${title}`);
+      } else if(aiIntakeParsed.type==='decision'){
+        ({error}=await sb.from('clara_decisions').insert({project_id,title,description:'Aangemaakt via AI intake.',impact:'Vastgelegd via intake.',decision_date:aiIntakeParsed.due_date||new Date().toISOString().slice(0,10)}));
+        if(!error)await addTimeline(project_id,`AI intake besluit: ${title}`);
+      } else {
+        ({error}=await sb.from('clara_timeline').insert({project_id,author_id:sessionUser?.id,title:`Notitie: ${title}`}));
+      }
+      if(error){msg('aiIntakeStatus',error.message);return}
+      $('aiIntakeInput').value='';
+      aiIntakeParsed=null;
+      renderAiReview(null);
+      msg('aiIntakeStatus','Opgeslagen via AI intake.');
+      await reload();
+    }
+
     async function saveQuickInput(){
       msg('quickStatus','');
       const text=$('quickText').value.trim();
@@ -312,6 +425,8 @@
         $('signupBtn').onclick=signup;
         $('logoutBtn').onclick=async()=>{await sb.auth.signOut();showAuth()};
         $('quickSaveBtn').onclick=saveQuickInput;
+        $('aiIntakeSend').onclick=runAiIntake;
+        $('aiIntakeInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runAiIntake();}});
         $('spaceSelector').onchange=onSpaceChange;
         $('projectForm').onsubmit=insertProject;
         $('taskForm').onsubmit=insertTask;
