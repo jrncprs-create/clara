@@ -472,12 +472,14 @@
           <label class="label" for="aiIntakeProject">Project voor opslag</label>
           <select id="aiIntakeProject" class="select">${options}</select>
         </div>
+        <div class="intake-project-picker">
+          <label class="label" for="aiIntakeProject">Project voor opslag</label>
+          <select id="aiIntakeProject" class="select">${options}</select>
+        </div>
         <div class="intake-actions">
           <button id="aiIntakeSave" class="btn primary">Opslaan</button>
           <button id="aiIntakeCancel" class="btn ghost">Annuleren</button>
         </div>`;
-      box.querySelectorAll('.intake-project-picker').forEach((node,index)=>{if(index>0)node.remove();});
-      box.querySelectorAll('#aiIntakeProject').forEach((node,index)=>{if(index>0)node.remove();});
       $('aiIntakeProject').onchange=e=>{
         const selectedId=e.target.value||null;
         const selectedProject=(appData?.projects||[]).find(project=>project.id===selectedId)||null;
