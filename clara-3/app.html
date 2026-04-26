@@ -1,1 +1,277 @@
-<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Clara 3.0 App</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#050505;--panel:#101011;--line:rgba(255,255,255,.09);--text:#fff;--muted:rgba(255,255,255,.58);--soft:rgba(255,255,255,.32);--accent:rgba(180,140,255,.95);--accent-bg:rgba(180,140,255,.12);--danger:#ff8585;--good:#83ffc2;--warn:#ffd06e;--radius:22px}body{min-height:100vh;padding:24px;background:radial-gradient(circle at top,rgba(255,255,255,.055),transparent 32%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Inter,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}[hidden]{display:none!important}.auth-wrap{min-height:calc(100vh - 48px);display:grid;place-items:center}.auth-card{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:30px}.kicker,.label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}.auth-title,.title{font-size:34px;font-weight:650;letter-spacing:-.035em}.copy,.subtitle{color:var(--muted);font-size:14px;line-height:1.5;margin-top:8px}.field{margin:14px 0}.label{display:block;margin-bottom:7px}.input,.textarea,.select{width:100%;border:1px solid rgba(255,255,255,.11);border-radius:14px;background:rgba(255,255,255,.045);padding:12px 13px;outline:none}.textarea{min-height:86px;resize:vertical}.btn{border:1px solid rgba(255,255,255,.11);border-radius:14px;background:rgba(255,255,255,.06);padding:10px 13px;font-size:13px;font-weight:650}.btn.primary{background:var(--accent-bg);border-color:rgba(180,140,255,.32)}.btn.ghost{color:var(--muted)}.message{margin-top:12px;color:var(--muted);font-size:13px;min-height:19px}.app{display:grid;grid-template-columns:280px 1fr;gap:22px;min-height:calc(100vh - 48px)}.sidebar{background:#090909;border:1px solid var(--line);border-radius:var(--radius);padding:24px 17px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}.brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}.nav{display:flex;flex-direction:column;gap:8px}.nav-item{text-align:left;padding:12px 13px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);color:var(--muted);font-size:14px}.nav-item.active{background:var(--accent-bg);border-color:rgba(180,140,255,.24);color:#fff}.sidebar-user{border-top:1px solid rgba(255,255,255,.07);padding-top:15px;color:var(--muted);font-size:12px;line-height:1.45;word-break:break-word}.content{display:flex;flex-direction:column;gap:20px;min-width:0}.header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.space-card{border:1px solid rgba(180,140,255,.18);background:rgba(180,140,255,.06);padding:17px;border-radius:18px;min-width:280px;max-width:380px}.space-title{font-size:15px;font-weight:700;margin-bottom:8px}.space-text{font-size:13px;color:rgba(255,255,255,.78);line-height:1.5}.view{display:none;flex-direction:column;gap:18px}.view.active{display:flex}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:21px;min-width:0}.card-title{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:16px;display:flex;justify-content:space-between;gap:12px}.row{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.055)}.row:last-child{border-bottom:none;padding-bottom:0}.row-title{font-size:15px;line-height:1.35;font-weight:560}.row-text{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.42}.row-meta{color:var(--muted);font-size:12px;white-space:nowrap}.tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--muted);font-size:11px;margin-top:8px;margin-right:5px}.tag.high{color:var(--danger);background:rgba(255,120,120,.08)}.tag.good{color:var(--good);background:rgba(115,255,185,.08)}.tag.watch{color:var(--warn);background:rgba(255,205,110,.08)}.attention{border-left:3px solid rgba(180,140,255,.55);padding-left:14px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.span-2{grid-column:1/-1}.empty{color:var(--soft);font-size:14px;padding:10px 0}.status-line{color:var(--muted);font-size:13px;min-height:19px;margin-top:12px}@media(max-width:1080px){body{padding:14px}.app{grid-template-columns:1fr}.grid,.form-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.header{flex-direction:column}.space-card{max-width:none}}</style></head><body><section id="authView" class="auth-wrap" hidden><div class="auth-card"><div class="kicker">Clara 3.0</div><h1 class="auth-title">Inloggen</h1><p class="copy">Deze cockpit is beveiligd. Log in met een toegelaten Begeister e-mailadres.</p><div class="field"><label class="label">E-mail</label><input id="emailInput" class="input" type="email"></div><div class="field"><label class="label">Wachtwoord</label><input id="passwordInput" class="input" type="password"></div><div style="display:flex;gap:10px;margin-top:18px"><button id="loginBtn" class="btn primary" style="flex:1">Inloggen</button><button id="signupBtn" class="btn ghost" style="flex:1">Account maken</button></div><div id="authMessage" class="message"></div></div></section><div id="appView" class="app" hidden><aside class="sidebar"><div><div class="brand">Clara 3.0</div><nav class="nav"><button class="nav-item active" data-view="dashboard">Dashboard</button><button class="nav-item" data-view="projects">Projecten</button><button class="nav-item" data-view="tasks">Taken</button><button class="nav-item" data-view="waiting">Waiting For</button><button class="nav-item" data-view="decisions">Besluiten</button><button class="nav-item" data-view="team">Team</button></nav></div><div class="sidebar-user"><div id="userEmail">Niet ingelogd</div><button id="logoutBtn" class="btn ghost" style="margin-top:12px;width:100%">Uitloggen</button></div></aside><main class="content"><section id="dashboard" class="view active"><div class="header"><div><div class="kicker">Begeister cockpit</div><h1 class="title">Clara Dashboard</h1><p class="subtitle">Gedeelde werklaag voor projecten, acties, besluiten en open lussen.</p></div><div class="space-card"><div class="space-title">Focus nu</div><div id="spaceFocus" class="space-text">Laden...</div></div></div><div class="grid"><section class="card"><div class="card-title">Attention</div><div id="attentionList"></div></section><section class="card"><div class="card-title">Vandaag</div><div id="todayList"></div></section></div><div class="grid"><section class="card"><div class="card-title">Project Health</div><div id="projectHealthList"></div></section><section class="card"><div class="card-title">Waiting For</div><div id="waitingList"></div></section></div><div class="grid"><section class="card"><div class="card-title">Besluiten</div><div id="decisionList"></div></section><section class="card"><div class="card-title">Team Activity</div><div id="activityList"></div></section></div></section><section id="projects" class="view"><div class="header"><div><div class="kicker">Projecten</div><h1 class="title">Projecten</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuw project</div><form id="projectForm" class="form-grid"><div><label class="label">Naam</label><input id="projectName" class="input" required></div><div><label class="label">Health</label><select id="projectHealth" class="select"><option value="good">Good</option><option value="watch" selected>Watch</option><option value="stuck">Stuck</option><option value="paused">Paused</option></select></div><div><label class="label">Status</label><select id="projectStatus" class="select"><option value="active" selected>Active</option><option value="slow_burn">Slow burn</option><option value="waiting">Waiting</option><option value="paused">Paused</option><option value="done">Done</option></select></div><div><label class="label">Momentum</label><select id="projectMomentum" class="select"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option><option value="none">None</option></select></div><div class="span-2"><label class="label">Samenvatting</label><textarea id="projectSummary" class="textarea"></textarea></div><div class="span-2"><label class="label">Volgende stap</label><input id="projectNext" class="input"></div><div class="span-2"><button class="btn primary" type="submit">Project toevoegen</button></div></form><div id="projectStatusLine" class="status-line"></div></section><section class="card"><div class="card-title">Alle projecten</div><div id="projectsList"></div></section></div></section><section id="tasks" class="view"><div class="header"><div><div class="kicker">Acties</div><h1 class="title">Taken</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuwe taak</div><form id="taskForm" class="form-grid"><div><label class="label">Titel</label><input id="taskTitle" class="input" required></div><div><label class="label">Project</label><select id="taskProject" class="select"></select></div><div><label class="label">Prioriteit</label><select id="taskPriority" class="select"><option value="low">Laag</option><option value="medium" selected>Middel</option><option value="high">Hoog</option></select></div><div><label class="label">Deadline</label><input id="taskDueDate" class="input" type="date"></div><div class="span-2"><label class="label">Omschrijving</label><textarea id="taskDescription" class="textarea"></textarea></div><div class="span-2"><button class="btn primary" type="submit">Taak toevoegen</button></div></form><div id="taskStatus" class="status-line"></div></section><section class="card"><div class="card-title">Open taken</div><div id="tasksList"></div></section></div></section><section id="waiting" class="view"><div class="header"><div><div class="kicker">Open lussen</div><h1 class="title">Waiting For</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuwe open lus</div><form id="waitingForm" class="form-grid"><div><label class="label">Wachten op</label><input id="waitingOn" class="input" required></div><div><label class="label">Project</label><select id="waitingProject" class="select"></select></div><div class="span-2"><label class="label">Waarom</label><textarea id="waitingReason" class="textarea"></textarea></div><div><label class="label">Opvolgen</label><input id="waitingFollow" class="input" placeholder="bijv. deze week"></div><div><label class="label">Prioriteit</label><select id="waitingPriority" class="select"><option value="low">Laag</option><option value="medium" selected>Middel</option><option value="high">Hoog</option></select></div><div class="span-2"><button class="btn primary" type="submit">Waiting-for toevoegen</button></div></form><div id="waitingStatusLine" class="status-line"></div></section><section class="card"><div class="card-title">Alle open lussen</div><div id="waitingPageList"></div></section></div></section><section id="decisions" class="view"><div class="header"><div><div class="kicker">Geheugen</div><h1 class="title">Besluiten</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuw besluit</div><form id="decisionForm" class="form-grid"><div><label class="label">Titel</label><input id="decisionTitle" class="input" required></div><div><label class="label">Project</label><select id="decisionProject" class="select"></select></div><div><label class="label">Datum</label><input id="decisionDate" class="input" type="date"></div><div><label class="label">Impact</label><input id="decisionImpact" class="input"></div><div class="span-2"><label class="label">Omschrijving</label><textarea id="decisionDescription" class="textarea"></textarea></div><div class="span-2"><button class="btn primary" type="submit">Besluit toevoegen</button></div></form><div id="decisionStatusLine" class="status-line"></div></section><section class="card"><div class="card-title">Alle besluiten</div><div id="decisionsPageList"></div></section></div></section><section id="team" class="view"><div class="header"><div><div class="kicker">Samenwerking</div><h1 class="title">Team</h1></div></div><section class="card"><div id="teamList"></div></section></section></main></div><script>const ALLOWED_EMAILS=['jeroen@begeister.nl','marlon@begeister.nl'];let sb=null,appData=null,sessionUser=null;const $=id=>document.getElementById(id);const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');const msg=(id,t)=>{$(id).textContent=t||''};const empty=t=>`<div class="empty">${esc(t||'Nog niets.')}</div>`;const row=({title,text,meta,tags=[],className=''})=>`<div class="row ${className}"><div><div class="row-title">${esc(title)}</div>${text?`<div class="row-text">${esc(text)}</div>`:''}${tags.filter(Boolean).map(tag=>`<span class="tag ${tag.className||''}">${esc(tag.label||tag)}</span>`).join('')}</div>${meta?`<div class="row-meta">${esc(meta)}</div>`:''}</div>`;async function initSupabase(){const r=await fetch('/api/config');const c=await r.json();if(!c.ok)throw new Error(c.error||'Config ontbreekt');sb=window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey)}async function loadData(){const fallback=await fetch('./seed-data.json').then(r=>r.json());try{const [spaces,projects,tasks,decisions,waiting,timeline,profiles]=await Promise.all([sb.from('clara_spaces').select('*').order('created_at'),sb.from('clara_projects').select('*').order('created_at',{ascending:false}),sb.from('clara_tasks').select('*').neq('status','done').order('created_at',{ascending:false}),sb.from('clara_decisions').select('*').order('created_at',{ascending:false}),sb.from('clara_waiting_for').select('*').neq('status','resolved').order('created_at',{ascending:false}),sb.from('clara_timeline').select('*').order('created_at',{ascending:false}).limit(20),sb.from('clara_profiles').select('*')]);if(!spaces.data?.length){appData={...fallback,isDemo:true};return}const pmap=new Map((projects.data||[]).map(p=>[p.id,p]));const prof=new Map((profiles.data||[]).map(p=>[p.id,p]));appData={isDemo:false,space:{...spaces.data[0],focus:spaces.data[0].focus||spaces.data[0].summary||'Geen focus gezet'},people:(profiles.data||[]).map(p=>({id:p.id,name:p.display_name||p.email||'Onbekend',role:p.role||'Team'})),projects:(projects.data||[]).map(p=>({...p,owner:prof.get(p.owner_id)?.display_name||p.owner_id||''})),today:(tasks.data||[]).slice(0,8).map(t=>({title:t.title,project:pmap.get(t.project_id)?.name||'Geen project',owner:prof.get(t.assigned_to)?.display_name||'',priority:t.priority||'medium'})),waiting_for:(waiting.data||[]).map(w=>({project:pmap.get(w.project_id)?.name||'Geen project',waiting_on:w.waiting_on,reason:w.reason,follow_up:w.follow_up_date,owner:prof.get(w.owner_id)?.display_name||''})),decisions:(decisions.data||[]).map(d=>({project:pmap.get(d.project_id)?.name||'Geen project',title:d.title,date:d.decision_date||'',impact:d.impact||d.description||''})),activity:(timeline.data||[]).map(t=>({person:prof.get(t.author_id)?.display_name||'Clara',action:t.title,project:pmap.get(t.project_id)?.name||'',time:new Date(t.created_at).toLocaleDateString('nl-NL')})),attention:buildAttention(projects.data||[],waiting.data||[])} }catch(e){console.warn(e);appData={...fallback,isDemo:true}}}function buildAttention(projects,waiting){const a=[];projects.forEach(p=>{if(['watch','stuck'].includes(p.health))a.push({project:p.name,type:p.health==='stuck'?'blocker':'risk',severity:p.health==='stuck'?'high':'medium',signal:p.risk||p.bottleneck||'Dit project vraagt aandacht.',recommended_action:p.next_step||'Bepaal de volgende stap.'})});waiting.slice(0,3).forEach(w=>a.push({project:projects.find(p=>p.id===w.project_id)?.name||'Waiting For',type:'blocker',severity:'medium',signal:w.reason||'Open afhankelijkheid.',recommended_action:w.follow_up_date?`Opvolgen: ${w.follow_up_date}`:'Opvolgen plannen.'}));return a.slice(0,6)}function render(){if(!appData)return;$('spaceFocus').textContent=appData.space?.focus||'Geen focus gezet';$('attentionList').innerHTML=(appData.attention||[]).map(i=>row({title:i.project,text:`${i.signal} Actie: ${i.recommended_action}`,meta:i.severity,tags:[{label:i.type},{label:i.severity,className:i.severity==='high'?'high':'watch'}],className:'attention'})).join('')||empty('Geen signalen.');$('todayList').innerHTML=(appData.today||[]).map(i=>row({title:i.title,text:i.project,meta:i.owner,tags:[{label:i.priority,className:i.priority==='high'?'high':''}]})).join('')||empty('Geen taken.');const prs=(appData.projects||[]).map(p=>row({title:p.name,text:`${p.summary||''} Volgende stap: ${p.next_step||'nog niet gezet'}`,meta:p.owner,tags:[{label:p.status||'open'},{label:p.health||'watch',className:p.health==='good'?'good':'watch'},{label:p.momentum||'medium'}]})).join('')||empty('Geen projecten.');$('projectHealthList').innerHTML=prs;$('projectsList').innerHTML=prs;const wr=(appData.waiting_for||[]).map(i=>row({title:i.waiting_on,text:`${i.reason||''} ${i.follow_up?`Opvolgen: ${i.follow_up}`:''}`,meta:i.project,tags:[{label:i.owner||'owner'}]})).join('')||empty('Geen open lussen.');$('waitingList').innerHTML=wr;$('waitingPageList').innerHTML=wr;const dr=(appData.decisions||[]).map(i=>row({title:i.title,text:i.impact,meta:i.date,tags:[{label:i.project}]})).join('')||empty('Geen besluiten.');$('decisionList').innerHTML=dr;$('decisionsPageList').innerHTML=dr;$('activityList').innerHTML=(appData.activity||[]).map(i=>row({title:i.action,text:`${i.person}${i.project?` · ${i.project}`:''}`,meta:i.time})).join('')||empty('Geen activiteit.');$('teamList').innerHTML=(appData.people||[]).map(p=>row({title:p.name,text:p.role,meta:p.id})).join('')||empty('Geen teamleden.');fillProjectSelects();loadTasksList()}function fillProjectSelects(){['taskProject','waitingProject','decisionProject'].forEach(id=>{$(id).innerHTML=(appData.projects||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')})}async function ensureSpace(){if(appData?.isDemo)return null;const {data}=await sb.from('clara_spaces').select('*').limit(1).maybeSingle();return data?.id||null}async function addTimeline(project_id,title){if(appData?.isDemo)return;await sb.from('clara_timeline').insert({project_id,author_id:sessionUser?.id,title})}async function reload(){await loadData();render()}async function insertProject(e){e.preventDefault();msg('projectStatusLine','');if(appData?.isDemo){msg('projectStatusLine','Maak eerst een space aan in Supabase.');return}const space_id=await ensureSpace();const payload={space_id,name:$('projectName').value.trim(),summary:$('projectSummary').value.trim(),status:$('projectStatus').value,momentum:$('projectMomentum').value,health:$('projectHealth').value,next_step:$('projectNext').value.trim(),owner_id:sessionUser?.id};const {data,error}=await sb.from('clara_projects').insert(payload).select().single();if(error){msg('projectStatusLine',error.message);return}await addTimeline(data.id,`Project toegevoegd: ${data.name}`);e.target.reset();msg('projectStatusLine','Project toegevoegd.');await reload()}async function insertTask(e){e.preventDefault();msg('taskStatus','');if(appData?.isDemo){msg('taskStatus','Demo-modus: maak eerst echte data aan.');return}const payload={project_id:$('taskProject').value,title:$('taskTitle').value.trim(),description:$('taskDescription').value.trim(),priority:$('taskPriority').value,due_date:$('taskDueDate').value||null,status:'open',created_by:sessionUser?.id,assigned_to:sessionUser?.id};const {error}=await sb.from('clara_tasks').insert(payload);if(error){msg('taskStatus',error.message);return}await addTimeline(payload.project_id,`Taak toegevoegd: ${payload.title}`);e.target.reset();$('taskPriority').value='medium';msg('taskStatus','Taak toegevoegd.');await reload()}async function insertWaiting(e){e.preventDefault();msg('waitingStatusLine','');if(appData?.isDemo){msg('waitingStatusLine','Demo-modus: maak eerst echte data aan.');return}const payload={project_id:$('waitingProject').value,waiting_on:$('waitingOn').value.trim(),reason:$('waitingReason').value.trim(),follow_up_date:$('waitingFollow').value.trim(),owner_id:sessionUser?.id,status:'open'};const {error}=await sb.from('clara_waiting_for').insert(payload);if(error){msg('waitingStatusLine',error.message);return}await addTimeline(payload.project_id,`Waiting-for toegevoegd: ${payload.waiting_on}`);e.target.reset();msg('waitingStatusLine','Waiting-for toegevoegd.');await reload()}async function insertDecision(e){e.preventDefault();msg('decisionStatusLine','');if(appData?.isDemo){msg('decisionStatusLine','Demo-modus: maak eerst echte data aan.');return}const payload={project_id:$('decisionProject').value,title:$('decisionTitle').value.trim(),description:$('decisionDescription').value.trim(),impact:$('decisionImpact').value.trim(),decision_date:$('decisionDate').value||new Date().toISOString().slice(0,10)};const {error}=await sb.from('clara_decisions').insert(payload);if(error){msg('decisionStatusLine',error.message);return}await addTimeline(payload.project_id,`Besluit toegevoegd: ${payload.title}`);e.target.reset();msg('decisionStatusLine','Besluit toegevoegd.');await reload()}async function loadTasksList(){if(!sb||appData?.isDemo){$('tasksList').innerHTML=empty('Demo-modus.');return}const {data,error}=await sb.from('clara_tasks').select('*').neq('status','done').order('created_at',{ascending:false});if(error){$('tasksList').innerHTML=empty(error.message);return}const p=new Map((appData.projects||[]).map(x=>[x.id,x.name]));$('tasksList').innerHTML=(data||[]).map(t=>row({title:t.title,text:t.description,meta:t.status,tags:[{label:p.get(t.project_id)||'Geen project'},{label:t.priority||'medium'}]})).join('')||empty('Geen open taken.')}async function showApp(session){sessionUser=session.user;$('authView').hidden=true;$('appView').hidden=false;$('userEmail').textContent=session.user.email;await reload()}function showAuth(){$('authView').hidden=false;$('appView').hidden=true}async function login(){msg('authMessage','');const email=String($('emailInput').value||'').trim().toLowerCase();if(!ALLOWED_EMAILS.includes(email)){msg('authMessage','Dit e-mailadres staat nog niet op de toegestane lijst.');return}const {data,error}=await sb.auth.signInWithPassword({email,password:$('passwordInput').value});if(error){msg('authMessage',error.message);return}await showApp(data.session)}async function signup(){msg('authMessage','');const email=String($('emailInput').value||'').trim().toLowerCase();if(!ALLOWED_EMAILS.includes(email)){msg('authMessage','Dit e-mailadres staat nog niet op de toegestane lijst.');return}const {error}=await sb.auth.signUp({email,password:$('passwordInput').value});msg('authMessage',error?error.message:'Account aangemaakt. Log daarna in.')}function setupNav(){document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.view).classList.add('active')}))}async function init(){try{await initSupabase();setupNav();$('loginBtn').onclick=login;$('signupBtn').onclick=signup;$('logoutBtn').onclick=async()=>{await sb.auth.signOut();showAuth()};$('projectForm').onsubmit=insertProject;$('taskForm').onsubmit=insertTask;$('waitingForm').onsubmit=insertWaiting;$('decisionForm').onsubmit=insertDecision;const {data}=await sb.auth.getSession();data.session?await showApp(data.session):showAuth();sb.auth.onAuthStateChange((_e,s)=>s?showApp(s):showAuth())}catch(e){showAuth();msg('authMessage',`Configfout: ${e.message}`)}}init();</script></body></html>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Clara 3.0 App</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#050505;--panel:#101011;--panel2:#0b0b0c;--line:rgba(255,255,255,.09);--text:#fff;--muted:rgba(255,255,255,.58);--soft:rgba(255,255,255,.32);--accent:rgba(180,140,255,.95);--accent-bg:rgba(180,140,255,.12);--danger:#ff8585;--good:#83ffc2;--warn:#ffd06e;--radius:22px}
+    body{min-height:100vh;padding:24px;background:radial-gradient(circle at top,rgba(255,255,255,.055),transparent 32%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Inter,"Segoe UI",sans-serif}
+    button,input,textarea,select{font:inherit;color:inherit}
+    button{cursor:pointer}
+    [hidden]{display:none!important}
+    .auth-wrap{min-height:calc(100vh - 48px);display:grid;place-items:center}
+    .auth-card{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:30px}
+    .kicker,.label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+    .auth-title,.title{font-size:34px;font-weight:650;letter-spacing:-.035em}
+    .copy,.subtitle{color:var(--muted);font-size:14px;line-height:1.5;margin-top:8px}
+    .field{margin:14px 0}
+    .label{display:block;margin-bottom:7px}
+    .input,.textarea,.select{width:100%;border:1px solid rgba(255,255,255,.11);border-radius:14px;background:rgba(255,255,255,.045);padding:12px 13px;outline:none}
+    .textarea{min-height:86px;resize:vertical}
+    .btn{border:1px solid rgba(255,255,255,.11);border-radius:14px;background:rgba(255,255,255,.06);padding:10px 13px;font-size:13px;font-weight:650}
+    .btn.primary{background:var(--accent-bg);border-color:rgba(180,140,255,.32)}
+    .btn.ghost{color:var(--muted)}
+    .message{margin-top:12px;color:var(--muted);font-size:13px;min-height:19px}
+    .app{display:grid;grid-template-columns:280px 1fr;gap:22px;min-height:calc(100vh - 48px)}
+    .sidebar{background:#090909;border:1px solid var(--line);border-radius:var(--radius);padding:24px 17px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
+    .brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav-item{text-align:left;padding:12px 13px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);color:var(--muted);font-size:14px}
+    .nav-item.active{background:var(--accent-bg);border-color:rgba(180,140,255,.24);color:#fff}
+    .sidebar-user{border-top:1px solid rgba(255,255,255,.07);padding-top:15px;color:var(--muted);font-size:12px;line-height:1.45;word-break:break-word}
+    .content{display:flex;flex-direction:column;gap:20px;min-width:0}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+    .space-card{border:1px solid rgba(180,140,255,.18);background:rgba(180,140,255,.06);padding:17px;border-radius:18px;min-width:280px;max-width:380px}
+    .space-title{font-size:15px;font-weight:700;margin-bottom:8px}
+    .space-text{font-size:13px;color:rgba(255,255,255,.78);line-height:1.5}
+    .view{display:none;flex-direction:column;gap:18px}
+    .view.active{display:flex}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:21px;min-width:0}
+    .card-title{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:16px;display:flex;justify-content:space-between;gap:12px}
+    .quick-card{background:linear-gradient(180deg,rgba(180,140,255,.11),rgba(255,255,255,.035));border-color:rgba(180,140,255,.22)}
+    .quick-actions{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-top:12px}
+    .row{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.055)}
+    .row:last-child{border-bottom:none;padding-bottom:0}
+    .row-title{font-size:15px;line-height:1.35;font-weight:560}
+    .row-text{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.42}
+    .row-meta{color:var(--muted);font-size:12px;white-space:nowrap}
+    .tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--muted);font-size:11px;margin-top:8px;margin-right:5px}
+    .tag.high{color:var(--danger);background:rgba(255,120,120,.08)}
+    .tag.good{color:var(--good);background:rgba(115,255,185,.08)}
+    .tag.watch{color:var(--warn);background:rgba(255,205,110,.08)}
+    .attention{border-left:3px solid rgba(180,140,255,.55);padding-left:14px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .span-2{grid-column:1/-1}
+    .empty{color:var(--soft);font-size:14px;padding:10px 0}
+    .status-line{color:var(--muted);font-size:13px;min-height:19px;margin-top:12px}
+    @media(max-width:1080px){body{padding:14px}.app{grid-template-columns:1fr}.grid,.form-grid,.quick-actions{grid-template-columns:1fr}.span-2{grid-column:auto}.header{flex-direction:column}.space-card{max-width:none}}
+  </style>
+</head>
+<body>
+  <section id="authView" class="auth-wrap" hidden>
+    <div class="auth-card">
+      <div class="kicker">Clara 3.0</div>
+      <h1 class="auth-title">Inloggen</h1>
+      <p class="copy">Deze cockpit is beveiligd. Log in met een toegelaten Begeister e-mailadres.</p>
+      <div class="field"><label class="label">E-mail</label><input id="emailInput" class="input" type="email" /></div>
+      <div class="field"><label class="label">Wachtwoord</label><input id="passwordInput" class="input" type="password" /></div>
+      <div style="display:flex;gap:10px;margin-top:18px"><button id="loginBtn" class="btn primary" style="flex:1">Inloggen</button><button id="signupBtn" class="btn ghost" style="flex:1">Account maken</button></div>
+      <div id="authMessage" class="message"></div>
+    </div>
+  </section>
+
+  <div id="appView" class="app" hidden>
+    <aside class="sidebar">
+      <div>
+        <div class="brand">Clara 3.0</div>
+        <nav class="nav">
+          <button class="nav-item active" data-view="dashboard">Dashboard</button>
+          <button class="nav-item" data-view="projects">Projecten</button>
+          <button class="nav-item" data-view="tasks">Taken</button>
+          <button class="nav-item" data-view="waiting">Waiting For</button>
+          <button class="nav-item" data-view="decisions">Besluiten</button>
+          <button class="nav-item" data-view="team">Team</button>
+        </nav>
+      </div>
+      <div class="sidebar-user"><div id="userEmail">Niet ingelogd</div><button id="logoutBtn" class="btn ghost" style="margin-top:12px;width:100%">Uitloggen</button></div>
+    </aside>
+
+    <main class="content">
+      <section id="dashboard" class="view active">
+        <div class="header">
+          <div><div class="kicker">Begeister cockpit</div><h1 class="title">Clara Dashboard</h1><p class="subtitle">Gedeelde werklaag voor projecten, acties, besluiten en open lussen.</p></div>
+          <div class="space-card"><div class="space-title">Focus nu</div><div id="spaceFocus" class="space-text">Laden...</div></div>
+        </div>
+
+        <section class="card quick-card">
+          <div class="card-title">Snelle invoer</div>
+          <textarea id="quickText" class="textarea" placeholder="Typ een actie, besluit of open lus. Bijvoorbeeld: Marlon vragen om planning voor LaLampe te checken."></textarea>
+          <div class="quick-actions">
+            <select id="quickType" class="select">
+              <option value="task">Taak</option>
+              <option value="waiting">Waiting For</option>
+              <option value="decision">Besluit</option>
+              <option value="timeline">Logboek</option>
+            </select>
+            <select id="quickProject" class="select"></select>
+            <button id="quickSaveBtn" class="btn primary">Opslaan</button>
+          </div>
+          <div id="quickStatus" class="status-line"></div>
+        </section>
+
+        <div class="grid"><section class="card"><div class="card-title">Attention</div><div id="attentionList"></div></section><section class="card"><div class="card-title">Vandaag</div><div id="todayList"></div></section></div>
+        <div class="grid"><section class="card"><div class="card-title">Project Health</div><div id="projectHealthList"></div></section><section class="card"><div class="card-title">Waiting For</div><div id="waitingList"></div></section></div>
+        <div class="grid"><section class="card"><div class="card-title">Besluiten</div><div id="decisionList"></div></section><section class="card"><div class="card-title">Team Activity</div><div id="activityList"></div></section></div>
+      </section>
+
+      <section id="projects" class="view"><div class="header"><div><div class="kicker">Projecten</div><h1 class="title">Projecten</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuw project</div><form id="projectForm" class="form-grid"><div><label class="label">Naam</label><input id="projectName" class="input" required /></div><div><label class="label">Health</label><select id="projectHealth" class="select"><option value="good">Good</option><option value="watch" selected>Watch</option><option value="stuck">Stuck</option><option value="paused">Paused</option></select></div><div><label class="label">Status</label><select id="projectStatus" class="select"><option value="active" selected>Active</option><option value="slow_burn">Slow burn</option><option value="waiting">Waiting</option><option value="paused">Paused</option><option value="done">Done</option></select></div><div><label class="label">Momentum</label><select id="projectMomentum" class="select"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option><option value="none">None</option></select></div><div class="span-2"><label class="label">Samenvatting</label><textarea id="projectSummary" class="textarea"></textarea></div><div class="span-2"><label class="label">Volgende stap</label><input id="projectNext" class="input" /></div><div class="span-2"><button class="btn primary" type="submit">Project toevoegen</button></div></form><div id="projectStatusLine" class="status-line"></div></section><section class="card"><div class="card-title">Alle projecten</div><div id="projectsList"></div></section></div></section>
+
+      <section id="tasks" class="view"><div class="header"><div><div class="kicker">Acties</div><h1 class="title">Taken</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuwe taak</div><form id="taskForm" class="form-grid"><div><label class="label">Titel</label><input id="taskTitle" class="input" required /></div><div><label class="label">Project</label><select id="taskProject" class="select"></select></div><div><label class="label">Prioriteit</label><select id="taskPriority" class="select"><option value="low">Laag</option><option value="medium" selected>Middel</option><option value="high">Hoog</option></select></div><div><label class="label">Deadline</label><input id="taskDueDate" class="input" type="date" /></div><div class="span-2"><label class="label">Omschrijving</label><textarea id="taskDescription" class="textarea"></textarea></div><div class="span-2"><button class="btn primary" type="submit">Taak toevoegen</button></div></form><div id="taskStatus" class="status-line"></div></section><section class="card"><div class="card-title">Open taken</div><div id="tasksList"></div></section></div></section>
+
+      <section id="waiting" class="view"><div class="header"><div><div class="kicker">Open lussen</div><h1 class="title">Waiting For</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuwe open lus</div><form id="waitingForm" class="form-grid"><div><label class="label">Wachten op</label><input id="waitingOn" class="input" required /></div><div><label class="label">Project</label><select id="waitingProject" class="select"></select></div><div class="span-2"><label class="label">Waarom</label><textarea id="waitingReason" class="textarea"></textarea></div><div><label class="label">Opvolgen</label><input id="waitingFollow" class="input" placeholder="bijv. deze week" /></div><div><label class="label">Prioriteit</label><select id="waitingPriority" class="select"><option value="low">Laag</option><option value="medium" selected>Middel</option><option value="high">Hoog</option></select></div><div class="span-2"><button class="btn primary" type="submit">Waiting-for toevoegen</button></div></form><div id="waitingStatusLine" class="status-line"></div></section><section class="card"><div class="card-title">Alle open lussen</div><div id="waitingPageList"></div></section></div></section>
+
+      <section id="decisions" class="view"><div class="header"><div><div class="kicker">Geheugen</div><h1 class="title">Besluiten</h1></div></div><div class="grid"><section class="card"><div class="card-title">Nieuw besluit</div><form id="decisionForm" class="form-grid"><div><label class="label">Titel</label><input id="decisionTitle" class="input" required /></div><div><label class="label">Project</label><select id="decisionProject" class="select"></select></div><div><label class="label">Datum</label><input id="decisionDate" class="input" type="date" /></div><div><label class="label">Impact</label><input id="decisionImpact" class="input" /></div><div class="span-2"><label class="label">Omschrijving</label><textarea id="decisionDescription" class="textarea"></textarea></div><div class="span-2"><button class="btn primary" type="submit">Besluit toevoegen</button></div></form><div id="decisionStatusLine" class="status-line"></div></section><section class="card"><div class="card-title">Alle besluiten</div><div id="decisionsPageList"></div></section></div></section>
+
+      <section id="team" class="view"><div class="header"><div><div class="kicker">Samenwerking</div><h1 class="title">Team</h1></div></div><section class="card"><div id="teamList"></div></section></section>
+    </main>
+  </div>
+
+  <script>
+    const ALLOWED_EMAILS=['jeroen@begeister.nl','marlon@begeister.nl'];
+    let sb=null,appData=null,sessionUser=null;
+    const $=id=>document.getElementById(id);
+    const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    const msg=(id,t)=>{$(id).textContent=t||''};
+    const empty=t=>`<div class="empty">${esc(t||'Nog niets.')}</div>`;
+    const row=({title,text,meta,tags=[],className=''})=>`<div class="row ${className}"><div><div class="row-title">${esc(title)}</div>${text?`<div class="row-text">${esc(text)}</div>`:''}${tags.filter(Boolean).map(tag=>`<span class="tag ${tag.className||''}">${esc(tag.label||tag)}</span>`).join('')}</div>${meta?`<div class="row-meta">${esc(meta)}</div>`:''}</div>`;
+
+    async function initSupabase(){const r=await fetch('/api/config');const c=await r.json();if(!c.ok)throw new Error(c.error||'Config ontbreekt');sb=window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey)}
+
+    async function loadData(){
+      const fallback=await fetch('./seed-data.json').then(r=>r.json());
+      try{
+        const [spaces,projects,tasks,decisions,waiting,timeline,profiles]=await Promise.all([
+          sb.from('clara_spaces').select('*').order('created_at'),
+          sb.from('clara_projects').select('*').order('created_at',{ascending:false}),
+          sb.from('clara_tasks').select('*').neq('status','done').order('created_at',{ascending:false}),
+          sb.from('clara_decisions').select('*').order('created_at',{ascending:false}),
+          sb.from('clara_waiting_for').select('*').neq('status','resolved').order('created_at',{ascending:false}),
+          sb.from('clara_timeline').select('*').order('created_at',{ascending:false}).limit(20),
+          sb.from('clara_profiles').select('*')
+        ]);
+        if(!spaces.data?.length){appData={...fallback,isDemo:true};return}
+        const pmap=new Map((projects.data||[]).map(p=>[p.id,p]));
+        const prof=new Map((profiles.data||[]).map(p=>[p.id,p]));
+        appData={
+          isDemo:false,
+          space:{...spaces.data[0],focus:spaces.data[0].focus||spaces.data[0].summary||'Geen focus gezet'},
+          people:(profiles.data||[]).map(p=>({id:p.id,name:p.display_name||p.email||'Onbekend',role:p.role||'Team'})),
+          projects:(projects.data||[]).map(p=>({...p,owner:prof.get(p.owner_id)?.display_name||p.owner_id||''})),
+          today:(tasks.data||[]).slice(0,8).map(t=>({title:t.title,project:pmap.get(t.project_id)?.name||'Geen project',owner:prof.get(t.assigned_to)?.display_name||'',priority:t.priority||'medium'})),
+          waiting_for:(waiting.data||[]).map(w=>({project:pmap.get(w.project_id)?.name||'Geen project',waiting_on:w.waiting_on,reason:w.reason,follow_up:w.follow_up_date,owner:prof.get(w.owner_id)?.display_name||''})),
+          decisions:(decisions.data||[]).map(d=>({project:pmap.get(d.project_id)?.name||'Geen project',title:d.title,date:d.decision_date||'',impact:d.impact||d.description||''})),
+          activity:(timeline.data||[]).map(t=>({person:prof.get(t.author_id)?.display_name||'Clara',action:t.title,project:pmap.get(t.project_id)?.name||'',time:new Date(t.created_at).toLocaleDateString('nl-NL')})),
+          attention:buildAttention(projects.data||[],waiting.data||[])
+        };
+      }catch(e){console.warn(e);appData={...fallback,isDemo:true}}
+    }
+
+    function buildAttention(projects,waiting){
+      const a=[];
+      projects.forEach(p=>{if(['watch','stuck'].includes(p.health))a.push({project:p.name,type:p.health==='stuck'?'blocker':'risk',severity:p.health==='stuck'?'high':'medium',signal:p.risk||p.bottleneck||'Dit project vraagt aandacht.',recommended_action:p.next_step||'Bepaal de volgende stap.'})});
+      waiting.slice(0,3).forEach(w=>a.push({project:projects.find(p=>p.id===w.project_id)?.name||'Waiting For',type:'blocker',severity:'medium',signal:w.reason||'Open afhankelijkheid.',recommended_action:w.follow_up_date?`Opvolgen: ${w.follow_up_date}`:'Opvolgen plannen.'}));
+      return a.slice(0,6);
+    }
+
+    function render(){
+      if(!appData)return;
+      $('spaceFocus').textContent=appData.space?.focus||'Geen focus gezet';
+      $('attentionList').innerHTML=(appData.attention||[]).map(i=>row({title:i.project,text:`${i.signal} Actie: ${i.recommended_action}`,meta:i.severity,tags:[{label:i.type},{label:i.severity,className:i.severity==='high'?'high':'watch'}],className:'attention'})).join('')||empty('Geen signalen.');
+      $('todayList').innerHTML=(appData.today||[]).map(i=>row({title:i.title,text:i.project,meta:i.owner,tags:[{label:i.priority,className:i.priority==='high'?'high':''}]})).join('')||empty('Geen taken.');
+      const prs=(appData.projects||[]).map(p=>row({title:p.name,text:`${p.summary||''} Volgende stap: ${p.next_step||'nog niet gezet'}`,meta:p.owner,tags:[{label:p.status||'open'},{label:p.health||'watch',className:p.health==='good'?'good':'watch'},{label:p.momentum||'medium'}]})).join('')||empty('Geen projecten.');
+      $('projectHealthList').innerHTML=prs;$('projectsList').innerHTML=prs;
+      const wr=(appData.waiting_for||[]).map(i=>row({title:i.waiting_on,text:`${i.reason||''} ${i.follow_up?`Opvolgen: ${i.follow_up}`:''}`,meta:i.project,tags:[{label:i.owner||'owner'}]})).join('')||empty('Geen open lussen.');
+      $('waitingList').innerHTML=wr;$('waitingPageList').innerHTML=wr;
+      const dr=(appData.decisions||[]).map(i=>row({title:i.title,text:i.impact,meta:i.date,tags:[{label:i.project}]})).join('')||empty('Geen besluiten.');
+      $('decisionList').innerHTML=dr;$('decisionsPageList').innerHTML=dr;
+      $('activityList').innerHTML=(appData.activity||[]).map(i=>row({title:i.action,text:`${i.person}${i.project?` · ${i.project}`:''}`,meta:i.time})).join('')||empty('Geen activiteit.');
+      $('teamList').innerHTML=(appData.people||[]).map(p=>row({title:p.name,text:p.role,meta:p.id})).join('')||empty('Geen teamleden.');
+      fillProjectSelects();
+      loadTasksList();
+    }
+
+    function fillProjectSelects(){
+      ['taskProject','waitingProject','decisionProject','quickProject'].forEach(id=>{
+        $(id).innerHTML=(appData.projects||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')
+      });
+    }
+
+    async function ensureSpace(){if(appData?.isDemo)return null;const {data}=await sb.from('clara_spaces').select('*').limit(1).maybeSingle();return data?.id||null}
+    async function addTimeline(project_id,title){if(appData?.isDemo)return;await sb.from('clara_timeline').insert({project_id,author_id:sessionUser?.id,title})}
+    async function reload(){await loadData();render()}
+
+    async function saveQuickInput(){
+      msg('quickStatus','');
+      const text=$('quickText').value.trim();
+      const type=$('quickType').value;
+      const project_id=$('quickProject').value || null;
+      if(!text){msg('quickStatus','Typ eerst iets.');return}
+      if(appData?.isDemo){msg('quickStatus','Demo-modus: log in met echte Supabase-data om op te slaan.');return}
+      let error=null;
+      if(type==='task'){
+        ({error}=await sb.from('clara_tasks').insert({project_id,title:text,description:'Aangemaakt via snelle invoer.',priority:'medium',status:'open',created_by:sessionUser?.id,assigned_to:sessionUser?.id}));
+        if(!error)await addTimeline(project_id,`Snelle taak: ${text}`);
+      }
+      if(type==='waiting'){
+        ({error}=await sb.from('clara_waiting_for').insert({project_id,waiting_on:text,reason:'Aangemaakt via snelle invoer.',owner_id:sessionUser?.id,status:'open'}));
+        if(!error)await addTimeline(project_id,`Snelle waiting-for: ${text}`);
+      }
+      if(type==='decision'){
+        ({error}=await sb.from('clara_decisions').insert({project_id,title:text,description:'Aangemaakt via snelle invoer.',impact:'Vastgelegd in Clara.',decision_date:new Date().toISOString().slice(0,10)}));
+        if(!error)await addTimeline(project_id,`Snel besluit: ${text}`);
+      }
+      if(type==='timeline'){
+        ({error}=await sb.from('clara_timeline').insert({project_id,author_id:sessionUser?.id,title:text}));
+      }
+      if(error){msg('quickStatus',error.message);return}
+      $('quickText').value='';
+      msg('quickStatus','Opgeslagen.');
+      await reload();
+    }
+
+    async function insertProject(e){e.preventDefault();msg('projectStatusLine','');if(appData?.isDemo){msg('projectStatusLine','Maak eerst een space aan in Supabase.');return}const space_id=await ensureSpace();const payload={space_id,name:$('projectName').value.trim(),summary:$('projectSummary').value.trim(),status:$('projectStatus').value,momentum:$('projectMomentum').value,health:$('projectHealth').value,next_step:$('projectNext').value.trim(),owner_id:sessionUser?.id};const {data,error}=await sb.from('clara_projects').insert(payload).select().single();if(error){msg('projectStatusLine',error.message);return}await addTimeline(data.id,`Project toegevoegd: ${data.name}`);e.target.reset();msg('projectStatusLine','Project toegevoegd.');await reload()}
+    async function insertTask(e){e.preventDefault();msg('taskStatus','');if(appData?.isDemo){msg('taskStatus','Demo-modus: maak eerst echte data aan.');return}const payload={project_id:$('taskProject').value,title:$('taskTitle').value.trim(),description:$('taskDescription').value.trim(),priority:$('taskPriority').value,due_date:$('taskDueDate').value||null,status:'open',created_by:sessionUser?.id,assigned_to:sessionUser?.id};const {error}=await sb.from('clara_tasks').insert(payload);if(error){msg('taskStatus',error.message);return}await addTimeline(payload.project_id,`Taak toegevoegd: ${payload.title}`);e.target.reset();$('taskPriority').value='medium';msg('taskStatus','Taak toegevoegd.');await reload()}
+    async function insertWaiting(e){e.preventDefault();msg('waitingStatusLine','');if(appData?.isDemo){msg('waitingStatusLine','Demo-modus: maak eerst echte data aan.');return}const payload={project_id:$('waitingProject').value,waiting_on:$('waitingOn').value.trim(),reason:$('waitingReason').value.trim(),follow_up_date:$('waitingFollow').value.trim(),owner_id:sessionUser?.id,status:'open'};const {error}=await sb.from('clara_waiting_for').insert(payload);if(error){msg('waitingStatusLine',error.message);return}await addTimeline(payload.project_id,`Waiting-for toegevoegd: ${payload.waiting_on}`);e.target.reset();msg('waitingStatusLine','Waiting-for toegevoegd.');await reload()}
+    async function insertDecision(e){e.preventDefault();msg('decisionStatusLine','');if(appData?.isDemo){msg('decisionStatusLine','Demo-modus: maak eerst echte data aan.');return}const payload={project_id:$('decisionProject').value,title:$('decisionTitle').value.trim(),description:$('decisionDescription').value.trim(),impact:$('decisionImpact').value.trim(),decision_date:$('decisionDate').value||new Date().toISOString().slice(0,10)};const {error}=await sb.from('clara_decisions').insert(payload);if(error){msg('decisionStatusLine',error.message);return}await addTimeline(payload.project_id,`Besluit toegevoegd: ${payload.title}`);e.target.reset();msg('decisionStatusLine','Besluit toegevoegd.');await reload()}
+
+    async function loadTasksList(){
+      if(!sb||appData?.isDemo){$('tasksList').innerHTML=empty('Demo-modus.');return}
+      const {data,error}=await sb.from('clara_tasks').select('*').neq('status','done').order('created_at',{ascending:false});
+      if(error){$('tasksList').innerHTML=empty(error.message);return}
+      const p=new Map((appData.projects||[]).map(x=>[x.id,x.name]));
+      $('tasksList').innerHTML=(data||[]).map(t=>row({title:t.title,text:t.description,meta:t.status,tags:[{label:p.get(t.project_id)||'Geen project'},{label:t.priority||'medium'}]})).join('')||empty('Geen open taken.');
+    }
+
+    async function showApp(session){sessionUser=session.user;$('authView').hidden=true;$('appView').hidden=false;$('userEmail').textContent=session.user.email;await reload()}
+    function showAuth(){$('authView').hidden=false;$('appView').hidden=true}
+    async function login(){msg('authMessage','');const email=String($('emailInput').value||'').trim().toLowerCase();if(!ALLOWED_EMAILS.includes(email)){msg('authMessage','Dit e-mailadres staat nog niet op de toegestane lijst.');return}const {data,error}=await sb.auth.signInWithPassword({email,password:$('passwordInput').value});if(error){msg('authMessage',error.message);return}await showApp(data.session)}
+    async function signup(){msg('authMessage','');const email=String($('emailInput').value||'').trim().toLowerCase();if(!ALLOWED_EMAILS.includes(email)){msg('authMessage','Dit e-mailadres staat nog niet op de toegestane lijst.');return}const {error}=await sb.auth.signUp({email,password:$('passwordInput').value});msg('authMessage',error?error.message:'Account aangemaakt. Log daarna in.')}
+
+    function setupNav(){document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.view).classList.add('active')}))}
+
+    async function init(){
+      try{
+        await initSupabase();
+        setupNav();
+        $('loginBtn').onclick=login;
+        $('signupBtn').onclick=signup;
+        $('logoutBtn').onclick=async()=>{await sb.auth.signOut();showAuth()};
+        $('quickSaveBtn').onclick=saveQuickInput;
+        $('projectForm').onsubmit=insertProject;
+        $('taskForm').onsubmit=insertTask;
+        $('waitingForm').onsubmit=insertWaiting;
+        $('decisionForm').onsubmit=insertDecision;
+        const {data}=await sb.auth.getSession();
+        data.session?await showApp(data.session):showAuth();
+        sb.auth.onAuthStateChange((_e,s)=>s?showApp(s):showAuth());
+      }catch(e){showAuth();msg('authMessage',`Configfout: ${e.message}`)}
+    }
+
+    init();
+  </script>
+</body>
+</html>
