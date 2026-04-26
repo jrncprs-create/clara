@@ -28,6 +28,9 @@
     .app{display:grid;grid-template-columns:280px 1fr;gap:22px;min-height:calc(100vh - 48px)}
     .sidebar{background:#090909;border:1px solid var(--line);border-radius:var(--radius);padding:24px 17px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
     .brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+    .build-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-top:-10px;margin-bottom:12px}
+    .space-select-wrap{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+    .space-select-wrap .label{margin-bottom:0;font-size:10px}
     .nav{display:flex;flex-direction:column;gap:8px}
     .nav-item{text-align:left;padding:12px 13px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);color:var(--muted);font-size:14px}
     .nav-item.active{background:var(--accent-bg);border-color:rgba(180,140,255,.24);color:#fff}
@@ -78,6 +81,11 @@
     <aside class="sidebar">
       <div>
         <div class="brand">Clara 3.0</div>
+        <div class="build-label">BUILD 002</div>
+        <div class="space-select-wrap">
+          <label class="label" for="spaceSelector">Space</label>
+          <select id="spaceSelector" class="select"></select>
+        </div>
         <nav class="nav">
           <button class="nav-item active" data-view="dashboard">Dashboard</button>
           <button class="nav-item" data-view="projects">Projecten</button>
@@ -132,12 +140,25 @@
 
   <script>
     const ALLOWED_EMAILS=['jeroen@begeister.nl','marlon@begeister.nl'];
-    let sb=null,appData=null,sessionUser=null;
+    let sb=null,appData=null,sessionUser=null,activeSpaceId=null;
     const $=id=>document.getElementById(id);
     const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     const msg=(id,t)=>{$(id).textContent=t||''};
     const empty=t=>`<div class="empty">${esc(t||'Nog niets.')}</div>`;
     const row=({title,text,meta,tags=[],className=''})=>`<div class="row ${className}"><div><div class="row-title">${esc(title)}</div>${text?`<div class="row-text">${esc(text)}</div>`:''}${tags.filter(Boolean).map(tag=>`<span class="tag ${tag.className||''}">${esc(tag.label||tag)}</span>`).join('')}</div>${meta?`<div class="row-meta">${esc(meta)}</div>`:''}</div>`;
+    const ACTIVE_SPACE_KEY='clara_active_space_id';
+    function getStoredActiveSpaceId(){try{return localStorage.getItem(ACTIVE_SPACE_KEY)}catch(_e){return null}}
+    function setStoredActiveSpaceId(id){activeSpaceId=id||null;try{id?localStorage.setItem(ACTIVE_SPACE_KEY,id):localStorage.removeItem(ACTIVE_SPACE_KEY)}catch(_e){}}
+    function resolveActiveSpaceId(spaces=[]){
+      const firstId=spaces[0]?.id||null;
+      const stored=getStoredActiveSpaceId();
+      const exists=stored && spaces.some(s=>s.id===stored);
+      const resolved=exists?stored:firstId;
+      if(resolved && resolved!==stored)setStoredActiveSpaceId(resolved);
+      if(!resolved)setStoredActiveSpaceId(null);
+      activeSpaceId=resolved;
+      return resolved;
+    }
 
     async function initSupabase(){const r=await fetch('/api/config');const c=await r.json();if(!c.ok)throw new Error(c.error||'Config ontbreekt');sb=window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey)}
 
@@ -154,20 +175,36 @@
           sb.from('clara_profiles').select('*')
         ]);
         if(!spaces.data?.length){appData={...fallback,isDemo:true};return}
-        const pmap=new Map((projects.data||[]).map(p=>[p.id,p]));
+        const allSpaces=spaces.data||[];
+        const currentSpaceId=resolveActiveSpaceId(allSpaces);
+        const activeSpace=allSpaces.find(s=>s.id===currentSpaceId)||allSpaces[0];
+        const scopedProjects=(projects.data||[]).filter(p=>p.space_id===currentSpaceId);
+        const scopedProjectIds=new Set(scopedProjects.map(p=>p.id));
+        const scopedTasks=(tasks.data||[]).filter(t=>scopedProjectIds.has(t.project_id));
+        const scopedWaiting=(waiting.data||[]).filter(w=>scopedProjectIds.has(w.project_id));
+        const scopedDecisions=(decisions.data||[]).filter(d=>scopedProjectIds.has(d.project_id));
+        const scopedTimeline=(timeline.data||[]).filter(t=>scopedProjectIds.has(t.project_id));
+        const pmap=new Map(scopedProjects.map(p=>[p.id,p]));
         const prof=new Map((profiles.data||[]).map(p=>[p.id,p]));
         appData={
           isDemo:false,
-          space:{...spaces.data[0],focus:spaces.data[0].focus||spaces.data[0].summary||'Geen focus gezet'},
+          spaces:allSpaces,
+          active_space_id:currentSpaceId,
+          space:{...activeSpace,focus:activeSpace?.focus||activeSpace?.summary||'Geen focus gezet'},
           people:(profiles.data||[]).map(p=>({id:p.id,name:p.display_name||p.email||'Onbekend',role:p.role||'Team'})),
-          projects:(projects.data||[]).map(p=>({...p,owner:prof.get(p.owner_id)?.display_name||p.owner_id||''})),
-          today:(tasks.data||[]).slice(0,8).map(t=>({title:t.title,project:pmap.get(t.project_id)?.name||'Geen project',owner:prof.get(t.assigned_to)?.display_name||'',priority:t.priority||'medium'})),
-          waiting_for:(waiting.data||[]).map(w=>({project:pmap.get(w.project_id)?.name||'Geen project',waiting_on:w.waiting_on,reason:w.reason,follow_up:w.follow_up_date,owner:prof.get(w.owner_id)?.display_name||''})),
-          decisions:(decisions.data||[]).map(d=>({project:pmap.get(d.project_id)?.name||'Geen project',title:d.title,date:d.decision_date||'',impact:d.impact||d.description||''})),
-          activity:(timeline.data||[]).map(t=>({person:prof.get(t.author_id)?.display_name||'Clara',action:t.title,project:pmap.get(t.project_id)?.name||'',time:new Date(t.created_at).toLocaleDateString('nl-NL')})),
-          attention:buildAttention(projects.data||[],waiting.data||[])
+          projects:scopedProjects.map(p=>({...p,owner:prof.get(p.owner_id)?.display_name||p.owner_id||''})),
+          today:scopedTasks.slice(0,8).map(t=>({title:t.title,project:pmap.get(t.project_id)?.name||'Geen project',owner:prof.get(t.assigned_to)?.display_name||'',priority:t.priority||'medium'})),
+          waiting_for:scopedWaiting.map(w=>({project:pmap.get(w.project_id)?.name||'Geen project',waiting_on:w.waiting_on,reason:w.reason,follow_up:w.follow_up_date,owner:prof.get(w.owner_id)?.display_name||''})),
+          decisions:scopedDecisions.map(d=>({project:pmap.get(d.project_id)?.name||'Geen project',title:d.title,date:d.decision_date||'',impact:d.impact||d.description||''})),
+          activity:scopedTimeline.map(t=>({person:prof.get(t.author_id)?.display_name||'Clara',action:t.title,project:pmap.get(t.project_id)?.name||'',time:new Date(t.created_at).toLocaleDateString('nl-NL')})),
+          attention:buildAttention(scopedProjects,scopedWaiting)
         };
-      }catch(e){console.warn(e);appData={...fallback,isDemo:true}}
+      }catch(e){
+        console.warn(e);
+        const demoSpaces=fallback.space?[fallback.space]:[];
+        const currentSpaceId=resolveActiveSpaceId(demoSpaces);
+        appData={...fallback,isDemo:true,spaces:demoSpaces,active_space_id:currentSpaceId,space:fallback.space||null}
+      }
     }
 
     function buildAttention(projects,waiting){
@@ -180,6 +217,7 @@
     function render(){
       if(!appData)return;
       $('spaceFocus').textContent=appData.space?.focus||'Geen focus gezet';
+      renderSpaceSelector();
       $('attentionList').innerHTML=(appData.attention||[]).map(i=>row({title:i.project,text:`${i.signal} Actie: ${i.recommended_action}`,meta:i.severity,tags:[{label:i.type},{label:i.severity,className:i.severity==='high'?'high':'watch'}],className:'attention'})).join('')||empty('Geen signalen.');
       $('todayList').innerHTML=(appData.today||[]).map(i=>row({title:i.title,text:i.project,meta:i.owner,tags:[{label:i.priority,className:i.priority==='high'?'high':''}]})).join('')||empty('Geen taken.');
       const prs=(appData.projects||[]).map(p=>row({title:p.name,text:`${p.summary||''} Volgende stap: ${p.next_step||'nog niet gezet'}`,meta:p.owner,tags:[{label:p.status||'open'},{label:p.health||'watch',className:p.health==='good'?'good':'watch'},{label:p.momentum||'medium'}]})).join('')||empty('Geen projecten.');
@@ -193,6 +231,12 @@
       fillProjectSelects();
       loadTasksList();
     }
+    function renderSpaceSelector(){
+      const spaces=appData.spaces||[];
+      $('spaceSelector').innerHTML=spaces.map(s=>`<option value="${esc(s.id)}">${esc(s.name||'Onbenoemde space')}</option>`).join('')||'<option value="">Geen spaces</option>';
+      $('spaceSelector').value=appData.active_space_id||spaces[0]?.id||'';
+      $('spaceSelector').disabled=spaces.length<=1;
+    }
 
     function fillProjectSelects(){
       ['taskProject','waitingProject','decisionProject','quickProject'].forEach(id=>{
@@ -200,9 +244,15 @@
       });
     }
 
-    async function ensureSpace(){if(appData?.isDemo)return null;const {data}=await sb.from('clara_spaces').select('*').limit(1).maybeSingle();return data?.id||null}
+    async function ensureSpace(){if(appData?.isDemo)return null;if(activeSpaceId)return activeSpaceId;const {data}=await sb.from('clara_spaces').select('*').order('created_at').limit(1).maybeSingle();if(data?.id)setStoredActiveSpaceId(data.id);return data?.id||null}
     async function addTimeline(project_id,title){if(appData?.isDemo)return;await sb.from('clara_timeline').insert({project_id,author_id:sessionUser?.id,title})}
     async function reload(){await loadData();render()}
+    async function onSpaceChange(){
+      const selected=$('spaceSelector').value||null;
+      if(!selected||selected===activeSpaceId)return;
+      setStoredActiveSpaceId(selected);
+      await reload();
+    }
 
     async function saveQuickInput(){
       msg('quickStatus','');
@@ -243,7 +293,8 @@
       const {data,error}=await sb.from('clara_tasks').select('*').neq('status','done').order('created_at',{ascending:false});
       if(error){$('tasksList').innerHTML=empty(error.message);return}
       const p=new Map((appData.projects||[]).map(x=>[x.id,x.name]));
-      $('tasksList').innerHTML=(data||[]).map(t=>row({title:t.title,text:t.description,meta:t.status,tags:[{label:p.get(t.project_id)||'Geen project'},{label:t.priority||'medium'}]})).join('')||empty('Geen open taken.');
+      const allowed=new Set((appData.projects||[]).map(x=>x.id));
+      $('tasksList').innerHTML=(data||[]).filter(t=>allowed.has(t.project_id)).map(t=>row({title:t.title,text:t.description,meta:t.status,tags:[{label:p.get(t.project_id)||'Geen project'},{label:t.priority||'medium'}]})).join('')||empty('Geen open taken.');
     }
 
     async function showApp(session){sessionUser=session.user;$('authView').hidden=true;$('appView').hidden=false;$('userEmail').textContent=session.user.email;await reload()}
@@ -261,6 +312,7 @@
         $('signupBtn').onclick=signup;
         $('logoutBtn').onclick=async()=>{await sb.auth.signOut();showAuth()};
         $('quickSaveBtn').onclick=saveQuickInput;
+        $('spaceSelector').onchange=onSpaceChange;
         $('projectForm').onsubmit=insertProject;
         $('taskForm').onsubmit=insertTask;
         $('waitingForm').onsubmit=insertWaiting;
