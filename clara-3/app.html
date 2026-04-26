@@ -458,6 +458,12 @@
       const options=projects.map(project=>
         `<option value="${esc(project.id)}" ${project.id===parsed.selected_project_id?'selected':''}>${esc(project.name)}</option>`
       ).join('')||'<option value="" selected>Geen projecten beschikbaar</option>';
+      const projectPickerHtml=`
+        <div class="intake-project-picker">
+          <label class="label" for="aiIntakeProject">Project voor opslag</label>
+          <select id="aiIntakeProject" class="select">${options}</select>
+        </div>
+      `;
       box.hidden=false;
       box.innerHTML=`<div class="intake-review-text">Ik denk dat dit een ${esc(parsed.type)} is. Kies hieronder het project voor opslag.</div>
         <div class="intake-meta">
@@ -468,14 +474,7 @@
           <span class="tag">Datum: ${esc(parsed.due_date||'niet gevonden')}</span>
           <span class="tag">Tijd: ${esc(parsed.due_time||'niet gevonden')}</span>
         </div>
-        <div class="intake-project-picker">
-          <label class="label" for="aiIntakeProject">Project voor opslag</label>
-          <select id="aiIntakeProject" class="select">${options}</select>
-        </div>
-        <div class="intake-project-picker">
-          <label class="label" for="aiIntakeProject">Project voor opslag</label>
-          <select id="aiIntakeProject" class="select">${options}</select>
-        </div>
+        ${projectPickerHtml}
         <div class="intake-actions">
           <button id="aiIntakeSave" class="btn primary">Opslaan</button>
           <button id="aiIntakeCancel" class="btn ghost">Annuleren</button>
