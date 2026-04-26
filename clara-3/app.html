@@ -160,7 +160,7 @@
           <img src="./assets/begeister-logo-white.png" class="brand-logo" alt="Begeister">
           <div>
             <div class="brand">CLARA 3.0</div>
-            <div class="build-label">BUILD 003</div>
+            <div id="buildLabel" class="build-label">BUILD local</div>
           </div>
         </div>
         <div class="space-select-wrap">
@@ -252,6 +252,22 @@
     }
 
     async function initSupabase(){const r=await fetch('/api/config');const c=await r.json();if(!c.ok)throw new Error(c.error||'Config ontbreekt');sb=window.supabase.createClient(c.supabaseUrl,c.supabaseAnonKey)}
+
+
+    async function loadBuildInfo(){
+      const label=$('buildLabel');
+      if(!label)return;
+      label.textContent='BUILD local';
+      try{
+        const r=await fetch('/api/build-info',{cache:'no-store'});
+        if(!r.ok)throw new Error(`build info status ${r.status}`);
+        const info=await r.json();
+        const build=String(info?.build||'').trim()||'local';
+        label.textContent=`BUILD ${build}`;
+      }catch(_e){
+        label.textContent='BUILD local';
+      }
+    }
 
     async function loadData(){
       const fallback=await fetch('./seed-data.json').then(r=>r.json());
@@ -492,6 +508,7 @@
     function setupNav(){document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.view).classList.add('active')}))}
 
     async function init(){
+      await loadBuildInfo();
       try{
         await initSupabase();
         setupNav();
