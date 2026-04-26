@@ -1,196 +1,142 @@
 {
+  "notice": "Demo/mockdata only. Geen persoonlijke of gevoelige informatie in deze publieke repo opslaan.",
   "space": {
-    "id": "space_begeister",
-    "name": "Begeister",
+    "id": "space_demo",
+    "name": "Werkruimte",
     "type": "organization",
     "summary": "Gedeelde werkstructuur voor projecten, acties, besluiten en open lussen.",
-    "focus": "Overzicht houden, commerciële basis versterken en projecten gezond prioriteren.",
+    "focus": "Overzicht houden, prioriteiten bewaken en open lussen zichtbaar maken.",
     "active_project_count": 5,
     "open_waiting_for_count": 4
   },
   "people": [
     {
-      "id": "jeroen",
-      "name": "Jeroen",
-      "role": "Concept, techniek, ontwerp en uitvoering"
+      "id": "person_1",
+      "name": "Persoon 1",
+      "role": "Concept, techniek en uitvoering"
     },
     {
-      "id": "marlon",
-      "name": "Marlon",
-      "role": "Productie, planning, context en kwaliteit"
+      "id": "person_2",
+      "name": "Persoon 2",
+      "role": "Productie, planning en kwaliteit"
     },
     {
-      "id": "joep",
-      "name": "Joep",
-      "role": "Content, social posts en workshopfoto’s"
+      "id": "person_3",
+      "name": "Persoon 3",
+      "role": "Content en updates"
     }
   ],
   "attention": [
     {
-      "project": "LaLampe",
+      "project": "Project A",
       "type": "momentum",
       "severity": "high",
       "signal": "Momentum is hoog, maar conversie moet nu leidend worden.",
-      "recommended_action": "Vul de eerstvolgende 2 workshopavonden en verzamel reviews."
+      "recommended_action": "Vul de eerstvolgende concrete momenten en verzamel feedback."
     },
     {
-      "project": "Clara 3.0",
+      "project": "Project B",
       "type": "risk",
       "severity": "medium",
       "signal": "De richting is sterk, maar het risico is opnieuw te veel techniek bouwen.",
       "recommended_action": "Eerst dashboard en projectstructuur valideren, daarna pas integraties."
     },
     {
-      "project": "Begeister algemeen",
+      "project": "Organisatie",
       "type": "scope",
       "severity": "medium",
-      "signal": "Begeister is de bovenlaag, geen los project.",
-      "recommended_action": "Alle projecten onder Begeister structureren als eigen projectkaarten."
-    },
-    {
-      "project": "AFK / lichtentiteiten",
-      "type": "focus",
-      "severity": "low",
-      "signal": "Inhoudelijk belangrijk, maar niet de primaire korte-termijn omzetlaag.",
-      "recommended_action": "Slow-burn houden met één concrete technische test per week."
+      "signal": "De organisatie is de bovenlaag, geen los project.",
+      "recommended_action": "Alle projecten onder de werkruimte structureren als eigen projectkaarten."
     }
   ],
   "projects": [
     {
-      "id": "project_lalampe",
-      "name": "LaLampe",
+      "id": "project_a",
+      "name": "Project A",
       "status": "active",
       "momentum": "high",
       "health": "good",
-      "owner": "jeroen",
-      "participants": ["marlon", "joep"],
-      "summary": "Lampworkshops en merkontwikkeling.",
-      "bottleneck": "Boekingen en zichtbaarheid.",
-      "risk": "Te veel losse formats tegelijk.",
-      "next_step": "Eerstvolgende workshopavonden vullen."
+      "owner": "person_1",
+      "participants": ["person_2", "person_3"],
+      "summary": "Commercieel en publiek project.",
+      "bottleneck": "Zichtbaarheid en conversie.",
+      "risk": "Te veel losse richtingen tegelijk.",
+      "next_step": "Eerstvolgende concrete actie vullen."
     },
     {
-      "id": "project_clara",
-      "name": "Clara 3.0",
+      "id": "project_b",
+      "name": "Project B",
       "status": "active",
       "momentum": "high",
       "health": "watch",
-      "owner": "jeroen",
-      "participants": ["marlon"],
-      "summary": "Gedeelde operating layer voor Begeister.",
+      "owner": "person_1",
+      "participants": ["person_2"],
+      "summary": "Interne systeemontwikkeling.",
       "bottleneck": "Scope scherp houden.",
       "risk": "Over-engineering.",
       "next_step": "Dashboard V2 valideren."
     },
     {
-      "id": "project_content_agent",
-      "name": "Content Agent",
-      "status": "active",
-      "momentum": "medium",
-      "health": "watch",
-      "owner": "jeroen",
-      "participants": ["joep"],
-      "summary": "Foto’s selecteren, verbeteren en vertalen naar social content.",
-      "bottleneck": "Scope en eerste simpele flow.",
-      "risk": "Te snel automatische posting willen.",
-      "next_step": "Alleen selectie + caption-flow afmaken."
-    },
-    {
-      "id": "project_begeister_acquisitie",
-      "name": "Begeister acquisitie",
-      "status": "active",
-      "momentum": "medium",
-      "health": "watch",
-      "owner": "marlon",
-      "participants": ["jeroen"],
-      "summary": "Nieuwe klanten en projecten voor ruimtelijke ervaringen.",
-      "bottleneck": "Duidelijke propositie en eerste outreach.",
-      "risk": "Diffuus blijven door te brede positionering.",
-      "next_step": "Top 10 leads kiezen."
-    },
-    {
-      "id": "project_afk",
-      "name": "AFK / lichtentiteiten",
+      "id": "project_c",
+      "name": "Project C",
       "status": "slow_burn",
       "momentum": "low",
       "health": "paused",
-      "owner": "jeroen",
+      "owner": "person_1",
       "participants": [],
-      "summary": "Autonome lichtentiteiten met gedrag en onderlinge communicatie.",
-      "bottleneck": "Tijd en technische focus.",
-      "risk": "Onderzoek blijft te groot zonder eerste fysieke test.",
-      "next_step": "Eén node als gedragstest bouwen."
+      "summary": "Artistiek of langlopend onderzoek.",
+      "bottleneck": "Tijd en focus.",
+      "risk": "Onderzoek blijft te groot zonder eerste test.",
+      "next_step": "Eén kleine test definiëren."
     }
   ],
   "today": [
     {
       "title": "Dashboard V2 beoordelen",
-      "project": "Clara 3.0",
-      "owner": "jeroen",
+      "project": "Project B",
+      "owner": "person_1",
       "priority": "high"
     },
     {
-      "title": "Workshopboekingen komende weken scherp krijgen",
-      "project": "LaLampe",
-      "owner": "jeroen",
+      "title": "Eerstvolgende commerciële actie scherp krijgen",
+      "project": "Project A",
+      "owner": "person_1",
       "priority": "high"
     },
     {
-      "title": "Bespreken wat Marlon in Clara moet zien",
-      "project": "Clara 3.0",
-      "owner": "marlon",
+      "title": "Bespreken wat zichtbaar moet zijn voor teamleden",
+      "project": "Project B",
+      "owner": "person_2",
       "priority": "medium"
     }
   ],
   "waiting_for": [
     {
-      "project": "LaLampe",
-      "waiting_on": "Airbnb / platforms",
-      "reason": "Approval en extra boekingskanalen.",
+      "project": "Project A",
+      "waiting_on": "Extern platform",
+      "reason": "Approval of terugkoppeling.",
       "since": "open",
       "follow_up": "deze week",
-      "owner": "jeroen"
+      "owner": "person_1"
     },
     {
-      "project": "Clara 3.0",
-      "waiting_on": "Marlon",
+      "project": "Project B",
+      "waiting_on": "Teamfeedback",
       "reason": "Feedback op gedeelde cockpit.",
       "since": "vandaag",
       "follow_up": "na eerste review",
-      "owner": "jeroen"
-    },
-    {
-      "project": "Content Agent",
-      "waiting_on": "Eerste echte fotoset",
-      "reason": "Flow testen met workshopmateriaal.",
-      "since": "open",
-      "follow_up": "na volgende workshop",
-      "owner": "joep"
-    },
-    {
-      "project": "Begeister acquisitie",
-      "waiting_on": "Leadselectie",
-      "reason": "Zonder scherpe leadlijst blijft acquisitie abstract.",
-      "since": "open",
-      "follow_up": "deze week",
-      "owner": "marlon"
+      "owner": "person_1"
     }
   ],
   "decisions": [
     {
-      "project": "Clara 3.0",
-      "title": "Begeister is de bovenlaag",
+      "project": "Project B",
+      "title": "Werkruimte is de bovenlaag",
       "date": "2026-04-26",
-      "impact": "Projecten hangen onder Begeister als space."
+      "impact": "Projecten hangen onder een space."
     },
     {
-      "project": "Clara 3.0",
-      "title": "Codex wordt primaire technische operator",
-      "date": "2026-04-26",
-      "impact": "Claude is niet meer de hoofdroute voor codewerk."
-    },
-    {
-      "project": "Clara 3.0",
+      "project": "Project B",
       "title": "Legacy blijft beschermd",
       "date": "2026-04-26",
       "impact": "Nieuwe ontwikkeling gebeurt parallel in /clara-3."
@@ -198,22 +144,16 @@
   ],
   "activity": [
     {
-      "person": "Jeroen",
-      "action": "zette Clara 3.0 richting scherp",
-      "project": "Clara 3.0",
+      "person": "Persoon 1",
+      "action": "zette de richting scherp",
+      "project": "Project B",
       "time": "vandaag"
     },
     {
-      "person": "Clara",
+      "person": "Systeem",
       "action": "maakte Dashboard V2 mockup",
-      "project": "Clara 3.0",
+      "project": "Project B",
       "time": "vandaag"
-    },
-    {
-      "person": "Joep",
-      "action": "krijgt contentrol in Clara",
-      "project": "LaLampe",
-      "time": "later"
     }
   ]
 }
