@@ -364,6 +364,8 @@
     }
 
     function normalizeText(v=''){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+    function toIsoDate(d){return d.toISOString().slice(0,10)}
+    function toIsoTime(hours,minutes=0){return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}`}
     function detectIntakeType(text=''){
       const t=normalizeText(text);
       if(/\b(besluit|keuze|beslissen|decision)\b/.test(t))return 'decision';
@@ -392,18 +394,41 @@
     function startOfToday(){const d=new Date();d.setHours(0,0,0,0);return d}
     function parseDutchDate(text=''){
       const t=normalizeText(text);
+      const now=startOfToday();
+      const addDays=(base,days)=>{const d=new Date(base);d.setDate(d.getDate()+days);return d};
+      if(/\bovermorgen\b/.test(t))return toIsoDate(addDays(now,2));
+      if(/\bmorgen\b/.test(t))return toIsoDate(addDays(now,1));
+      if(/\bvandaag\b/.test(t))return toIsoDate(now);
+
+      const nextWeekMatch=t.match(/\bvolgende week\s+(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\b/);
+      if(nextWeekMatch){
+        const order={maandag:0,dinsdag:1,woensdag:2,donderdag:3,vrijdag:4,zaterdag:5,zondag:6};
+        const dayName=nextWeekMatch[1];
+        const todayIndex=(now.getDay()+6)%7;
+        const daysUntilNextMonday=((7-todayIndex)%7)||7;
+        const nextMonday=addDays(now,daysUntilNextMonday);
+        return toIsoDate(addDays(nextMonday,order[dayName]));
+      }
+
       const map={zondag:0,maandag:1,dinsdag:2,woensdag:3,donderdag:4,vrijdag:5,zaterdag:6};
       for(const [name,day] of Object.entries(map)){
         if(t.includes(name)){
-          const now=startOfToday();
           const delta=(day-now.getDay()+7)%7||7;
-          const d=new Date(now);
-          d.setDate(now.getDate()+delta);
-          return d.toISOString().slice(0,10);
+          return toIsoDate(addDays(now,delta));
         }
       }
       const m=t.match(/\b(\d{4}-\d{2}-\d{2})\b/);
       if(m)return m[1];
+      return null;
+    }
+    function parseDutchTime(text=''){
+      const t=normalizeText(text);
+      let m=t.match(/\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/);
+      if(m)return toIsoTime(Number(m[1]),Number(m[2]));
+      m=t.match(/\b([01]?\d|2[0-3])\s*uur\b/);
+      if(m)return toIsoTime(Number(m[1]),0);
+      m=t.match(/\bom\s*([01]?\d|2[0-3])\b/);
+      if(m)return toIsoTime(Number(m[1]),0);
       return null;
     }
     function parseAiIntake(text=''){
@@ -412,6 +437,7 @@
       const fallbackProject=(appData?.projects||[])[0]||null;
       const selectedProject=project||fallbackProject;
       const due_date=parseDutchDate(text);
+      const due_time=parseDutchTime(text);
       const space=appData?.space?.name||'Onbekende space';
       return {
         type,
@@ -421,6 +447,7 @@
         selected_project_name:selectedProject?.name||'Geen project gekozen',
         space,
         due_date,
+        due_time,
         title:text.trim()
       };
     }
@@ -432,13 +459,18 @@
         `<option value="${esc(project.id)}" ${project.id===parsed.selected_project_id?'selected':''}>${esc(project.name)}</option>`
       ).join('')||'<option value="" selected>Geen projecten beschikbaar</option>';
       box.hidden=false;
-      box.innerHTML=`<div class="intake-review-text">Ik denk dat dit een ${esc(parsed.type)} is binnen ${esc(parsed.project_name)}.</div>
+      box.innerHTML=`<div class="intake-review-text">Ik denk dat dit een ${esc(parsed.type)} is. Kies hieronder het project voor opslag.</div>
         <div class="intake-meta">
           <span class="tag">Type: ${esc(parsed.type)}</span>
           <span class="tag">Herkend project: ${esc(parsed.project_name)}</span>
           <span class="tag">Gekozen project: ${esc(parsed.selected_project_name||'Geen project gekozen')}</span>
           <span class="tag">Space: ${esc(parsed.space)}</span>
           <span class="tag">Datum: ${esc(parsed.due_date||'niet gevonden')}</span>
+          <span class="tag">Tijd: ${esc(parsed.due_time||'niet gevonden')}</span>
+        </div>
+        <div class="intake-project-picker">
+          <label class="label" for="aiIntakeProject">Project voor opslag</label>
+          <select id="aiIntakeProject" class="select">${options}</select>
         </div>
         <div class="intake-project-picker">
           <label class="label" for="aiIntakeProject">Project voor opslag</label>
@@ -480,13 +512,13 @@
       const title=aiIntakeParsed.title;
       let error=null;
       if(aiIntakeParsed.type==='task'){
-        ({error}=await sb.from('clara_tasks').insert({project_id,title,description:'Aangemaakt via AI intake.',priority:'medium',status:'open',due_date:aiIntakeParsed.due_date,created_by:sessionUser?.id,assigned_to:sessionUser?.id}));
+        ({error}=await sb.from('clara_tasks').insert({project_id,title,description:'Aangemaakt via AI intake.',priority:'medium',status:'open',due_date:aiIntakeParsed.due_date,due_time:aiIntakeParsed.due_time||null,created_by:sessionUser?.id,assigned_to:sessionUser?.id}));
         if(!error)await addTimeline(project_id,`AI intake taak: ${title}`);
       } else if(aiIntakeParsed.type==='waiting'){
-        ({error}=await sb.from('clara_waiting_for').insert({project_id,waiting_on:title,reason:'Aangemaakt via AI intake.',follow_up_date:aiIntakeParsed.due_date||null,owner_id:sessionUser?.id,status:'open'}));
+        ({error}=await sb.from('clara_waiting_for').insert({project_id,waiting_on:title,reason:aiIntakeParsed.due_time?`Aangemaakt via AI intake. Tijd: ${aiIntakeParsed.due_time}`:'Aangemaakt via AI intake.',follow_up_date:aiIntakeParsed.due_date||null,owner_id:sessionUser?.id,status:'open'}));
         if(!error)await addTimeline(project_id,`AI intake waiting-for: ${title}`);
       } else if(aiIntakeParsed.type==='decision'){
-        ({error}=await sb.from('clara_decisions').insert({project_id,title,description:'Aangemaakt via AI intake.',impact:'Vastgelegd via intake.',decision_date:aiIntakeParsed.due_date||new Date().toISOString().slice(0,10)}));
+        ({error}=await sb.from('clara_decisions').insert({project_id,title,description:aiIntakeParsed.due_time?`Aangemaakt via AI intake. Tijd: ${aiIntakeParsed.due_time}`:'Aangemaakt via AI intake.',impact:'Vastgelegd via intake.',decision_date:aiIntakeParsed.due_date||new Date().toISOString().slice(0,10)}));
         if(!error)await addTimeline(project_id,`AI intake besluit: ${title}`);
       } else {
         ({error}=await sb.from('clara_timeline').insert({project_id,author_id:sessionUser?.id,title:`Notitie: ${title}`}));
