@@ -126,6 +126,8 @@
     .intake-review{margin-top:12px;padding:12px;border:1px solid rgba(180,140,255,.2);border-radius:14px;background:rgba(180,140,255,.08)}
     .intake-review-text{font-size:13px;color:var(--muted);margin-bottom:8px}
     .intake-meta{display:flex;flex-wrap:wrap;gap:8px}
+    .intake-project-picker{margin-top:10px}
+    .intake-project-picker .select{display:block;width:100%}
     .intake-actions{display:flex;gap:10px;margin-top:12px}
 
     @media(max-width:1080px){
@@ -407,25 +409,52 @@
     function parseAiIntake(text=''){
       const type=detectIntakeType(text);
       const project=detectProjectFromText(text);
+      const fallbackProject=(appData?.projects||[])[0]||null;
+      const selectedProject=project||fallbackProject;
       const due_date=parseDutchDate(text);
       const space=appData?.space?.name||'Onbekende space';
-      return {type,project_id:project?.id||null,project_name:project?.name||'Geen match',space,due_date,title:text.trim()};
+      return {
+        type,
+        project_id:project?.id||null,
+        project_name:project?.name||'Geen match',
+        selected_project_id:selectedProject?.id||null,
+        selected_project_name:selectedProject?.name||'Geen project gekozen',
+        space,
+        due_date,
+        title:text.trim()
+      };
     }
     function renderAiReview(parsed){
       const box=$('aiIntakeReview');
       if(!parsed){box.hidden=true;box.innerHTML='';return}
+      const projects=appData?.projects||[];
+      const options=projects.map(project=>
+        `<option value="${esc(project.id)}" ${project.id===parsed.selected_project_id?'selected':''}>${esc(project.name)}</option>`
+      ).join('')||'<option value="" selected>Geen projecten beschikbaar</option>';
       box.hidden=false;
       box.innerHTML=`<div class="intake-review-text">Ik denk dat dit een ${esc(parsed.type)} is binnen ${esc(parsed.project_name)}.</div>
         <div class="intake-meta">
           <span class="tag">Type: ${esc(parsed.type)}</span>
-          <span class="tag">Project: ${esc(parsed.project_name)}</span>
+          <span class="tag">Herkend project: ${esc(parsed.project_name)}</span>
+          <span class="tag">Gekozen project: ${esc(parsed.selected_project_name||'Geen project gekozen')}</span>
           <span class="tag">Space: ${esc(parsed.space)}</span>
           <span class="tag">Datum: ${esc(parsed.due_date||'niet gevonden')}</span>
+        </div>
+        <div class="intake-project-picker">
+          <label class="label" for="aiIntakeProject">Project voor opslag</label>
+          <select id="aiIntakeProject" class="select">${options}</select>
         </div>
         <div class="intake-actions">
           <button id="aiIntakeSave" class="btn primary">Opslaan</button>
           <button id="aiIntakeCancel" class="btn ghost">Annuleren</button>
         </div>`;
+      $('aiIntakeProject').onchange=e=>{
+        const selectedId=e.target.value||null;
+        const selectedProject=(appData?.projects||[]).find(project=>project.id===selectedId)||null;
+        aiIntakeParsed.selected_project_id=selectedId;
+        aiIntakeParsed.selected_project_name=selectedProject?.name||'Geen project gekozen';
+        renderAiReview(aiIntakeParsed);
+      };
       $('aiIntakeSave').onclick=saveAiIntakeParsed;
       $('aiIntakeCancel').onclick=cancelAiIntake;
     }
@@ -446,8 +475,8 @@
     async function saveAiIntakeParsed(){
       if(!aiIntakeParsed)return;
       if(appData?.isDemo){msg('aiIntakeStatus','Demo-modus: log in met echte Supabase-data om op te slaan.');return}
-      const project_id=aiIntakeParsed.project_id||$('quickProject')?.value||null;
-      if(!project_id){msg('aiIntakeStatus','Geen project gevonden. Kies eerst een project via snelle invoer.');return}
+      const project_id=aiIntakeParsed.selected_project_id||null;
+      if(!project_id){msg('aiIntakeStatus','Kies eerst een project in de AI Intake-review.');return}
       const title=aiIntakeParsed.title;
       let error=null;
       if(aiIntakeParsed.type==='task'){
