@@ -1404,6 +1404,34 @@ async function normalizeReviewPayload(aiResult) {
 
     const rows = Array.isArray(data) ? data : []
     itemsForValidation = itemsWithProjectPrep.map(item => {
+      const textKey = normalizeProjectMatchKey(`${safeString(item.source_text)} ${safeString(item.title)}`)
+      const literalMatches = []
+      for (const row of rows) {
+        const nameKey = normalizeProjectMatchKey(row.name)
+        if (!nameKey) continue
+        if (textKey && textKey.includes(nameKey)) {
+          literalMatches.push({ row, kind: 'literal', score: 1 })
+        }
+      }
+
+      if (literalMatches.length) {
+        literalMatches.sort((a, b) => {
+          const lenA = normalizeProjectMatchKey(a.row.name).length
+          const lenB = normalizeProjectMatchKey(b.row.name).length
+          if (lenA !== lenB) return lenB - lenA
+          return String(a.row.id).localeCompare(String(b.row.id))
+        })
+
+        const winner = literalMatches[0].row
+        return {
+          ...item,
+          project_resolution: {
+            resolved_id: winner.id,
+            candidates: [{ id: winner.id, name: winner.name, score: 1 }]
+          }
+        }
+      }
+
       if (!item.project_label || item.project_label.trim().length < 3) return item
 
       const labelKey = normalizeProjectMatchKey(item.project_label)
