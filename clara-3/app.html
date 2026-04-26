@@ -28,12 +28,14 @@
     .app{display:grid;grid-template-columns:280px 1fr;gap:22px;min-height:calc(100vh - 48px)}
     .sidebar{background:#090909;border:1px solid var(--line);border-radius:var(--radius);padding:24px 17px;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
     .brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+    .build-label{display:inline-flex;padding:5px 9px;border-radius:999px;border:1px solid rgba(180,140,255,.28);background:rgba(180,140,255,.12);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.86);margin-bottom:14px}
     .nav{display:flex;flex-direction:column;gap:8px}
     .nav-item{text-align:left;padding:12px 13px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);color:var(--muted);font-size:14px}
     .nav-item.active{background:var(--accent-bg);border-color:rgba(180,140,255,.24);color:#fff}
     .sidebar-user{border-top:1px solid rgba(255,255,255,.07);padding-top:15px;color:var(--muted);font-size:12px;line-height:1.45;word-break:break-word}
     .content{display:flex;flex-direction:column;gap:20px;min-width:0}
     .header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+    .space-toolbar{display:flex;flex-direction:column;gap:6px;max-width:320px}
     .space-card{border:1px solid rgba(180,140,255,.18);background:rgba(180,140,255,.06);padding:17px;border-radius:18px;min-width:280px;max-width:380px}
     .space-title{font-size:15px;font-weight:700;margin-bottom:8px}
     .space-text{font-size:13px;color:rgba(255,255,255,.78);line-height:1.5}
@@ -78,6 +80,7 @@
     <aside class="sidebar">
       <div>
         <div class="brand">Clara 3.0</div>
+        <div class="build-label">Build 002 · Space layer</div>
         <nav class="nav">
           <button class="nav-item active" data-view="dashboard">Dashboard</button>
           <button class="nav-item" data-view="projects">Projecten</button>
@@ -93,7 +96,15 @@
     <main class="content">
       <section id="dashboard" class="view active">
         <div class="header">
-          <div><div class="kicker">Begeister cockpit</div><h1 class="title">Clara Dashboard</h1><p class="subtitle">Gedeelde werklaag voor projecten, acties, besluiten en open lussen.</p></div>
+          <div>
+            <div class="space-toolbar">
+              <label class="label" for="spaceSelector">Actieve space</label>
+              <select id="spaceSelector" class="select"></select>
+            </div>
+            <div class="kicker" style="margin-top:12px">Begeister cockpit</div>
+            <h1 class="title">Clara Dashboard</h1>
+            <p class="subtitle">Gedeelde werklaag voor projecten, acties, besluiten en open lussen.</p>
+          </div>
           <div class="space-card"><div class="space-title">Focus nu</div><div id="spaceFocus" class="space-text">Laden...</div></div>
         </div>
 
@@ -132,7 +143,8 @@
 
   <script>
     const ALLOWED_EMAILS=['jeroen@begeister.nl','marlon@begeister.nl'];
-    let sb=null,appData=null,sessionUser=null;
+    const SPACE_STORAGE_KEY='clara_active_space_id';
+    let sb=null,appData=null,sessionUser=null,activeSpaceId=null;
     const $=id=>document.getElementById(id);
     const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     const msg=(id,t)=>{$(id).textContent=t||''};
@@ -153,19 +165,31 @@
           sb.from('clara_timeline').select('*').order('created_at',{ascending:false}).limit(20),
           sb.from('clara_profiles').select('*')
         ]);
-        if(!spaces.data?.length){appData={...fallback,isDemo:true};return}
-        const pmap=new Map((projects.data||[]).map(p=>[p.id,p]));
+        if(!spaces.data?.length){appData={...fallback,isDemo:true,spaces:[fallback.space],activeSpaceId:fallback.space?.id||'space_demo'};activeSpaceId=appData.activeSpaceId;return}
+        const availableSpaces=spaces.data||[];
+        const savedSpaceId=localStorage.getItem(SPACE_STORAGE_KEY);
+        activeSpaceId=availableSpaces.some(space=>space.id===activeSpaceId)?activeSpaceId:(availableSpaces.some(space=>space.id===savedSpaceId)?savedSpaceId:availableSpaces[0].id);
+        localStorage.setItem(SPACE_STORAGE_KEY,activeSpaceId);
+        const projectsInSpace=(projects.data||[]).filter(project=>project.space_id===activeSpaceId);
+        const projectIds=new Set(projectsInSpace.map(project=>project.id));
+        const tasksInSpace=(tasks.data||[]).filter(task=>projectIds.has(task.project_id));
+        const waitingInSpace=(waiting.data||[]).filter(item=>projectIds.has(item.project_id));
+        const decisionsInSpace=(decisions.data||[]).filter(item=>projectIds.has(item.project_id));
+        const timelineInSpace=(timeline.data||[]).filter(item=>projectIds.has(item.project_id));
+        const pmap=new Map(projectsInSpace.map(p=>[p.id,p]));
         const prof=new Map((profiles.data||[]).map(p=>[p.id,p]));
         appData={
           isDemo:false,
-          space:{...spaces.data[0],focus:spaces.data[0].focus||spaces.data[0].summary||'Geen focus gezet'},
+          spaces:availableSpaces,
+          activeSpaceId,
+          space:{...availableSpaces.find(space=>space.id===activeSpaceId),focus:availableSpaces.find(space=>space.id===activeSpaceId)?.focus||availableSpaces.find(space=>space.id===activeSpaceId)?.summary||'Geen focus gezet'},
           people:(profiles.data||[]).map(p=>({id:p.id,name:p.display_name||p.email||'Onbekend',role:p.role||'Team'})),
-          projects:(projects.data||[]).map(p=>({...p,owner:prof.get(p.owner_id)?.display_name||p.owner_id||''})),
-          today:(tasks.data||[]).slice(0,8).map(t=>({title:t.title,project:pmap.get(t.project_id)?.name||'Geen project',owner:prof.get(t.assigned_to)?.display_name||'',priority:t.priority||'medium'})),
-          waiting_for:(waiting.data||[]).map(w=>({project:pmap.get(w.project_id)?.name||'Geen project',waiting_on:w.waiting_on,reason:w.reason,follow_up:w.follow_up_date,owner:prof.get(w.owner_id)?.display_name||''})),
-          decisions:(decisions.data||[]).map(d=>({project:pmap.get(d.project_id)?.name||'Geen project',title:d.title,date:d.decision_date||'',impact:d.impact||d.description||''})),
-          activity:(timeline.data||[]).map(t=>({person:prof.get(t.author_id)?.display_name||'Clara',action:t.title,project:pmap.get(t.project_id)?.name||'',time:new Date(t.created_at).toLocaleDateString('nl-NL')})),
-          attention:buildAttention(projects.data||[],waiting.data||[])
+          projects:projectsInSpace.map(p=>({...p,owner:prof.get(p.owner_id)?.display_name||p.owner_id||''})),
+          today:tasksInSpace.slice(0,8).map(t=>({title:t.title,project:pmap.get(t.project_id)?.name||'Geen project',owner:prof.get(t.assigned_to)?.display_name||'',priority:t.priority||'medium'})),
+          waiting_for:waitingInSpace.map(w=>({project:pmap.get(w.project_id)?.name||'Geen project',waiting_on:w.waiting_on,reason:w.reason,follow_up:w.follow_up_date,owner:prof.get(w.owner_id)?.display_name||''})),
+          decisions:decisionsInSpace.map(d=>({project:pmap.get(d.project_id)?.name||'Geen project',title:d.title,date:d.decision_date||'',impact:d.impact||d.description||''})),
+          activity:timelineInSpace.map(t=>({person:prof.get(t.author_id)?.display_name||'Clara',action:t.title,project:pmap.get(t.project_id)?.name||'',time:new Date(t.created_at).toLocaleDateString('nl-NL')})),
+          attention:buildAttention(projectsInSpace,waitingInSpace)
         };
       }catch(e){console.warn(e);appData={...fallback,isDemo:true}}
     }
@@ -190,17 +214,25 @@
       $('decisionList').innerHTML=dr;$('decisionsPageList').innerHTML=dr;
       $('activityList').innerHTML=(appData.activity||[]).map(i=>row({title:i.action,text:`${i.person}${i.project?` · ${i.project}`:''}`,meta:i.time})).join('')||empty('Geen activiteit.');
       $('teamList').innerHTML=(appData.people||[]).map(p=>row({title:p.name,text:p.role,meta:p.id})).join('')||empty('Geen teamleden.');
+      fillSpaceSelect();
       fillProjectSelects();
       loadTasksList();
     }
 
+    function fillSpaceSelect(){
+      const spaces=appData?.spaces||[appData?.space].filter(Boolean);
+      $('spaceSelector').innerHTML=spaces.map(space=>`<option value="${esc(space.id)}">${esc(space.name||space.id)}</option>`).join('');
+      if(activeSpaceId)$('spaceSelector').value=activeSpaceId;
+    }
+
     function fillProjectSelects(){
       ['taskProject','waitingProject','decisionProject','quickProject'].forEach(id=>{
-        $(id).innerHTML=(appData.projects||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')
+        const options=(appData.projects||[]).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+        $(id).innerHTML=options||'<option value="">Geen project in deze space</option>';
       });
     }
 
-    async function ensureSpace(){if(appData?.isDemo)return null;const {data}=await sb.from('clara_spaces').select('*').limit(1).maybeSingle();return data?.id||null}
+    async function ensureSpace(){if(appData?.isDemo)return null;return activeSpaceId}
     async function addTimeline(project_id,title){if(appData?.isDemo)return;await sb.from('clara_timeline').insert({project_id,author_id:sessionUser?.id,title})}
     async function reload(){await loadData();render()}
 
@@ -243,7 +275,14 @@
       const {data,error}=await sb.from('clara_tasks').select('*').neq('status','done').order('created_at',{ascending:false});
       if(error){$('tasksList').innerHTML=empty(error.message);return}
       const p=new Map((appData.projects||[]).map(x=>[x.id,x.name]));
-      $('tasksList').innerHTML=(data||[]).map(t=>row({title:t.title,text:t.description,meta:t.status,tags:[{label:p.get(t.project_id)||'Geen project'},{label:t.priority||'medium'}]})).join('')||empty('Geen open taken.');
+      const filtered=(data||[]).filter(task=>p.has(task.project_id));
+      $('tasksList').innerHTML=filtered.map(t=>row({title:t.title,text:t.description,meta:t.status,tags:[{label:p.get(t.project_id)||'Geen project'},{label:t.priority||'medium'}]})).join('')||empty('Geen open taken.');
+    }
+
+    async function changeSpace(){
+      activeSpaceId=$('spaceSelector').value;
+      localStorage.setItem(SPACE_STORAGE_KEY,activeSpaceId);
+      await reload();
     }
 
     async function showApp(session){sessionUser=session.user;$('authView').hidden=true;$('appView').hidden=false;$('userEmail').textContent=session.user.email;await reload()}
@@ -261,6 +300,7 @@
         $('signupBtn').onclick=signup;
         $('logoutBtn').onclick=async()=>{await sb.auth.signOut();showAuth()};
         $('quickSaveBtn').onclick=saveQuickInput;
+        $('spaceSelector').onchange=changeSpace;
         $('projectForm').onsubmit=insertProject;
         $('taskForm').onsubmit=insertTask;
         $('waitingForm').onsubmit=insertWaiting;
