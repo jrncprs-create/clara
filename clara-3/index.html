@@ -3,31 +3,143 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clara 3.0 Dashboard V1</title>
+  <title>Clara 3.0</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg: #050505;
       --panel: #0f0f10;
+      --panel-2: #151516;
       --panel-border: rgba(255,255,255,0.08);
       --text: #ffffff;
-      --muted: rgba(255,255,255,0.55);
-      --soft: rgba(255,255,255,0.28);
-      --accent: rgba(180, 140, 255, 0.9);
+      --muted: rgba(255,255,255,0.56);
+      --soft: rgba(255,255,255,0.32);
+      --accent: rgba(180, 140, 255, 0.95);
+      --accent-soft: rgba(180, 140, 255, 0.12);
+      --danger: rgba(255, 120, 120, 0.95);
+      --good: rgba(115, 255, 185, 0.9);
+      --warn: rgba(255, 205, 110, 0.95);
       --radius: 22px;
     }
 
     body {
-      background: radial-gradient(circle at top, rgba(255,255,255,0.04), transparent 30%), #050505;
+      background: radial-gradient(circle at top, rgba(255,255,255,0.055), transparent 32%), #050505;
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif;
       min-height: 100vh;
       padding: 28px;
+    }
+
+    button, input, textarea, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+
+    .auth-wrap {
+      min-height: calc(100vh - 56px);
+      display: grid;
+      place-items: center;
+    }
+
+    .auth-card {
+      width: min(440px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .auth-kicker,
+    .kicker {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--soft);
+      margin-bottom: 14px;
+    }
+
+    .auth-title {
+      font-size: 32px;
+      font-weight: 650;
+      letter-spacing: -0.035em;
+      margin-bottom: 10px;
+    }
+
+    .auth-copy {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .field { margin-bottom: 14px; }
+
+    .label {
+      display: block;
+      color: var(--soft);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .input,
+    .textarea,
+    .select {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.045);
+      padding: 13px 14px;
+      outline: none;
+      color: #fff;
+    }
+
+    .textarea { min-height: 92px; resize: vertical; }
+
+    .input:focus,
+    .textarea:focus,
+    .select:focus {
+      border-color: rgba(180,140,255,0.45);
+      box-shadow: 0 0 0 3px rgba(180,140,255,0.12);
+    }
+
+    .btn {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .btn.primary {
+      background: var(--accent-soft);
+      border-color: rgba(180,140,255,0.32);
+    }
+
+    .btn.ghost {
+      color: var(--muted);
+    }
+
+    .btn.danger {
+      color: var(--danger);
+      border-color: rgba(255,120,120,0.2);
+      background: rgba(255,120,120,0.06);
+    }
+
+    .auth-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .auth-actions .btn { flex: 1; }
+
+    .auth-message {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      min-height: 20px;
     }
 
     .app {
@@ -41,9 +153,10 @@
       background: #090909;
       border: 1px solid var(--panel-border);
       border-radius: var(--radius);
-      padding: 28px 20px;
+      padding: 26px 18px;
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       gap: 18px;
     }
 
@@ -55,6 +168,8 @@
       margin-bottom: 18px;
     }
 
+    .nav { display: flex; flex-direction: column; gap: 8px; }
+
     .nav-item {
       padding: 12px 14px;
       border-radius: 14px;
@@ -62,6 +177,7 @@
       border: 1px solid rgba(255,255,255,0.04);
       color: var(--muted);
       font-size: 14px;
+      text-align: left;
     }
 
     .nav-item.active {
@@ -70,11 +186,16 @@
       color: #fff;
     }
 
-    .content {
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
+    .sidebar-user {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      word-break: break-word;
     }
+
+    .content { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 
     .header {
       display: flex;
@@ -85,8 +206,8 @@
 
     .title {
       font-size: 34px;
-      font-weight: 600;
-      letter-spacing: -0.03em;
+      font-weight: 650;
+      letter-spacing: -0.035em;
     }
 
     .subtitle {
@@ -94,41 +215,32 @@
       color: var(--muted);
       font-size: 15px;
       line-height: 1.5;
+      max-width: 720px;
     }
 
-    .focus-box {
+    .top-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .space-card {
       border: 1px solid rgba(180,140,255,0.18);
       background: rgba(180,140,255,0.06);
       padding: 18px;
       border-radius: 18px;
-      min-width: 260px;
+      min-width: 280px;
+      max-width: 360px;
     }
 
-    .focus-label {
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--soft);
-      margin-bottom: 10px;
-    }
+    .space-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .space-text { line-height: 1.5; font-size: 13px; color: rgba(255,255,255,0.78); }
 
-    .focus-text {
-      line-height: 1.5;
-      font-size: 14px;
-      color: rgba(255,255,255,0.85);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
+    .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 
     .card {
       background: var(--panel);
       border: 1px solid var(--panel-border);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 22px;
+      min-width: 0;
     }
 
     .card-title {
@@ -136,7 +248,10 @@
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--soft);
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .row {
@@ -144,24 +259,13 @@
       justify-content: space-between;
       gap: 12px;
       padding: 14px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.055);
     }
 
-    .row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .row-title {
-      font-size: 15px;
-      line-height: 1.35;
-    }
-
-    .row-meta {
-      color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
-    }
+    .row:last-child { border-bottom: none; padding-bottom: 0; }
+    .row-title { font-size: 15px; line-height: 1.35; font-weight: 560; }
+    .row-text { margin-top: 5px; color: var(--muted); font-size: 13px; line-height: 1.42; }
+    .row-meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
 
     .tag {
       display: inline-flex;
@@ -171,152 +275,591 @@
       background: rgba(255,255,255,0.06);
       color: var(--muted);
       font-size: 11px;
-      margin-top: 6px;
+      margin-top: 8px;
+      margin-right: 5px;
     }
 
-    @media (max-width: 980px) {
-      .app {
-        grid-template-columns: 1fr;
-      }
+    .tag.high { color: var(--danger); background: rgba(255,120,120,0.08); }
+    .tag.good { color: var(--good); background: rgba(115,255,185,0.08); }
+    .tag.watch { color: var(--warn); background: rgba(255,205,110,0.08); }
 
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    .attention {
+      border-left: 3px solid rgba(180,140,255,0.55);
+      padding-left: 14px;
+    }
 
-      .header {
-        flex-direction: column;
-      }
+    .view { display: none; flex-direction: column; gap: 20px; }
+    .view.active { display: flex; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid .span-2 { grid-column: 1 / -1; }
+
+    .empty {
+      color: var(--soft);
+      font-size: 14px;
+      padding: 12px 0;
+    }
+
+    .status-line {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      min-height: 20px;
+    }
+
+    @media (max-width: 1080px) {
+      body { padding: 16px; }
+      .app { grid-template-columns: 1fr; }
+      .grid, .grid-3 { grid-template-columns: 1fr; }
+      .header { flex-direction: column; }
+      .space-card { max-width: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .span-2 { grid-column: auto; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
+  <section id="authView" class="auth-wrap" hidden>
+    <div class="auth-card">
+      <div class="auth-kicker">Clara 3.0</div>
+      <h1 class="auth-title">Inloggen</h1>
+      <p class="auth-copy">Deze cockpit is bedoeld voor de gedeelde werklaag. Log in met een toegelaten e-mailadres.</p>
+
+      <div class="field">
+        <label class="label" for="emailInput">E-mail</label>
+        <input id="emailInput" class="input" type="email" autocomplete="email" placeholder="naam@domein.nl" />
+      </div>
+
+      <div class="field">
+        <label class="label" for="passwordInput">Wachtwoord</label>
+        <input id="passwordInput" class="input" type="password" autocomplete="current-password" placeholder="Wachtwoord" />
+      </div>
+
+      <div class="auth-actions">
+        <button id="loginBtn" class="btn primary">Inloggen</button>
+        <button id="signupBtn" class="btn ghost">Account maken</button>
+      </div>
+
+      <div id="authMessage" class="auth-message"></div>
+    </div>
+  </section>
+
+  <div id="appView" class="app" hidden>
     <aside class="sidebar">
       <div>
         <div class="brand">Clara 3.0</div>
-        <div class="nav-item active">Dashboard</div>
-        <div class="nav-item">Projecten</div>
-        <div class="nav-item">Taken</div>
-        <div class="nav-item">Waiting For</div>
-        <div class="nav-item">Besluiten</div>
-        <div class="nav-item">Team</div>
+        <nav class="nav">
+          <button class="nav-item active" data-view="dashboard">Dashboard</button>
+          <button class="nav-item" data-view="projects">Projecten</button>
+          <button class="nav-item" data-view="tasks">Taken</button>
+          <button class="nav-item" data-view="waiting">Waiting For</button>
+          <button class="nav-item" data-view="decisions">Besluiten</button>
+          <button class="nav-item" data-view="team">Team</button>
+        </nav>
+      </div>
+      <div class="sidebar-user">
+        <div id="userEmail">Niet ingelogd</div>
+        <button id="logoutBtn" class="btn ghost" style="margin-top: 12px; width: 100%;">Uitloggen</button>
       </div>
     </aside>
 
     <main class="content">
-      <div class="header">
-        <div>
-          <div class="title">Clara Dashboard</div>
-          <div class="subtitle">
-            Eerste Clara 3.0 cockpit. Niet slim. Wel helder.
+      <section id="dashboard" class="view active">
+        <div class="header">
+          <div>
+            <div class="kicker">Begeister cockpit</div>
+            <h1 class="title">Clara Dashboard</h1>
+            <p class="subtitle">Gedeelde werklaag voor projecten, acties, besluiten en open lussen. Eerst overzicht, daarna pas automatisering.</p>
+          </div>
+          <div class="space-card">
+            <div class="space-title">Focus nu</div>
+            <div id="spaceFocus" class="space-text">Laden...</div>
           </div>
         </div>
 
-        <div class="focus-box">
-          <div class="focus-label">Focus nu</div>
-          <div class="focus-text">
-            LaLampe boekingen vullen, Clara structureren en open samenwerkingen helder houden.
+        <div class="grid">
+          <section class="card">
+            <div class="card-title">Attention</div>
+            <div id="attentionList"></div>
+          </section>
+          <section class="card">
+            <div class="card-title">Vandaag</div>
+            <div id="todayList"></div>
+          </section>
+        </div>
+
+        <div class="grid">
+          <section class="card">
+            <div class="card-title">Project Health</div>
+            <div id="projectHealthList"></div>
+          </section>
+          <section class="card">
+            <div class="card-title">Waiting For</div>
+            <div id="waitingList"></div>
+          </section>
+        </div>
+
+        <div class="grid">
+          <section class="card">
+            <div class="card-title">Besluiten</div>
+            <div id="decisionList"></div>
+          </section>
+          <section class="card">
+            <div class="card-title">Team Activity</div>
+            <div id="activityList"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="projects" class="view">
+        <div class="header">
+          <div>
+            <div class="kicker">Projecten</div>
+            <h1 class="title">Projecten</h1>
+            <p class="subtitle">Alles hangt onder een space. Projecten zijn containers voor context, acties, besluiten en waiting-for.</p>
           </div>
         </div>
-      </div>
-
-      <div class="grid">
         <section class="card">
-          <div class="card-title">Vandaag</div>
-
-          <div class="row">
-            <div>
-              <div class="row-title">Workshop planning afmaken</div>
-              <div class="tag">LaLampe</div>
-            </div>
-            <div class="row-meta">Vandaag</div>
-          </div>
-
-          <div class="row">
-            <div>
-              <div class="row-title">Dashboard structuur bespreken</div>
-              <div class="tag">Clara</div>
-            </div>
-            <div class="row-meta">14:00</div>
-          </div>
-
-          <div class="row">
-            <div>
-              <div class="row-title">Content selecteren voor workshoppost</div>
-              <div class="tag">Joep</div>
-            </div>
-            <div class="row-meta">Open</div>
-          </div>
+          <div id="projectsList"></div>
         </section>
+      </section>
 
+      <section id="tasks" class="view">
+        <div class="header">
+          <div>
+            <div class="kicker">Acties</div>
+            <h1 class="title">Nieuwe taak</h1>
+            <p class="subtitle">Eerste CRUD-laag. Taken worden gekoppeld aan een project.</p>
+          </div>
+        </div>
         <section class="card">
-          <div class="card-title">Projecten</div>
-
-          <div class="row">
+          <form id="taskForm" class="form-grid">
             <div>
-              <div class="row-title">LaLampe</div>
-              <div class="tag">Actief</div>
+              <label class="label" for="taskTitle">Titel</label>
+              <input id="taskTitle" class="input" required placeholder="Bijv. workshoppagina aanscherpen" />
             </div>
-            <div class="row-meta">Boekingen</div>
-          </div>
-
-          <div class="row">
             <div>
-              <div class="row-title">Clara 3.0</div>
-              <div class="tag">In opbouw</div>
+              <label class="label" for="taskProject">Project</label>
+              <select id="taskProject" class="select"></select>
             </div>
-            <div class="row-meta">Dashboard</div>
-          </div>
-
-          <div class="row">
             <div>
-              <div class="row-title">Begeister</div>
-              <div class="tag">Slow burn</div>
+              <label class="label" for="taskPriority">Prioriteit</label>
+              <select id="taskPriority" class="select">
+                <option value="low">Laag</option>
+                <option value="medium" selected>Middel</option>
+                <option value="high">Hoog</option>
+              </select>
             </div>
-            <div class="row-meta">Pitch</div>
-          </div>
+            <div>
+              <label class="label" for="taskDueDate">Deadline</label>
+              <input id="taskDueDate" class="input" type="date" />
+            </div>
+            <div class="span-2">
+              <label class="label" for="taskDescription">Omschrijving</label>
+              <textarea id="taskDescription" class="textarea" placeholder="Kort genoeg om bruikbaar te blijven."></textarea>
+            </div>
+            <div class="span-2">
+              <button class="btn primary" type="submit">Taak toevoegen</button>
+            </div>
+          </form>
+          <div id="taskStatus" class="status-line" style="margin-top: 14px;"></div>
         </section>
-
         <section class="card">
-          <div class="card-title">Waiting For</div>
-
-          <div class="row">
-            <div>
-              <div class="row-title">Reactie workshopdeelnemer</div>
-              <div class="tag">LaLampe</div>
-            </div>
-            <div class="row-meta">3 dagen</div>
-          </div>
-
-          <div class="row">
-            <div>
-              <div class="row-title">Feedback Marlon op projectstructuur</div>
-              <div class="tag">Clara</div>
-            </div>
-            <div class="row-meta">Open</div>
-          </div>
+          <div class="card-title">Open taken</div>
+          <div id="tasksList"></div>
         </section>
+      </section>
 
-        <section class="card">
-          <div class="card-title">Team Activity</div>
+      <section id="waiting" class="view">
+        <div class="header"><div><div class="kicker">Open lussen</div><h1 class="title">Waiting For</h1></div></div>
+        <section class="card"><div id="waitingPageList"></div></section>
+      </section>
 
-          <div class="row">
-            <div class="row-title">Jeroen werkte Clara 3.0 uit</div>
-            <div class="row-meta">Vandaag</div>
-          </div>
+      <section id="decisions" class="view">
+        <div class="header"><div><div class="kicker">Geheugen</div><h1 class="title">Besluiten</h1></div></div>
+        <section class="card"><div id="decisionsPageList"></div></section>
+      </section>
 
-          <div class="row">
-            <div class="row-title">Marlon gaf input op samenwerking</div>
-            <div class="row-meta">Gisteren</div>
-          </div>
-
-          <div class="row">
-            <div class="row-title">Joep uploadde workshopfoto’s</div>
-            <div class="row-meta">2 dagen</div>
-          </div>
-        </section>
-      </div>
+      <section id="team" class="view">
+        <div class="header"><div><div class="kicker">Samenwerking</div><h1 class="title">Team</h1></div></div>
+        <section class="card"><div id="teamList"></div></section>
+      </section>
     </main>
   </div>
+
+  <script>
+    const ALLOWED_EMAILS = ['jeroen@begeister.nl', 'marlon@begeister.nl']
+
+    let supabaseClient = null
+    let appData = null
+    let sessionUser = null
+
+    const $ = (id) => document.getElementById(id)
+
+    function normalizeEmail(email) {
+      return String(email || '').trim().toLowerCase()
+    }
+
+    function setAuthMessage(message) {
+      $('authMessage').textContent = message || ''
+    }
+
+    function row({ title, text, meta, tags = [], className = '' }) {
+      const safeTags = tags.filter(Boolean).map((tag) => `<span class="tag ${tag.className || ''}">${escapeHtml(tag.label || tag)}</span>`).join('')
+      return `
+        <div class="row ${className}">
+          <div>
+            <div class="row-title">${escapeHtml(title || '')}</div>
+            ${text ? `<div class="row-text">${escapeHtml(text)}</div>` : ''}
+            ${safeTags}
+          </div>
+          ${meta ? `<div class="row-meta">${escapeHtml(meta)}</div>` : ''}
+        </div>
+      `
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+    }
+
+    function empty(text = 'Nog niets.') {
+      return `<div class="empty">${escapeHtml(text)}</div>`
+    }
+
+    async function initSupabase() {
+      const response = await fetch('/api/config')
+      const config = await response.json()
+      if (!config.ok) throw new Error(config.error || 'Config ontbreekt.')
+      supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey)
+    }
+
+    async function loadData() {
+      const fallback = await fetch('./seed-data.json').then((res) => res.json())
+
+      try {
+        const [spaces, projects, tasks, decisions, waitingFor, timeline, profiles] = await Promise.all([
+          supabaseClient.from('clara_spaces').select('*').order('created_at', { ascending: true }),
+          supabaseClient.from('clara_projects').select('*').order('priority', { ascending: false }),
+          supabaseClient.from('clara_tasks').select('*').neq('status', 'done').order('created_at', { ascending: false }),
+          supabaseClient.from('clara_decisions').select('*').order('decision_date', { ascending: false }),
+          supabaseClient.from('clara_waiting_for').select('*').neq('status', 'resolved').order('created_at', { ascending: false }),
+          supabaseClient.from('clara_timeline').select('*').order('created_at', { ascending: false }).limit(12),
+          supabaseClient.from('clara_profiles').select('*')
+        ])
+
+        const hasRealData = spaces.data && spaces.data.length
+        if (!hasRealData) {
+          appData = fallback
+          appData.isDemo = true
+          return
+        }
+
+        const projectMap = new Map((projects.data || []).map((project) => [project.id, project]))
+        const profileMap = new Map((profiles.data || []).map((profile) => [profile.id, profile]))
+
+        appData = {
+          isDemo: false,
+          space: {
+            name: spaces.data[0].name,
+            summary: spaces.data[0].summary || '',
+            focus: spaces.data[0].focus || spaces.data[0].summary || 'Geen focus gezet.',
+            active_project_count: (projects.data || []).length,
+            open_waiting_for_count: (waitingFor.data || []).length
+          },
+          people: (profiles.data || []).map((person) => ({
+            id: person.id,
+            name: person.display_name || person.email || 'Onbekend',
+            role: person.role || 'Team'
+          })),
+          attention: buildAttention(projects.data || [], waitingFor.data || []),
+          projects: (projects.data || []).map((project) => ({
+            ...project,
+            owner: profileMap.get(project.owner_id)?.display_name || project.owner_id || '',
+            participants: project.participant_ids || []
+          })),
+          today: (tasks.data || []).slice(0, 6).map((task) => ({
+            title: task.title,
+            project: projectMap.get(task.project_id)?.name || 'Geen project',
+            owner: profileMap.get(task.assigned_to)?.display_name || task.assigned_to || '',
+            priority: task.priority || 'medium'
+          })),
+          waiting_for: (waitingFor.data || []).map((item) => ({
+            project: projectMap.get(item.project_id)?.name || 'Geen project',
+            waiting_on: item.waiting_on,
+            reason: item.reason,
+            since: item.since || '',
+            follow_up: item.follow_up_date || '',
+            owner: profileMap.get(item.owner_id)?.display_name || item.owner_id || ''
+          })),
+          decisions: (decisions.data || []).map((decision) => ({
+            project: projectMap.get(decision.project_id)?.name || 'Geen project',
+            title: decision.title,
+            date: decision.decision_date || '',
+            impact: decision.impact || decision.description || ''
+          })),
+          activity: (timeline.data || []).map((item) => ({
+            person: profileMap.get(item.author_id)?.display_name || 'Clara',
+            action: item.title,
+            project: projectMap.get(item.project_id)?.name || '',
+            time: new Date(item.created_at).toLocaleDateString('nl-NL')
+          }))
+        }
+      } catch (error) {
+        console.warn('Fallback to seed data:', error)
+        appData = fallback
+        appData.isDemo = true
+      }
+    }
+
+    function buildAttention(projects, waitingFor) {
+      const attention = []
+      for (const project of projects) {
+        if (project.health === 'watch' || project.health === 'stuck') {
+          attention.push({
+            project: project.name,
+            type: project.health === 'stuck' ? 'blocker' : 'risk',
+            severity: project.health === 'stuck' ? 'high' : 'medium',
+            signal: project.risk || project.bottleneck || 'Dit project vraagt aandacht.',
+            recommended_action: project.next_step || 'Bepaal de volgende stap.'
+          })
+        }
+      }
+      for (const item of waitingFor.slice(0, 3)) {
+        attention.push({
+          project: projects.find((project) => project.id === item.project_id)?.name || 'Waiting For',
+          type: 'blocker',
+          severity: 'medium',
+          signal: item.reason || 'Open afhankelijkheid.',
+          recommended_action: item.follow_up_date ? `Opvolgen: ${item.follow_up_date}` : 'Opvolgen plannen.'
+        })
+      }
+      return attention.slice(0, 6)
+    }
+
+    function render() {
+      if (!appData) return
+      $('spaceFocus').textContent = appData.space?.focus || 'Geen focus gezet.'
+
+      $('attentionList').innerHTML = (appData.attention || []).map((item) => row({
+        title: item.project,
+        text: `${item.signal} Actie: ${item.recommended_action}`,
+        meta: item.severity,
+        tags: [{ label: item.type }, { label: item.severity, className: item.severity === 'high' ? 'high' : 'watch' }],
+        className: 'attention'
+      })).join('') || empty('Geen signalen.')
+
+      $('todayList').innerHTML = (appData.today || []).map((item) => row({
+        title: item.title,
+        text: item.project,
+        meta: item.owner,
+        tags: [{ label: item.priority, className: item.priority === 'high' ? 'high' : '' }]
+      })).join('') || empty('Geen taken voor vandaag.')
+
+      const projectRows = (appData.projects || []).map((project) => row({
+        title: project.name,
+        text: `${project.summary || ''} Volgende stap: ${project.next_step || 'nog niet gezet'}`,
+        meta: project.owner,
+        tags: [
+          { label: project.status || 'open' },
+          { label: project.health || 'watch', className: project.health === 'good' ? 'good' : 'watch' },
+          { label: project.momentum || 'medium' }
+        ]
+      })).join('') || empty('Geen projecten.')
+
+      $('projectHealthList').innerHTML = projectRows
+      $('projectsList').innerHTML = projectRows
+
+      const waitingRows = (appData.waiting_for || []).map((item) => row({
+        title: item.waiting_on,
+        text: `${item.reason || ''} ${item.follow_up ? `Opvolgen: ${item.follow_up}` : ''}`,
+        meta: item.project,
+        tags: [{ label: item.owner || 'owner' }]
+      })).join('') || empty('Geen open lussen.')
+
+      $('waitingList').innerHTML = waitingRows
+      $('waitingPageList').innerHTML = waitingRows
+
+      const decisionRows = (appData.decisions || []).map((item) => row({
+        title: item.title,
+        text: item.impact,
+        meta: item.date,
+        tags: [{ label: item.project }]
+      })).join('') || empty('Geen besluiten.')
+
+      $('decisionList').innerHTML = decisionRows
+      $('decisionsPageList').innerHTML = decisionRows
+
+      $('activityList').innerHTML = (appData.activity || []).map((item) => row({
+        title: item.action,
+        text: `${item.person}${item.project ? ` · ${item.project}` : ''}`,
+        meta: item.time
+      })).join('') || empty('Geen activiteit.')
+
+      $('teamList').innerHTML = (appData.people || []).map((person) => row({
+        title: person.name,
+        text: person.role,
+        meta: person.id
+      })).join('') || empty('Geen teamleden.')
+
+      fillTaskProjectSelect()
+      loadTasksList()
+    }
+
+    function fillTaskProjectSelect() {
+      const select = $('taskProject')
+      select.innerHTML = (appData.projects || []).map((project) => `<option value="${escapeHtml(project.id)}">${escapeHtml(project.name)}</option>`).join('')
+    }
+
+    async function loadTasksList() {
+      const target = $('tasksList')
+      if (!supabaseClient || appData?.isDemo) {
+        target.innerHTML = empty('Demo-modus. Koppel Supabase-tabellen om echte taken te tonen.')
+        return
+      }
+      const { data, error } = await supabaseClient.from('clara_tasks').select('*').neq('status', 'done').order('created_at', { ascending: false })
+      if (error) {
+        target.innerHTML = empty(`Taken konden niet geladen worden: ${error.message}`)
+        return
+      }
+      const projectMap = new Map((appData.projects || []).map((project) => [project.id, project.name]))
+      target.innerHTML = (data || []).map((task) => row({
+        title: task.title,
+        text: task.description,
+        meta: task.status,
+        tags: [{ label: projectMap.get(task.project_id) || 'Geen project' }, { label: task.priority || 'medium' }]
+      })).join('') || empty('Geen open taken.')
+    }
+
+    async function handleTaskSubmit(event) {
+      event.preventDefault()
+      $('taskStatus').textContent = ''
+
+      if (appData?.isDemo) {
+        $('taskStatus').textContent = 'Demo-modus: maak eerst de Clara 3.0 Supabase-tabellen aan.'
+        return
+      }
+
+      const payload = {
+        project_id: $('taskProject').value,
+        title: $('taskTitle').value.trim(),
+        description: $('taskDescription').value.trim(),
+        priority: $('taskPriority').value,
+        due_date: $('taskDueDate').value || null,
+        status: 'open',
+        created_by: sessionUser?.id,
+        assigned_to: sessionUser?.id
+      }
+
+      const { error } = await supabaseClient.from('clara_tasks').insert(payload)
+      if (error) {
+        $('taskStatus').textContent = error.message
+        return
+      }
+
+      $('taskForm').reset()
+      $('taskPriority').value = 'medium'
+      $('taskStatus').textContent = 'Taak toegevoegd.'
+      await loadData()
+      render()
+    }
+
+    async function showApp(session) {
+      sessionUser = session.user
+      $('authView').hidden = true
+      $('appView').hidden = false
+      $('userEmail').textContent = session.user.email
+      await loadData()
+      render()
+    }
+
+    function showAuth() {
+      $('authView').hidden = false
+      $('appView').hidden = true
+    }
+
+    async function handleLogin() {
+      setAuthMessage('')
+      const email = normalizeEmail($('emailInput').value)
+      const password = $('passwordInput').value
+
+      if (!ALLOWED_EMAILS.includes(email)) {
+        setAuthMessage('Dit e-mailadres staat nog niet op de toegestane lijst.')
+        return
+      }
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password })
+      if (error) {
+        setAuthMessage(error.message)
+        return
+      }
+      await showApp(data.session)
+    }
+
+    async function handleSignup() {
+      setAuthMessage('')
+      const email = normalizeEmail($('emailInput').value)
+      const password = $('passwordInput').value
+
+      if (!ALLOWED_EMAILS.includes(email)) {
+        setAuthMessage('Dit e-mailadres staat nog niet op de toegestane lijst.')
+        return
+      }
+
+      const { error } = await supabaseClient.auth.signUp({ email, password })
+      if (error) {
+        setAuthMessage(error.message)
+        return
+      }
+      setAuthMessage('Account aangemaakt. Check eventueel je mail voor bevestiging en log daarna in.')
+    }
+
+    async function handleLogout() {
+      await supabaseClient.auth.signOut()
+      sessionUser = null
+      showAuth()
+    }
+
+    function setupNavigation() {
+      document.querySelectorAll('.nav-item').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.nav-item').forEach((item) => item.classList.remove('active'))
+          button.classList.add('active')
+          const viewName = button.dataset.view
+          document.querySelectorAll('.view').forEach((view) => view.classList.remove('active'))
+          $(viewName).classList.add('active')
+        })
+      })
+    }
+
+    async function init() {
+      try {
+        await initSupabase()
+        setupNavigation()
+        $('loginBtn').addEventListener('click', handleLogin)
+        $('signupBtn').addEventListener('click', handleSignup)
+        $('logoutBtn').addEventListener('click', handleLogout)
+        $('taskForm').addEventListener('submit', handleTaskSubmit)
+
+        const { data } = await supabaseClient.auth.getSession()
+        if (data.session) await showApp(data.session)
+        else showAuth()
+
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+          if (session) showApp(session)
+          else showAuth()
+        })
+      } catch (error) {
+        showAuth()
+        setAuthMessage(`Configfout: ${error.message}`)
+      }
+    }
+
+    init()
+  </script>
 </body>
 </html>
