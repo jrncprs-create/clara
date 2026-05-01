@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clara 4 Core Lab v0.3</title>
+  <title>Clara 4 Core Lab v0.4</title>
   <style>
     :root {
       color-scheme: dark;
@@ -20,239 +20,51 @@
       --warning: #ffd36d;
       --radius: 22px;
     }
-
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: radial-gradient(circle at top left, #20242d 0, #08090b 34rem);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    main {
-      width: min(1380px, calc(100vw - 32px));
-      margin: 0 auto;
-      padding: 28px 0;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 24px;
-      margin-bottom: 22px;
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: clamp(32px, 5vw, 58px);
-      line-height: 0.95;
-      letter-spacing: -0.06em;
-    }
-
-    .subtitle {
-      color: var(--muted);
-      max-width: 760px;
-      line-height: 1.5;
-      margin: 0;
-    }
-
-    .version-box {
-      display: grid;
-      gap: 7px;
-      justify-items: end;
-    }
-
-    .version {
-      color: var(--accent);
-      border: 1px solid color-mix(in srgb, var(--accent), transparent 58%);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 13px;
-      white-space: nowrap;
-      background: rgba(214, 255, 114, 0.06);
-    }
-
-    .deploy-note {
-      color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(320px, 0.82fr) minmax(520px, 1.55fr);
-      gap: 18px;
-      align-items: start;
-    }
-
-    .card {
-      background: color-mix(in srgb, var(--panel), transparent 4%);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: 0 24px 80px rgba(0,0,0,0.28);
-      overflow: hidden;
-    }
-
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top left, #20242d 0, #08090b 34rem); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(1380px, calc(100vw - 32px)); margin: 0 auto; padding: 28px 0; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 22px; }
+    h1 { margin: 0 0 8px; font-size: clamp(32px, 5vw, 58px); line-height: 0.95; letter-spacing: -0.06em; }
+    .subtitle { color: var(--muted); max-width: 760px; line-height: 1.5; margin: 0; }
+    .version-box { display: grid; gap: 7px; justify-items: end; }
+    .version { color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent), transparent 58%); border-radius: 999px; padding: 8px 12px; font-size: 13px; white-space: nowrap; background: rgba(214, 255, 114, 0.06); }
+    .deploy-note { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .layout { display: grid; grid-template-columns: minmax(320px, 0.82fr) minmax(520px, 1.55fr); gap: 18px; align-items: start; }
+    .card { background: color-mix(in srgb, var(--panel), transparent 4%); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 24px 80px rgba(0,0,0,0.28); overflow: hidden; }
     .card-head { padding: 18px 18px 0; }
-
-    .card-title {
-      font-weight: 750;
-      letter-spacing: -0.03em;
-      margin: 0;
-    }
-
+    .card-title { font-weight: 750; letter-spacing: -0.03em; margin: 0; }
     .card-body { padding: 18px; }
-
-    textarea, select {
-      width: 100%;
-      border: 1px solid var(--line);
-      background: #0b0d12;
-      color: var(--text);
-      border-radius: 16px;
-      padding: 14px;
-      font: inherit;
-      outline: none;
-    }
-
-    textarea {
-      min-height: 405px;
-      resize: vertical;
-      line-height: 1.5;
-    }
-
-    label {
-      display: block;
-      margin: 0 0 8px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: end;
-      margin-top: 12px;
-    }
-
-    button {
-      border: 0;
-      background: var(--accent);
-      color: #111;
-      font-weight: 850;
-      border-radius: 999px;
-      padding: 13px 18px;
-      cursor: pointer;
-      min-width: 130px;
-    }
-
+    textarea, select { width: 100%; border: 1px solid var(--line); background: #0b0d12; color: var(--text); border-radius: 16px; padding: 14px; font: inherit; outline: none; }
+    textarea { min-height: 405px; resize: vertical; line-height: 1.5; }
+    label { display: block; margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-top: 12px; }
+    button { border: 0; background: var(--accent); color: #111; font-weight: 850; border-radius: 999px; padding: 13px 18px; cursor: pointer; min-width: 130px; }
     button:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    .status {
-      min-height: 20px;
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
+    .status { min-height: 20px; margin-top: 12px; color: var(--muted); font-size: 14px; }
     .status.error { color: var(--danger); }
     .output-grid { display: grid; gap: 12px; }
     .topline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    .block {
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px;
-    }
-
-    .block.major {
-      background: linear-gradient(180deg, rgba(214,255,114,0.06), rgba(23,26,33,1));
-      border-color: color-mix(in srgb, var(--accent), var(--line) 72%);
-    }
-
-    .block h2 {
-      margin: 0 0 10px;
-      font-size: 15px;
-      letter-spacing: -0.02em;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: baseline;
-    }
-
-    .block p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
+    .block { background: var(--panel-2); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+    .block.major { background: linear-gradient(180deg, rgba(214,255,114,0.06), rgba(23,26,33,1)); border-color: color-mix(in srgb, var(--accent), var(--line) 72%); }
+    .block h2 { margin: 0 0 10px; font-size: 15px; letter-spacing: -0.02em; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+    .block p { margin: 0; color: var(--muted); line-height: 1.5; }
     .mini-label { color: var(--muted); font-size: 12px; font-weight: 500; }
     ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.6; }
-
-    .item {
-      border-top: 1px solid var(--line);
-      padding-top: 10px;
-      margin-top: 10px;
-    }
-
+    .item { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
     .item:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
     .item strong { color: var(--text); }
-
     .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-
-    .pill {
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 4px 8px;
-      background: #101219;
-    }
-
+    .pill { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; background: #101219; }
     .pill.good { color: var(--accent); border-color: color-mix(in srgb, var(--accent), transparent 55%); }
     .pill.warn { color: var(--warning); border-color: color-mix(in srgb, var(--warning), transparent 55%); }
-
     .dashboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-
-    .dash-tile {
-      min-height: 102px;
-      background: var(--panel-3);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 12px;
-    }
-
+    .dash-tile { min-height: 102px; background: var(--panel-3); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
     .dash-tile h3 { margin: 0 0 8px; font-size: 13px; color: var(--soft); }
-
-    pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: #cbd1d8;
-      font-size: 12px;
-      line-height: 1.5;
-      max-height: 320px;
-      overflow: auto;
-    }
-
+    pre { margin: 0; white-space: pre-wrap; word-break: break-word; color: #cbd1d8; font-size: 12px; line-height: 1.5; max-height: 320px; overflow: auto; }
     details summary { cursor: pointer; color: var(--soft); font-weight: 700; }
     .empty { color: var(--muted); font-style: italic; }
-
-    @media (max-width: 1080px) {
-      .topline, .dashboard { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 900px) {
-      header { align-items: flex-start; flex-direction: column; }
-      .version-box { justify-items: start; }
-      .layout { grid-template-columns: 1fr; }
-      textarea { min-height: 260px; }
-      .row { grid-template-columns: 1fr; }
-      button { width: 100%; }
-    }
+    @media (max-width: 1080px) { .topline, .dashboard { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { header { align-items: flex-start; flex-direction: column; } .version-box { justify-items: start; } .layout { grid-template-columns: 1fr; } textarea { min-height: 260px; } .row { grid-template-columns: 1fr; } button { width: 100%; } }
   </style>
 </head>
 <body>
@@ -263,8 +75,8 @@
         <p class="subtitle">Eerst Clara’s intelligentie testen. Jij voert tekst in; Clara laat zien wat ze begrijpt, wat ze zou opslaan en wat ze op het dashboard zou tonen.</p>
       </div>
       <div class="version-box">
-        <div class="version">v0.3 · core lab</div>
-        <div class="deploy-note">laatste update: agenda ≠ taak met datum</div>
+        <div class="version">v0.4 · core lab</div>
+        <div class="deploy-note">laatste update: aandacht, projectsignalen en blokken aangescherpt</div>
       </div>
     </header>
 
@@ -279,12 +91,9 @@
             <option value="calendar">Agendatekst</option>
             <option value="voice">Inspraak / transcript</option>
           </select>
-
           <div style="height:12px"></div>
-
           <label for="input">Wat geef je aan Clara?</label>
           <textarea id="input" placeholder="Bijvoorbeeld: Claire vroeg nog naar die installatie met agaat. Ik moet haar eigenlijk antwoorden, maar weet niet of dit onder AFK of iets nieuws valt."></textarea>
-
           <div class="row">
             <div class="status" id="status">Nog geen analyse.</div>
             <button id="analyzeBtn">Analyseer</button>
@@ -296,7 +105,7 @@
         <div class="card-head"><p class="card-title">Wat Clara doet</p></div>
         <div class="card-body">
           <div class="output-grid" id="output">
-            <div class="block major"><p class="empty">Voer iets in en klik op Analyseer. Controleer bovenaan of je v0.3 ziet.</p></div>
+            <div class="block major"><p class="empty">Voer iets in en klik op Analyseer. Controleer bovenaan of je v0.4 ziet.</p></div>
           </div>
         </div>
       </div>
@@ -304,31 +113,17 @@
   </main>
 
   <script>
-    const LAB_VERSION = '0.3';
+    const LAB_VERSION = '0.4';
     const input = document.getElementById('input');
     const source = document.getElementById('source');
     const btn = document.getElementById('analyzeBtn');
     const statusEl = document.getElementById('status');
     const output = document.getElementById('output');
 
-    function esc(value) {
-      return String(value ?? '').replace(/[&<>'"]/g, char => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-      }[char]));
-    }
-
-    function list(items) {
-      if (!items || !items.length) return '<p class="empty">Geen.</p>';
-      return `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
-    }
-
+    function esc(value) { return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char])); }
+    function list(items) { if (!items || !items.length) return '<p class="empty">Geen.</p>'; return `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`; }
     function confidence(value) { return `${Math.round((Number(value) || 0) * 100)}%`; }
-
-    function pillClass(value) {
-      if (value === 'ready_to_save' || value === 'action_for_jeroen') return 'good';
-      if (value === 'needs_review' || value === 'waiting_for_other') return 'warn';
-      return '';
-    }
+    function pillClass(value) { if (value === 'ready_to_save' || value === 'action_for_jeroen') return 'good'; if (value === 'needs_review' || value === 'waiting_for_other') return 'warn'; return ''; }
 
     function renderItems(items) {
       if (!items || !items.length) return '<p class="empty">Geen voorgestelde items.</p>';
@@ -344,8 +139,7 @@
             <span class="pill">tijd: ${esc(item.time || 'geen')}</span>
             <span class="pill">zekerheid: ${confidence(item.confidence)}</span>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
 
     function renderSignals(signals) {
@@ -358,13 +152,10 @@
             <span class="pill ${pillClass(signal.kind)}">${esc(signal.kind)}</span>
             <span class="pill">zekerheid: ${confidence(signal.confidence)}</span>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
 
-    function renderDashboardTile(title, items) {
-      return `<div class="dash-tile"><h3>${esc(title)}</h3>${list(items)}</div>`;
-    }
+    function renderDashboardTile(title, items) { return `<div class="dash-tile"><h3>${esc(title)}</h3>${list(items)}</div>`; }
 
     function renderResult(data) {
       const dashboard = data.dashboard_output || {};
@@ -372,78 +163,34 @@
       const signalCount = data.signals?.length || 0;
       const uncertaintyCount = data.uncertainties?.length || 0;
       const questionCount = data.questions?.length || 0;
-
       output.innerHTML = `
-        <div class="block major">
-          <h2>Clara’s conclusie <span class="mini-label">v${LAB_VERSION}</span></h2>
-          <p>${esc(data.summary || 'Geen samenvatting.')}</p>
-          <div class="meta">
-            <span class="pill">${signalCount} signalen</span>
-            <span class="pill">${itemCount} items</span>
-            <span class="pill ${uncertaintyCount ? 'warn' : ''}">${uncertaintyCount} onzekerheden</span>
-            <span class="pill ${questionCount ? 'warn' : ''}">${questionCount} vragen</span>
-          </div>
-        </div>
-
-        <div class="block">
-          <h2>Dashboard-preview <span class="mini-label">wat jij straks zou zien</span></h2>
-          <div class="dashboard">
-            ${renderDashboardTile('Vandaag', dashboard.today)}
-            ${renderDashboardTile('Aandacht', dashboard.attention)}
-            ${renderDashboardTile('Wacht op', dashboard.waiting_for)}
-            ${renderDashboardTile('Agenda', dashboard.agenda)}
-            ${renderDashboardTile('Projectsignalen', dashboard.project_signals)}
-            ${renderDashboardTile('Suggesties', dashboard.suggestions)}
-          </div>
-        </div>
-
-        <div class="topline">
-          <div class="block"><h2>Voorstel om op te slaan</h2>${renderItems(data.proposed_items)}</div>
-          <div class="block"><h2>Onzekerheden & vragen</h2><div class="item"><strong>Onzekerheden</strong>${list(data.uncertainties)}</div><div class="item"><strong>Vragen van Clara</strong>${list(data.questions)}</div></div>
-        </div>
-
+        <div class="block major"><h2>Clara’s conclusie <span class="mini-label">v${LAB_VERSION}</span></h2><p>${esc(data.summary || 'Geen samenvatting.')}</p><div class="meta"><span class="pill">${signalCount} signalen</span><span class="pill">${itemCount} items</span><span class="pill ${uncertaintyCount ? 'warn' : ''}">${uncertaintyCount} onzekerheden</span><span class="pill ${questionCount ? 'warn' : ''}">${questionCount} vragen</span></div></div>
+        <div class="block"><h2>Dashboard-preview <span class="mini-label">wat jij straks zou zien</span></h2><div class="dashboard">${renderDashboardTile('Vandaag', dashboard.today)}${renderDashboardTile('Aandacht', dashboard.attention)}${renderDashboardTile('Wacht op', dashboard.waiting_for)}${renderDashboardTile('Agenda', dashboard.agenda)}${renderDashboardTile('Projectsignalen', dashboard.project_signals)}${renderDashboardTile('Suggesties', dashboard.suggestions)}</div></div>
+        <div class="topline"><div class="block"><h2>Voorstel om op te slaan</h2>${renderItems(data.proposed_items)}</div><div class="block"><h2>Onzekerheden & vragen</h2><div class="item"><strong>Onzekerheden</strong>${list(data.uncertainties)}</div><div class="item"><strong>Vragen van Clara</strong>${list(data.questions)}</div></div></div>
         <div class="block"><h2>Gevonden signalen <span class="mini-label">waar Clara haar conclusie op baseert</span></h2>${renderSignals(data.signals)}</div>
         <div class="block"><h2>Bewust genegeerde ruis</h2>${list(data.ignored_noise)}</div>
-        <div class="block"><details><summary>Ruwe JSON tonen</summary><div style="height:12px"></div><pre>${esc(JSON.stringify(data, null, 2))}</pre></details></div>
-      `;
+        <div class="block"><details><summary>Ruwe JSON tonen</summary><div style="height:12px"></div><pre>${esc(JSON.stringify(data, null, 2))}</pre></details></div>`;
     }
 
     async function analyze() {
       const value = input.value.trim();
-      if (!value) {
-        statusEl.textContent = 'Voer eerst tekst in.';
-        statusEl.className = 'status error';
-        return;
-      }
-
+      if (!value) { statusEl.textContent = 'Voer eerst tekst in.'; statusEl.className = 'status error'; return; }
       btn.disabled = true;
       statusEl.textContent = 'Clara analyseert...';
       statusEl.className = 'status';
-
       try {
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ input: value, source: source.value })
-        });
-
+        const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: value, source: source.value }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || data.error || 'Analyse mislukt');
-
         renderResult(data);
         statusEl.textContent = `Analyse klaar · v${LAB_VERSION}`;
       } catch (error) {
         statusEl.textContent = error.message || String(error);
         statusEl.className = 'status error';
-      } finally {
-        btn.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     }
-
     btn.addEventListener('click', analyze);
-    input.addEventListener('keydown', event => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') analyze();
-    });
+    input.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') analyze(); });
   </script>
 </body>
 </html>
