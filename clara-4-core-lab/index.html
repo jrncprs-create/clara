@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clara 4 Core Lab</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08090b;
+      --panel: #111318;
+      --panel-2: #171a21;
+      --text: #f2f2ef;
+      --muted: #9da3ad;
+      --line: #272b35;
+      --accent: #d6ff72;
+      --danger: #ff7a7a;
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #20242d 0, #08090b 36rem);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(1320px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 680px;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .version {
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent), transparent 60%);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.4fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: color-mix(in srgb, var(--panel), transparent 4%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.28);
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 18px 18px 0;
+    }
+
+    .card-title {
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0;
+    }
+
+    .card-body {
+      padding: 18px;
+    }
+
+    textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0b0d12;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 14px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 420px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      background: var(--accent);
+      color: #111;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 13px 18px;
+      cursor: pointer;
+      min-width: 130px;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .status {
+      min-height: 20px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status.error { color: var(--danger); }
+
+    .output-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .block {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .block h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+    }
+
+    .block p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .item {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    .item:first-child {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .item strong { color: var(--text); }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #101219;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #cbd1d8;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @media (max-width: 900px) {
+      header { align-items: flex-start; flex-direction: column; }
+      .layout { grid-template-columns: 1fr; }
+      textarea { min-height: 260px; }
+      .row { grid-template-columns: 1fr; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Clara 4 Core Lab</h1>
+        <p class="subtitle">Eerst Clara’s intelligentie testen. Jij voert tekst in; Clara laat zien wat ze begrijpt, wat ze zou opslaan en wat ze op een dashboard zou tonen.</p>
+      </div>
+      <div class="version">0.1 · core lab</div>
+    </header>
+
+    <section class="layout">
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title">Input</p>
+        </div>
+        <div class="card-body">
+          <label for="source">Bron</label>
+          <select id="source">
+            <option value="manual">Losse input / gesprek</option>
+            <option value="email">Mailtekst</option>
+            <option value="calendar">Agendatekst</option>
+            <option value="voice">Inspraak / transcript</option>
+          </select>
+
+          <div style="height:12px"></div>
+
+          <label for="input">Wat geef je aan Clara?</label>
+          <textarea id="input" placeholder="Bijvoorbeeld: Claire vroeg nog naar die installatie met agaat. Ik moet haar eigenlijk antwoorden, maar weet niet of dit onder AFK of iets nieuws valt."></textarea>
+
+          <div class="row">
+            <div class="status" id="status">Nog geen analyse.</div>
+            <button id="analyzeBtn">Analyseer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <p class="card-title">Wat Clara doet</p>
+        </div>
+        <div class="card-body">
+          <div class="output-grid" id="output">
+            <div class="block"><p class="empty">Voer iets in en klik op Analyseer.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const input = document.getElementById('input');
+    const source = document.getElementById('source');
+    const btn = document.getElementById('analyzeBtn');
+    const statusEl = document.getElementById('status');
+    const output = document.getElementById('output');
+
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[char]));
+    }
+
+    function list(items) {
+      if (!items || !items.length) return '<p class="empty">Geen.</p>';
+      return `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
+    }
+
+    function renderItems(items) {
+      if (!items || !items.length) return '<p class="empty">Geen voorgestelde items.</p>';
+      return items.map(item => `
+        <div class="item">
+          <strong>${esc(item.title)}</strong>
+          <p>${esc(item.description || '')}</p>
+          <div class="meta">
+            <span class="pill">${esc(item.type)}</span>
+            <span class="pill">${esc(item.status)}</span>
+            <span class="pill">project: ${esc(item.project || 'onbekend')}</span>
+            <span class="pill">datum: ${esc(item.date || 'geen')}</span>
+            <span class="pill">tijd: ${esc(item.time || 'geen')}</span>
+            <span class="pill">zekerheid: ${Math.round((item.confidence || 0) * 100)}%</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderSignals(signals) {
+      if (!signals || !signals.length) return '<p class="empty">Geen signalen.</p>';
+      return signals.map(signal => `
+        <div class="item">
+          <strong>${esc(signal.title)}</strong>
+          <p>${esc(signal.reason)}</p>
+          <div class="meta">
+            <span class="pill">${esc(signal.kind)}</span>
+            <span class="pill">zekerheid: ${Math.round((signal.confidence || 0) * 100)}%</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderResult(data) {
+      const dashboard = data.dashboard_output || {};
+      output.innerHTML = `
+        <div class="block">
+          <h2>Samenvatting</h2>
+          <p>${esc(data.summary || 'Geen samenvatting.')}</p>
+        </div>
+        <div class="block">
+          <h2>Gevonden signalen</h2>
+          ${renderSignals(data.signals)}
+        </div>
+        <div class="block">
+          <h2>Voorstel om op te slaan</h2>
+          ${renderItems(data.proposed_items)}
+        </div>
+        <div class="block">
+          <h2>Dashboard-output</h2>
+          <div class="item"><strong>Vandaag</strong>${list(dashboard.today)}</div>
+          <div class="item"><strong>Aandacht</strong>${list(dashboard.attention)}</div>
+          <div class="item"><strong>Wacht op</strong>${list(dashboard.waiting_for)}</div>
+          <div class="item"><strong>Agenda</strong>${list(dashboard.agenda)}</div>
+          <div class="item"><strong>Projectsignalen</strong>${list(dashboard.project_signals)}</div>
+          <div class="item"><strong>Suggesties</strong>${list(dashboard.suggestions)}</div>
+        </div>
+        <div class="block">
+          <h2>Onzekerheden</h2>
+          ${list(data.uncertainties)}
+        </div>
+        <div class="block">
+          <h2>Vragen van Clara</h2>
+          ${list(data.questions)}
+        </div>
+        <div class="block">
+          <h2>Bewust genegeerde ruis</h2>
+          ${list(data.ignored_noise)}
+        </div>
+        <div class="block">
+          <h2>Ruwe JSON</h2>
+          <pre>${esc(JSON.stringify(data, null, 2))}</pre>
+        </div>
+      `;
+    }
+
+    async function analyze() {
+      const value = input.value.trim();
+      if (!value) {
+        statusEl.textContent = 'Voer eerst tekst in.';
+        statusEl.className = 'status error';
+        return;
+      }
+
+      btn.disabled = true;
+      statusEl.textContent = 'Clara analyseert...';
+      statusEl.className = 'status';
+
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input: value, source: source.value })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || 'Analyse mislukt');
+        }
+
+        renderResult(data);
+        statusEl.textContent = 'Analyse klaar.';
+      } catch (error) {
+        statusEl.textContent = error.message || String(error);
+        statusEl.className = 'status error';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener('click', analyze);
+    input.addEventListener('keydown', event => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') analyze();
+    });
+  </script>
+</body>
+</html>
