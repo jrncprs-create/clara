@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clara 4 Core Lab v0.2</title>
+  <title>Clara 4 Core Lab v0.3</title>
   <style>
     :root {
       color-scheme: dark;
@@ -95,9 +95,7 @@
       overflow: hidden;
     }
 
-    .card-head {
-      padding: 18px 18px 0;
-    }
+    .card-head { padding: 18px 18px 0; }
 
     .card-title {
       font-weight: 750;
@@ -105,9 +103,7 @@
       margin: 0;
     }
 
-    .card-body {
-      padding: 18px;
-    }
+    .card-body { padding: 18px; }
 
     textarea, select {
       width: 100%;
@@ -152,10 +148,7 @@
       min-width: 130px;
     }
 
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .status {
       min-height: 20px;
@@ -165,17 +158,8 @@
     }
 
     .status.error { color: var(--danger); }
-
-    .output-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .topline {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    .output-grid { display: grid; gap: 12px; }
+    .topline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
     .block {
       background: var(--panel-2);
@@ -205,18 +189,8 @@
       line-height: 1.5;
     }
 
-    .mini-label {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    ul {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
+    .mini-label { color: var(--muted); font-size: 12px; font-weight: 500; }
+    ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.6; }
 
     .item {
       border-top: 1px solid var(--line);
@@ -224,20 +198,10 @@
       margin-top: 10px;
     }
 
-    .item:first-child {
-      border-top: 0;
-      padding-top: 0;
-      margin-top: 0;
-    }
-
+    .item:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
     .item strong { color: var(--text); }
 
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
+    .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
     .pill {
       font-size: 12px;
@@ -251,11 +215,7 @@
     .pill.good { color: var(--accent); border-color: color-mix(in srgb, var(--accent), transparent 55%); }
     .pill.warn { color: var(--warning); border-color: color-mix(in srgb, var(--warning), transparent 55%); }
 
-    .dashboard {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
+    .dashboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 
     .dash-tile {
       min-height: 102px;
@@ -265,11 +225,7 @@
       padding: 12px;
     }
 
-    .dash-tile h3 {
-      margin: 0 0 8px;
-      font-size: 13px;
-      color: var(--soft);
-    }
+    .dash-tile h3 { margin: 0 0 8px; font-size: 13px; color: var(--soft); }
 
     pre {
       margin: 0;
@@ -282,16 +238,8 @@
       overflow: auto;
     }
 
-    details summary {
-      cursor: pointer;
-      color: var(--soft);
-      font-weight: 700;
-    }
-
-    .empty {
-      color: var(--muted);
-      font-style: italic;
-    }
+    details summary { cursor: pointer; color: var(--soft); font-weight: 700; }
+    .empty { color: var(--muted); font-style: italic; }
 
     @media (max-width: 1080px) {
       .topline, .dashboard { grid-template-columns: 1fr; }
@@ -315,16 +263,14 @@
         <p class="subtitle">Eerst Clara’s intelligentie testen. Jij voert tekst in; Clara laat zien wat ze begrijpt, wat ze zou opslaan en wat ze op het dashboard zou tonen.</p>
       </div>
       <div class="version-box">
-        <div class="version">v0.2 · core lab</div>
-        <div class="deploy-note">laatste UI-update: overzicht + versielabel</div>
+        <div class="version">v0.3 · core lab</div>
+        <div class="deploy-note">laatste update: agenda ≠ taak met datum</div>
       </div>
     </header>
 
     <section class="layout">
       <div class="card">
-        <div class="card-head">
-          <p class="card-title">Input</p>
-        </div>
+        <div class="card-head"><p class="card-title">Input</p></div>
         <div class="card-body">
           <label for="source">Bron</label>
           <select id="source">
@@ -347,12 +293,10 @@
       </div>
 
       <div class="card">
-        <div class="card-head">
-          <p class="card-title">Wat Clara doet</p>
-        </div>
+        <div class="card-head"><p class="card-title">Wat Clara doet</p></div>
         <div class="card-body">
           <div class="output-grid" id="output">
-            <div class="block major"><p class="empty">Voer iets in en klik op Analyseer. Controleer bovenaan of je v0.2 ziet.</p></div>
+            <div class="block major"><p class="empty">Voer iets in en klik op Analyseer. Controleer bovenaan of je v0.3 ziet.</p></div>
           </div>
         </div>
       </div>
@@ -360,7 +304,7 @@
   </main>
 
   <script>
-    const LAB_VERSION = '0.2';
+    const LAB_VERSION = '0.3';
     const input = document.getElementById('input');
     const source = document.getElementById('source');
     const btn = document.getElementById('analyzeBtn');
@@ -369,11 +313,7 @@
 
     function esc(value) {
       return String(value ?? '').replace(/[&<>'"]/g, char => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
       }[char]));
     }
 
@@ -382,9 +322,7 @@
       return `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
     }
 
-    function confidence(value) {
-      return `${Math.round((Number(value) || 0) * 100)}%`;
-    }
+    function confidence(value) { return `${Math.round((Number(value) || 0) * 100)}%`; }
 
     function pillClass(value) {
       if (value === 'ready_to_save' || value === 'action_for_jeroen') return 'good';
@@ -460,34 +398,13 @@
         </div>
 
         <div class="topline">
-          <div class="block">
-            <h2>Voorstel om op te slaan</h2>
-            ${renderItems(data.proposed_items)}
-          </div>
-          <div class="block">
-            <h2>Onzekerheden & vragen</h2>
-            <div class="item"><strong>Onzekerheden</strong>${list(data.uncertainties)}</div>
-            <div class="item"><strong>Vragen van Clara</strong>${list(data.questions)}</div>
-          </div>
+          <div class="block"><h2>Voorstel om op te slaan</h2>${renderItems(data.proposed_items)}</div>
+          <div class="block"><h2>Onzekerheden & vragen</h2><div class="item"><strong>Onzekerheden</strong>${list(data.uncertainties)}</div><div class="item"><strong>Vragen van Clara</strong>${list(data.questions)}</div></div>
         </div>
 
-        <div class="block">
-          <h2>Gevonden signalen <span class="mini-label">waar Clara haar conclusie op baseert</span></h2>
-          ${renderSignals(data.signals)}
-        </div>
-
-        <div class="block">
-          <h2>Bewust genegeerde ruis</h2>
-          ${list(data.ignored_noise)}
-        </div>
-
-        <div class="block">
-          <details>
-            <summary>Ruwe JSON tonen</summary>
-            <div style="height:12px"></div>
-            <pre>${esc(JSON.stringify(data, null, 2))}</pre>
-          </details>
-        </div>
+        <div class="block"><h2>Gevonden signalen <span class="mini-label">waar Clara haar conclusie op baseert</span></h2>${renderSignals(data.signals)}</div>
+        <div class="block"><h2>Bewust genegeerde ruis</h2>${list(data.ignored_noise)}</div>
+        <div class="block"><details><summary>Ruwe JSON tonen</summary><div style="height:12px"></div><pre>${esc(JSON.stringify(data, null, 2))}</pre></details></div>
       `;
     }
 
@@ -511,10 +428,7 @@
         });
 
         const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || data.error || 'Analyse mislukt');
-        }
+        if (!response.ok) throw new Error(data.message || data.error || 'Analyse mislukt');
 
         renderResult(data);
         statusEl.textContent = `Analyse klaar · v${LAB_VERSION}`;
