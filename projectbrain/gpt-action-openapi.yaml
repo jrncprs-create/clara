@@ -1,0 +1,78 @@
+openapi: 3.1.0
+info:
+  title: Clara Projectbrain API
+  version: 0.1.0
+  description: API for turning rough ChatGPT brainstorms into GitHub Projectbrain status updates.
+servers:
+  - url: https://YOUR-VERCEL-DOMAIN-HERE
+    description: Replace with the Vercel deployment domain for Clara.
+paths:
+  /api/projectbrain-update:
+    post:
+      operationId: updateProjectbrain
+      summary: Update a Projectbrain status file
+      description: Creates a proposed or pushed Projectbrain status update for a known project.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - input
+              properties:
+                project:
+                  type: string
+                  description: Optional project slug or name. Examples: clara, lalampe, begeister, afk-landjuweel-amarte. If omitted, the API tries to detect the project.
+                input:
+                  type: string
+                  description: Rough chat summary, brainstorm text, or user note to fold into the project status.
+                source:
+                  type: string
+                  default: chatgpt
+                  description: Where this update came from.
+                mode:
+                  type: string
+                  enum:
+                    - check
+                    - push
+                  default: check
+                  description: check returns proposed markdown only. push writes to GitHub, preferably through a PR.
+                create_pr:
+                  type: boolean
+                  default: true
+                  description: If true, push mode creates a branch and pull request instead of writing directly to main.
+      responses:
+        '200':
+          description: Projectbrain update result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                properties:
+                  ok:
+                    type: boolean
+                  mode:
+                    type: string
+                  project:
+                    type: string
+                  path:
+                    type: string
+                  change_summary:
+                    type: string
+                  markdown:
+                    type: string
+                  pull_request:
+                    type:
+                      - object
+                      - 'null'
+        '400':
+          description: Missing or invalid input
+        '422':
+          description: Project unclear
+        '500':
+          description: Server or integration error
+components:
+  schemas: {}
