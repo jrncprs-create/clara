@@ -1,33 +1,19 @@
-# Begeister Status
+# Begeister
 
-## Laatst bijgewerkt
-2026-05-02
+## Kern
+Nog niet opnieuw vastgesteld.
 
-## Strekking
-Begeister is het gezamenlijke project/bedrijf rond objecten, workshops, installaties en creatieve productie. De projectstatus moet helpen om inhoud, rollen, geld, uren, investeringen en open keuzes helder te houden.
-
-## Huidige fase
-Oriëntatie / structurering. Er is behoefte aan duidelijke grenzen, eerlijke verdeling en projectmatige vastlegging.
-
-## Laatste ontwikkeling
-Begeister krijgt een eigen Projectbrain-statusbestand zodat relevante brainstorms of beslissingen via `PB` naar GitHub kunnen worden doorgezet.
+## Feiten
+- Nog niet opnieuw vastgesteld.
 
 ## Beslissingen
-- Begeister krijgt een eigen Projectbrain-status.
-- Projectinformatie moet gescheiden blijven van LaLampe en autonome kunstprojecten.
-- Projectbrain moet vooral status, beslissingen, open acties en onduidelijkheden vastleggen.
+- Nog niet opnieuw vastgesteld.
+
+## Doelen
+- Nog niet opnieuw vastgesteld.
 
 ## Open acties
-- Rollen en verantwoordelijkheden verder scherp maken.
-- Financiële afspraken en investeringslogica concreet houden.
-- Projectmatige uren/inkomsten/investeringen blijven onderscheiden van privézaken.
+- Nog niet opnieuw vastgesteld.
 
-## Risico's / onduidelijkheden
-- Begeister, LaLampe en autonome kunst kunnen inhoudelijk door elkaar gaan lopen als de projectgrenzen niet expliciet blijven.
-- Financiële en relationele dynamiek moet niet onbedoeld door Projectbrain worden versimpeld.
-
-## Eerstvolgende stap
-Bij volgende relevante Begeister-bespreking `PB` gebruiken om deze status aan te scherpen met actuele concrete ontwikkelingen.
-
-## Bronnen / laatste signalen
-- Projectbrain-startbestand aangemaakt op basis van bestaande projectcontext en gesprek 2026-05-02.
+## Onzekerheden
+- Projectbrain-status is gereset en moet opnieuw zorgvuldig worden opgebouwd.
