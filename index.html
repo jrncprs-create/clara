@@ -3,13 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clara 4 Core Lab stable agenda</title>
-  <meta http-equiv="refresh" content="0; url=/clara-4-core-lab/index.html" />
-  <script>
-    window.location.replace('/clara-4-core-lab/index.html');
-  </script>
+  <title>Clara 4 Core Lab v0.12.8</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#1e1e1e}
+    iframe{display:block;width:100%;height:100%;border:0;background:#1e1e1e}
+  </style>
 </head>
 <body>
-  <p>Je wordt doorgestuurd naar <a href="/clara-4-core-lab/index.html">Clara 4 Core Lab</a>…</p>
+  <iframe id="claraFrame" src="/clara-4-core-lab/index.html" title="Clara 4 Core Lab v0.12.8"></iframe>
+  <script>
+    const frame=document.getElementById('claraFrame');
+    frame.addEventListener('load',()=>{
+      const w=frame.contentWindow;
+      const d=frame.contentDocument;
+      if(!w||!d)return;
+      document.title='Clara 4 Core Lab v0.12.8';
+      const tag=d.querySelector('.state-tag');
+      if(tag)tag.textContent='v0.12.8 · Lab state';
+      const title=d.querySelector('title');
+      if(title)title.textContent='Clara 4 Core Lab v0.12.8';
+      const style=d.createElement('style');
+      style.textContent=`
+        .event.confirmed{background:rgba(255,255,255,.105)!important;border:1px solid rgba(255,255,255,.28)!important}
+        .event.pencil,.event.needs_time{background:rgba(255,255,255,.045)!important;border:1px dashed rgba(255,255,255,.16)!important}
+        .box.done{background:rgba(255,255,255,.16)!important;border-color:rgba(255,255,255,.45)!important}
+      `;
+      d.head.appendChild(style);
+      if(typeof w.markOverlaps==='function'){
+        const original=w.markOverlaps;
+        w.markOverlaps=function(items){
+          const clean=(items||[]).map(item=>{const copy=Object.assign({},item);delete copy._frontend_conflict;return copy});
+          return original(clean);
+        };
+        if(typeof w.renderFromState==='function')w.renderFromState();
+      }
+    });
+  </script>
 </body>
 </html>
