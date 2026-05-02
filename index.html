@@ -3,49 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clara 4 Core Lab v0.12.9</title>
+  <title>Clara 4 Core Lab v0.12.10</title>
   <style>
     html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#1e1e1e}
     iframe{display:block;width:100%;height:100%;border:0;background:#1e1e1e}
   </style>
 </head>
 <body>
-  <iframe id="claraFrame" src="/clara-4-core-lab/index.html" title="Clara 4 Core Lab v0.12.9"></iframe>
+  <iframe id="claraFrame" src="/clara-4-core-lab/index.html" title="Clara 4 Core Lab v0.12.10"></iframe>
   <script>
     const frame=document.getElementById('claraFrame');
     frame.addEventListener('load',()=>{
       const w=frame.contentWindow;
       const d=frame.contentDocument;
       if(!w||!d)return;
-      document.title='Clara 4 Core Lab v0.12.9';
-      const innerTitle=d.querySelector('title');
-      if(innerTitle)innerTitle.textContent='Clara 4 Core Lab v0.12.9';
-      const tag=d.querySelector('.state-tag');
-      if(tag)tag.textContent='v0.12.9 · Lab state';
 
-      const temp=d.getElementById('clockTemp');
-      if(temp)temp.textContent='Amsterdam · 17°';
+      document.title='Clara 4 Core Lab v0.12.10';
+      const innerTitle=d.querySelector('title');
+      if(innerTitle) innerTitle.textContent='Clara 4 Core Lab v0.12.10';
+      const tag=d.querySelector('.state-tag');
+      if(tag) tag.textContent='v0.12.10 · Lab state';
+
+      const datePanel=d.querySelector('.date-panel');
+      const clockWidget=d.querySelector('.clock-widget');
+      const clockDigits=d.querySelector('.clock-digits');
+      const clockMeta=d.querySelector('.clock-meta');
+      const weatherRow=d.querySelector('.clock-weather');
       const weatherIcon=d.querySelector('.weather-icon');
-      if(weatherIcon)weatherIcon.textContent='☀';
+      if(weatherRow && !d.getElementById('clockTempInline')){
+        const locationNode=weatherRow.querySelector('span:not(.weather-icon)');
+        if(locationNode) locationNode.textContent='Amsterdam';
+        const temp=d.createElement('span');
+        temp.id='clockTempInline';
+        temp.textContent='17°';
+        temp.style.fontSize='12px';
+        temp.style.color='#f3f3f3';
+        temp.style.letterSpacing='.02em';
+        weatherRow.insertBefore(temp, weatherIcon||null);
+      }
+      if(weatherIcon) weatherIcon.textContent='◐';
+      if(datePanel && clockWidget && clockDigits && clockMeta){
+        datePanel.style.minHeight='118px';
+        datePanel.style.alignItems='stretch';
+        datePanel.style.padding='12px 16px';
+        clockWidget.style.width='100%';
+        clockWidget.style.display='grid';
+        clockWidget.style.gridTemplateColumns='86px 1fr';
+        clockWidget.style.alignItems='center';
+        clockWidget.style.columnGap='18px';
+        clockDigits.style.fontSize='54px';
+        clockDigits.style.lineHeight='.82';
+        clockDigits.style.letterSpacing='-.09em';
+        clockMeta.style.gap='3px';
+      }
 
       const style=d.createElement('style');
       style.textContent=`
         .event.confirmed{background:rgba(255,255,255,.105)!important;border:1px solid rgba(255,255,255,.28)!important}
         .event.pencil,.event.needs_time{background:rgba(255,255,255,.045)!important;border:1px dashed rgba(255,255,255,.16)!important}
         .box.done{background:rgba(255,255,255,.16)!important;border-color:rgba(255,255,255,.45)!important}
-        .date-panel{min-height:110px!important}
-        .clock-weather{margin-top:7px!important;font-size:12px!important;gap:8px!important}
-        .weather-icon{font-size:19px!important}
+
+        .date-panel{grid-column:3/5!important;grid-row:1!important;border-color:rgba(255,255,255,.14)!important}
+        .clock-widget{align-items:center!important}
+        .clock-meta strong{font-size:12px!important;letter-spacing:.06em!important}
+        .clock-meta span{font-size:11px!important;color:#dadada!important}
+        .clock-weather{display:flex!important;align-items:center!important;gap:8px!important;margin-top:8px!important;padding-top:6px!important;border-top:1px solid rgba(255,255,255,.08)!important}
+        .weather-icon{font-size:16px!important;color:#f0f0f0!important}
+        .date-nav{align-self:center!important}
+        .date-btn{border-color:rgba(255,255,255,.12)!important}
+
         .cols{grid-template-rows:auto auto 1fr!important}
-        .date-panel{grid-column:3/5!important;grid-row:1!important}
-        .regie-col{grid-column:3/5!important;grid-row:2!important;min-height:210px!important}
-        .attention-col{grid-column:3/5!important;grid-row:3!important}
+        .regie-col{grid-column:3/5!important;grid-row:2!important;min-height:170px!important;max-height:260px!important}
+        .attention-col{grid-column:3/5!important;grid-row:3!important;min-height:0!important}
         .regie-col .col-head{padding:14px 16px!important}
         .regie-col .col-title{font-size:16px!important}
-        .regie-col .col-sub{font-size:11px!important}
-        .regie-col .card:first-child h3{font-size:15px!important;margin-bottom:10px!important}
-        .regie-col .card:first-child .mini,.regie-col .card:first-child .mini-edit{font-size:13px!important;line-height:1.45!important;color:#ececec!important}
         .regie-col .stack{gap:10px!important}
+        .regie-col .card:first-child{background:rgba(255,255,255,.025)!important}
+        .regie-col .card:first-child h3{font-size:15px!important;margin-bottom:8px!important}
+        .regie-col .card:first-child .mini,.regie-col .card:first-child .mini-edit,.regie-col .card:first-child .sub{font-size:13px!important;line-height:1.45!important;color:#ececec!important}
       `;
       d.head.appendChild(style);
 
@@ -56,7 +91,7 @@
           return original(clean);
         };
       }
-      if(typeof w.renderFromState==='function')w.renderFromState();
+      if(typeof w.renderFromState==='function') w.renderFromState();
     });
   </script>
 </body>
