@@ -8,9 +8,24 @@ Doel:
 
 ## Status
 
-Versie: `0.1`
+Versie: `0.13.3`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
+
+## Werkregel (Core Lab)
+
+1. Werk lokaal in Cursor.  
+2. Geen commit of push tenzij Jeroen dat expliciet vraagt.  
+3. Wijzigingen compact en gericht op het probleem.  
+4. Primair `clara-4-core-lab/` en bijbehorende lab-API’s.  
+5. Geen grote herbouw, geen nieuwe architectuur, geen opslaglaag tenzij expliciet gevraagd.  
+6. **Versie:** kleine fix → patch (`0.12.8` → `0.12.9`); grotere werkende stap → minor (`0.12.x` → `0.13.0`).  
+7. Alle versieplekken gelijk trekken: zichtbare UI (`app.js` / `index.html`), `package.json`, `package-lock.json` (root), `version.txt` / `version-label.txt` als die bestaan.  
+8. **`CHANGELOG.md`:** per release versie, datum, korte regel.  
+9. Test: `node --check` op gewijzigde JS + relevante lab-testzin(nen) waar mogelijk.  
+10. Kort rapport: oude→nieuwe versie, bestanden, test, geen commit/push.
+
+Wijzigingslog: zie `CHANGELOG.md`.
 
 ## Wat zit hierin
 

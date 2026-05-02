@@ -1,4 +1,4 @@
-const LAB_VERSION='0.12.8';
+const LAB_VERSION='0.13.3';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn');
 let labState={agenda:[],attention:[],tasks:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null},updated_at:null},activeAgendaTab='day',activeAgendaDate=null,currentController=null,isAnalyzing=false,dragState=null,thinkingId=0;
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
@@ -8,16 +8,54 @@ function dateLabel(iso){let t=todayIso();if(iso===t)return'Vandaag';if(iso===add
 function timeToMin(t){if(!t||!/^[0-2]?\d:[0-5]\d$/.test(t))return null;let[a,b]=t.split(':').map(Number);return a*60+b}
 function minToTime(m){if(m>=1440)return'00:00';m=Math.max(0,m);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
 function round15(m){return Math.round(m/15)*15}
-function setStatus(t){statusEl.textContent=t||''}
+function setStatus(t){if(statusEl)statusEl.textContent=t||''}
 function touchState(){labState.updated_at=new Date().toISOString();setStatus('Lab State bijgewerkt · gaat mee naar Clara')}
 function resizeInput(){input.style.height='32px';input.style.height=Math.min(input.scrollHeight,190)+'px'}
 function scrollBottom(){chatLog.scrollTop=chatLog.scrollHeight}
 function setAnalyzing(on){isAnalyzing=on;btn.classList.toggle('stop',on);btn.textContent=on?'■':'↑'}
 function addUserMessage(t){chatLog.insertAdjacentHTML('beforeend',`<div class="msg user"><div class="msg-body">${esc(t)}</div></div>`);scrollBottom()}
-function addThinking(){thinkingId++;let id='thinking-'+thinkingId;chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant thinking" id="${id}"><div class="msg-body">Clara denkt…</div></div>`);scrollBottom();return id}
+function addThinking(){thinkingId++;let id='thinking-'+thinkingId;chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant thinking" id="${id}"><div class="msg-body"><div class="typing-indicator" aria-hidden="true"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div><div class="thinking-status" id="${id}-status" role="status" aria-live="polite"></div></div></div>`);scrollBottom();return id}
 function removeThinking(id){document.getElementById(id)?.remove()}
+function setThinkingStatus(thinkingId,t){let el=document.getElementById(thinkingId+'-status');if(el)el.textContent=t==null?'':String(t)}
+function clearThinkingStatus(thinkingId){setThinkingStatus(thinkingId,'')}
 function updateDate(){let n=new Date(),shown=activeAgendaDate?new Date(`${activeAgendaDate}T12:00:00`):n;clockHour.textContent=String(n.getHours()).padStart(2,'0');clockMinute.textContent=String(n.getMinutes()).padStart(2,'0');clockWeekday.textContent=shown.toLocaleDateString('en-US',{weekday:'long'});clockDate.textContent=shown.toLocaleDateString('en-GB',{day:'numeric',month:'long'}).toUpperCase();clockYear.textContent=shown.getFullYear()}
 function markOverlaps(items){let out=items.map(i=>({...i,_frontend_conflict:false}));let timed=out.map((i,idx)=>({i,idx,s:timeToMin(i.start_time),e:timeToMin(i.end_time)})).filter(x=>x.s!=null);timed.forEach(x=>{if(x.e==null)x.e=x.s+(x.i.estimated_duration_minutes||30)});for(let a=0;a<timed.length;a++)for(let b=a+1;b<timed.length;b++)if(timed[a].i.date===timed[b].i.date&&timed[a].s<timed[b].e&&timed[b].s<timed[a].e){out[timed[a].idx]._frontend_conflict=true;out[timed[b].idx]._frontend_conflict=true}out.forEach(i=>{if(i.status==='conflict'&&!i._frontend_conflict)i.status='pencil'});return out}
+function buildStartupWisdom(labState){
+  const agenda=markOverlaps([...(labState.agenda||[])]);
+  const att=labState.attention||[];
+  const tasks=labState.tasks||[];
+  const dr=labState.day_regie||{};
+  const roll=(dr.rollover_candidates||[]).filter(Boolean);
+  const checks=(dr.items_to_check||[]).filter(Boolean);
+  const review=String(dr.review_prompt||'').trim();
+  const conflicts=agenda.filter(i=>i._frontend_conflict);
+  const pencils=agenda.filter(i=>i.status==='pencil');
+  const needsTime=agenda.filter(i=>i.status==='needs_time');
+  const day=new Date().getDate();
+  const empty=[
+    'Wijsheid van de dag: wat je uitstelt om niet te kiezen, kiest soms voor jou.',
+    'Kleine tip: begin met het ding dat het minst drama belooft — momentum is gratis.',
+    'Als een taak drie keer terugkomt, is het vaak geen taak maar een project met een snor.',
+    'Vandaag mag rustig: regel eerst het kleinste wat blijft hangen, niet het luidste wat schreeuwt.',
+    'Clara ziet nog geen spoor in het lab; vertel straks wat er speelt, dan denkt ze mee.'
+  ];
+  const has=agenda.length||att.length||tasks.length||roll.length||checks.length||review.length;
+  if(!has)return empty[day%empty.length];
+  if(conflicts.length)return 'Je planning fluistert: er zit overlap. Eén draad tegelijk recht trekken — niet meteen het hele tapijt meenemen.';
+  if(roll.length)return roll.length===1?'Er ligt iets klaar om door te schuiven; alsof je één plank verlegt i.p.v. de hele vloer open te breken.':'Er liggen dingen klaar om door te schuiven; plank voor plank werkt beter dan alles tegelijk.';
+  if(needsTime.length)return 'Er staat werk zonder vaste plek; nog alleen kiezen waar het vandaag past — geen chaos, alleen prioriteit.';
+  if(checks.length)return 'Je dagcheck heeft open haakjes; rustig één voor één, dan blijft het hoofd koel.';
+  if(att.length){const open=att.filter(i=>!i.done).length;return open?`Op aandacht staan ${open} draadjes; trek er één los, de rest wacht wel.`:'Aandacht is bijgewerkt; niets gierig wachtend vandaag.'}
+  if(tasks.length){const open=tasks.filter(i=>!i.done).length;return open?`${open} taken fluisteren zacht; bewaar tempo, geen lijstenmomentum.`:'Takenbak is rustig; geniet ervóór de volgende golf.'}
+  if(pencils.length>=2)return 'Meerdere potloodblokken vragen om ja of nee — geen roman nodig.';
+  if(agenda.length)return 'Er staat al iets op rails; een klein duwtje is vaak genoeg.';
+  if(review)return 'Je dagregie heeft een eigen stem; kort luisteren, dan weet je waar je heen wilt.';
+  return empty[day%empty.length];
+}
+function applyStartupGreeting(){
+  const el=document.querySelector('#chatLog .msg.assistant:not(.thinking) .msg-body');
+  if(el)el.textContent=buildStartupWisdom(labState);
+}
 function classifyAllDay(i){let s=timeToMin(i.start_time),e=timeToMin(i.end_time),d=i.estimated_duration_minutes||(s!=null&&e!=null?e-s:null);return s==null||i.status==='needs_time'||d>=300}
 function syncFromAnalysis(data){let agenda=markOverlaps(data.clara_agenda||[]).map((i,idx)=>({id:'ag-'+Date.now()+'-'+idx,...i}));let dash=data.dashboard_output||{};labState={agenda,attention:[...new Set([...(agenda.filter(i=>i._frontend_conflict).map(i=>i.title)),...(dash.attention||[])])].map((title,i)=>({id:'at-'+Date.now()+'-'+i,title,done:false})),tasks:(data.proposed_items||[]).filter(i=>['task','reminder','attention'].includes(i.type)).map((i,idx)=>({id:'ta-'+Date.now()+'-'+idx,title:i.title,done:false,project:i.project||null})),day_regie:data.day_review||{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null},updated_at:new Date().toISOString()}}
 function renderTimeline(items,startHour,endHour,label){let start=startHour*60,end=endHour*60,total=end-start,hours=[];for(let m=start;m<=end;m+=60)hours.push(m);let labels=hours.map(m=>`<div class="hour" style="top:${(m-start)/total*100}%">${minToTime(m)}</div><div class="tick" style="top:${(m-start)/total*100}%"></div>`).join('');let lines=hours.map(m=>`<div class="line" style="top:${(m-start)/total*100}%"></div>`).join('');let blocks=items.map(i=>{let s=timeToMin(i.start_time),e=timeToMin(i.end_time),dur=i.estimated_duration_minutes||(e!=null&&s!=null?e-s:30)||30,itemEnd=e??s+dur,visibleStart=Math.max(start,s),visibleEnd=Math.min(end,itemEnd),rawH=(visibleEnd-visibleStart)/total*100,h=Math.max(3.8,rawH-1),top=(visibleStart-start)/total*100+.25,compact=(itemEnd-s)<=20||rawH<4.2,cls=i._frontend_conflict?'conflict':i.status==='confirmed'?'confirmed':'pencil',confirm=i.status==='pencil'?`<button class="plain" data-agenda-action="confirm" data-id="${esc(i.id)}">✓</button>`:'';return `<div class="event ${cls} ${compact?'compact':''}" style="top:${top}%;height:${h}%"><div class="handle top" data-resize="start" data-id="${esc(i.id)}"></div><div class="event-row"><strong class="event-title" contenteditable="true" data-agenda-field="title" data-id="${esc(i.id)}">${esc(i.title)}</strong><span class="event-time">${esc(i.start_time||'')} – ${esc(i.end_time||minToTime(itemEnd))}</span>${confirm}<button class="plain" data-agenda-action="delete" data-id="${esc(i.id)}">×</button></div><div class="handle bottom" data-resize="end" data-id="${esc(i.id)}"></div></div>`}).join('');return `<div class="timeline-card" data-start="${start}" data-end="${end}"><div class="section-head"><strong>${label}</strong><span>${minToTime(start)} – ${minToTime(end)}</span></div><div class="timeline"><div class="axis">${labels}</div><div class="events">${lines}${blocks}</div></div></div>`}
@@ -29,7 +67,7 @@ function deriveSuggestions(){let conf=labState.agenda.filter(i=>i._frontend_conf
 function addAssistantMessage(text,suggestions){let opt=suggestions&&suggestions.length?`<div class="options"><div class="option-text">${esc(suggestions[0].text)}</div><div class="option-actions"><button data-proposal-action="decline">Afslaan</button><button data-proposal-action="ok" data-kind="${esc(suggestions[0].type)}">Okay</button></div></div>`:'';chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant"><div class="msg-body">${esc(text)}</div>${opt}</div>`);scrollBottom()}
 function contextPayload(message){return 'Actuele lokale Clara Lab State, inclusief handmatige wijzigingen. Behandel dit als waarheid:\n'+JSON.stringify(labState,null,2)+'\n\nNieuw bericht:\n'+message}
 function render(data){syncFromAnalysis(data);renderFromState();addAssistantMessage(String(data.summary||'Ik heb je planning rechts in de agenda gezet.').slice(0,520),deriveSuggestions())}
-async function analyzeText(message,showUser=true){if(isAnalyzing&&currentController){currentController.abort();return}let value=String(message||'').trim();if(!value){setStatus('Voer eerst tekst in.');return}if(showUser)addUserMessage(value);input.value='';resizeInput();currentController=new AbortController();setAnalyzing(true);setStatus('Clara analyseert met lokale Lab State...');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);try{let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Analyse mislukt');removeThinking(thinking);render(data);setStatus('Analyse klaar · v'+LAB_VERSION)}catch(e){removeThinking(thinking);setStatus(e.name==='AbortError'?'Analyse gestopt.':e.message)}finally{clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
+async function analyzeText(message,showUser=true){if(isAnalyzing&&currentController){currentController.abort();return}let value=String(message||'').trim();if(!value){setStatus('Voer eerst tekst in.');return}if(showUser)addUserMessage(value);input.value='';resizeInput();currentController=new AbortController();setAnalyzing(true);setStatus('Clara analyseert met lokale Lab State...');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);const settle=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));try{setThinkingStatus(thinking,'Clara leest je input');await settle();setThinkingStatus(thinking,'Clara maakt een planning');let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Analyse mislukt');setThinkingStatus(thinking,'Clara werkt de dag bij');await settle();removeThinking(thinking);render(data);setStatus('Analyse klaar · v'+LAB_VERSION)}catch(e){removeThinking(thinking);setStatus(e.name==='AbortError'?'Analyse gestopt.':e.message)}finally{clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
 chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-proposal-action]');if(!b)return;if(b.dataset.proposalAction==='ok'&&b.dataset.kind==='confirm_all'){labState.agenda.forEach(i=>{if(i.status==='pencil')i.status='confirmed';i.confirmation_required=false});touchState();renderFromState()}b.closest('.options')?.remove()});
 agendaCol.addEventListener('click',e=>{let tab=e.target.closest('[data-agenda-tab]');if(tab){activeAgendaTab=tab.dataset.agendaTab;renderFromState();return}let a=e.target.closest('[data-agenda-action]');if(!a)return;let id=a.dataset.id,item=labState.agenda.find(i=>i.id===id);if(a.dataset.agendaAction==='confirm'&&item){item.status='confirmed';item.confirmation_required=false;touchState();renderFromState()}if(a.dataset.agendaAction==='delete'){labState.agenda=labState.agenda.filter(i=>i.id!==id);touchState();renderFromState()}});
 agendaCol.addEventListener('pointerdown',e=>{let h=e.target.closest('[data-resize]');if(!h)return;e.preventDefault();let section=h.closest('.timeline-card'),tl=h.closest('.timeline'),item=labState.agenda.find(i=>i.id===h.dataset.id);if(!section||!tl||!item)return;dragState={id:item.id,edge:h.dataset.resize,start:Number(section.dataset.start),end:Number(section.dataset.end),rect:tl.getBoundingClientRect()};h.setPointerCapture?.(e.pointerId)});
@@ -42,4 +80,4 @@ function handleListBlur(e){let k=e.target.dataset.listKind,f=e.target.dataset.li
 attentionCol.addEventListener('blur',handleListBlur,true);regieCol.addEventListener('blur',handleListBlur,true);
 agendaPrevBtn?.addEventListener('click',()=>{activeAgendaDate=addDaysIso(activeAgendaDate||todayIso(),-1);renderFromState()});
 agendaNextBtn?.addEventListener('click',()=>{activeAgendaDate=addDaysIso(activeAgendaDate||todayIso(),1);renderFromState()});
-btn.addEventListener('click',()=>analyzeText(input.value,true));input.addEventListener('input',resizeInput);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();analyzeText(input.value,true)}});resizeInput();updateDate();setInterval(updateDate,1000);
+btn.addEventListener('click',()=>analyzeText(input.value,true));input.addEventListener('input',resizeInput);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();analyzeText(input.value,true)}});resizeInput();updateDate();setInterval(updateDate,1000);applyStartupGreeting();

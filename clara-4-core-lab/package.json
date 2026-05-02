@@ -1,11 +1,11 @@
 {
   "name": "clara-4-core-lab",
-  "version": "0.1.0",
+  "version": "0.13.3",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
-    "start": "vercel dev"
+    "dev": "bash scripts/dev.sh",
+    "start": "bash scripts/dev.sh"
   },
   "engines": {
     "node": ">=20"

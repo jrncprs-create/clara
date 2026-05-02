@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "devCommand": "npx --yes serve@14 . -l $PORT"
+}
