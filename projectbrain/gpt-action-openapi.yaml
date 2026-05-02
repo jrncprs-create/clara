@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
   title: Clara Projectbrain API
-  version: 0.1.0
+  version: 0.1.1
   description: API for turning rough ChatGPT brainstorms into GitHub Projectbrain status updates.
 servers:
-  - url: https://YOUR-VERCEL-DOMAIN-HERE
-    description: Replace with the Vercel deployment domain for Clara.
+  - url: https://clara-phi-teal.vercel.app
+    description: Clara production deployment on Vercel.
 paths:
   /api/projectbrain-update:
     post:
@@ -38,11 +38,11 @@ paths:
                     - check
                     - push
                   default: check
-                  description: check returns proposed markdown only. push writes to GitHub, preferably through a PR.
+                  description: check returns proposed markdown only. push writes to GitHub.
                 create_pr:
                   type: boolean
-                  default: true
-                  description: If true, push mode creates a branch and pull request instead of writing directly to main.
+                  default: false
+                  description: If true, push mode tries to create a branch and pull request. Current working default is false, which writes directly to main.
       responses:
         '200':
           description: Projectbrain update result
@@ -60,8 +60,26 @@ paths:
                     type: string
                   path:
                     type: string
+                  branch:
+                    type: string
+                  commit:
+                    type:
+                      - string
+                      - 'null'
                   change_summary:
                     type: string
+                  detected_decisions:
+                    type: array
+                    items:
+                      type: string
+                  detected_actions:
+                    type: array
+                    items:
+                      type: string
+                  uncertainties:
+                    type: array
+                    items:
+                      type: string
                   markdown:
                     type: string
                   pull_request:
