@@ -2,7 +2,8 @@ const PROJECTBRAIN_PROJECTS = {
   clara: 'projectbrain/projects/clara.md',
   lalampe: 'projectbrain/projects/lalampe.md',
   begeister: 'projectbrain/projects/begeister.md',
-  'afk-landjuweel-amarte': 'projectbrain/projects/afk-landjuweel-amarte.md'
+  'afk-landjuweel-amarte': 'projectbrain/projects/afk-landjuweel-amarte.md',
+  'clara-core-lab': 'projectbrain/projects/clara-core-lab.md'
 };
 
 function json(res, status, payload) {
