@@ -4,7 +4,7 @@
 2026-05-02
 
 ## Strekking
-LaLampe is een workshopproject rond het transformeren van bestaande objecten tot persoonlijke lampen. De nadruk ligt op ervaring, proces, materiaalkeuze, eenvoudige techniek en transformatie.
+LaLampe is een workshopproject rond het transformeren van bestaande objecten tot persoonlijke lampen. De nadruk ligt op ervaring, proces, materiaalkeuze, eenvoudige techniek en transformatie. De focus ligt vooral op het testen van een kleine avondworkshop met nadruk op ervaring en transformatie, niet op agressieve verkoop.
 
 ## Huidige fase
 Voorbereiding / testfase. De eerste logische vorm is een kleine avondworkshop met een beperkt aantal deelnemers.
@@ -33,3 +33,4 @@ Projectbrain API testen met een LaLampe-input in `check` mode en daarna koppelen
 
 ## Bronnen / laatste signalen
 - Gesprek 2026-05-02: behoefte om ChatGPT-brainstorms met één korte `PB`-trigger naar GitHub Projectbrain door te zetten.
+- Input 2026-05-02: kleine avondworkshop vooral als test, met focus op ervaring en transformatie, niet op harde verkoop.
