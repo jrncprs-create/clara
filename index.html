@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clara 4 Core Lab v0.12.10</title>
+  <title>Clara 4 Core Lab v0.12.11</title>
   <style>
     html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#1e1e1e}
     iframe{display:block;width:100%;height:100%;border:0;background:#1e1e1e}
   </style>
 </head>
 <body>
-  <iframe id="claraFrame" src="/clara-4-core-lab/index.html" title="Clara 4 Core Lab v0.12.10"></iframe>
+  <iframe id="claraFrame" src="/clara-4-core-lab/index.html" title="Clara 4 Core Lab v0.12.11"></iframe>
   <script>
     const frame=document.getElementById('claraFrame');
     frame.addEventListener('load',()=>{
@@ -18,11 +18,11 @@
       const d=frame.contentDocument;
       if(!w||!d)return;
 
-      document.title='Clara 4 Core Lab v0.12.10';
+      document.title='Clara 4 Core Lab v0.12.11';
       const innerTitle=d.querySelector('title');
-      if(innerTitle) innerTitle.textContent='Clara 4 Core Lab v0.12.10';
+      if(innerTitle) innerTitle.textContent='Clara 4 Core Lab v0.12.11';
       const tag=d.querySelector('.state-tag');
-      if(tag) tag.textContent='v0.12.10 · Lab state';
+      if(tag) tag.textContent='v0.12.11 · Lab state';
 
       const datePanel=d.querySelector('.date-panel');
       const clockWidget=d.querySelector('.clock-widget');
@@ -63,6 +63,11 @@
         .event.pencil,.event.needs_time{background:rgba(255,255,255,.045)!important;border:1px dashed rgba(255,255,255,.16)!important}
         .box.done{background:rgba(255,255,255,.16)!important;border-color:rgba(255,255,255,.45)!important}
 
+        .cols{height:100%!important;grid-template-rows:auto auto 1fr!important;align-items:stretch!important}
+        .chat-col{grid-row:1/4!important;height:100%!important;min-height:0!important}
+        .agenda-col{grid-row:1/4!important;height:100%!important;min-height:0!important}
+        .chat-col .col-body,.agenda-col .col-body{height:100%!important;min-height:0!important}
+
         .date-panel{grid-column:3/5!important;grid-row:1!important;border-color:rgba(255,255,255,.14)!important}
         .clock-widget{align-items:center!important}
         .clock-meta strong{font-size:12px!important;letter-spacing:.06em!important}
@@ -72,7 +77,6 @@
         .date-nav{align-self:center!important}
         .date-btn{border-color:rgba(255,255,255,.12)!important}
 
-        .cols{grid-template-rows:auto auto 1fr!important}
         .regie-col{grid-column:3/5!important;grid-row:2!important;min-height:170px!important;max-height:260px!important}
         .attention-col{grid-column:3/5!important;grid-row:3!important;min-height:0!important}
         .regie-col .col-head{padding:14px 16px!important}
