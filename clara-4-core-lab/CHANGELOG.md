@@ -1,5 +1,17 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.13.8 — 2026-05-02
+
+- **Eerste start:** bij lege Lab State (geen agenda/aandacht/taken/dagregie) en nog geen geslaagde auto-start in deze sessie (`sessionStorage`): automatisch één lichte `/api/analyze` met `source: projectbrain_startup` en vaste interne prompt (niet als gebruikersbericht); denkbolletjes + bestaande statusflow; daarna korte Clara-tekst in het eerste chatbericht en potloodagenda/Aandacht/Dagregie direct gevuld.
+- **Geen hoofdstart met voorbeeldvragen:** startsuggestie-knoppen en offer-regel verwijderd; startscherm voelt aan als “al klaargezet”.
+- **Dubbele start voorkomen:** na succes `sessionStorage` marker; bij volledig lege staat na handmatig wissen wordt de marker gewist (`touchState` + `clearStartupDoneIfEmpty`) zodat refresh opnieuw mag starten; Lab State wordt in `localStorage` bewaard zodat refresh met bestaande planning geen nieuwe auto-run triggert.
+- **API:** `projectbrain_startup` — extra appendix (max 1 blok/project, 3–5 potlooditems, duurrichtlijnen, `source`/`projectbrain_startup`); `enforceStartupAgendaMetadata`; `ensurePencil`-fallback ook bij startup als agenda leeg blijft.
+
+## 0.13.7 — 2026-05-02
+
+- **Aandacht (API + UI):** generieke/meta-regels worden weggefilterd (o.a. overlap, geen dump, Projectbrain “in aandacht”, taken niet verkorten, UI-duur-reminders). Max. 5 items; `ensurePencil` voegt geen generieke checkregels meer toe. Bij te weinig concrete punten vult de frontend aan met heuristische projectchecks (mobiel/Marlon, Begeister-grens, AFK-ecologie, LaLampe materiaal). Agendatitels niet dubbel als aandacht.
+- **Dagregie (API + UI):** JSON-schema `day_review.now_first_move` — eerste stap met stuurintentie; `sanitizeDayReview` ontdubbelt `items_to_check` t.o.v. agendatitels en scherpt zwakke `review_prompt` bij. UI: **Nu** gebruikt `now_first_move` als die niet enkel een agendatitel is; anders “Start met …; dat bepaalt …”. **Straks** filtert agendakopieën en vult korte checks. **Einde dag** met vaste scherpe fallback bij generieke potloodvraag.
+
 ## 0.13.6 — 2026-05-02
 
 - Projectbrain: `clara-core-lab.md` toegevoegd aan de vaste projectlijst in `clara-4-core-lab/api/analyze.js`, root `api/analyze.js` en `api/projectbrain-status.js` (sync met GitHub/main).

@@ -272,6 +272,121 @@ function sanitizeClaraAgenda(result, options = {}) {
   return result;
 }
 
+function sanitizeDayReview(parsed, today) {
+  if (!parsed?.day_review) return parsed;
+  const agenda = Array.isArray(parsed.clara_agenda) ? parsed.clara_agenda : [];
+  const titlesToday = new Set(
+    agenda
+      .filter((i) => i && (i.date || today) === today)
+      .map((i) => String(i.title || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+  let items = (Array.isArray(parsed.day_review.items_to_check) ? parsed.day_review.items_to_check : [])
+    .map((s) => String(s || '').trim())
+    .filter(Boolean);
+  items = items
+    .filter((s) => {
+      if (isGenericAttentionText(s)) return false;
+      const sl = s.toLowerCase();
+      for (const tt of titlesToday) {
+        if (!tt || sl.length < 6) continue;
+        if (tt === sl) return false;
+        if (Math.min(tt.length, sl.length) >= 10 && (tt.includes(sl) || sl.includes(tt))) return false;
+      }
+      return true;
+    })
+    .slice(0, 2);
+  const hasPencil = agenda.some((i) => i && (i.date || today) === today && i.status === 'pencil');
+  if (!items.length && hasPencil) {
+    items.push('Controleer lokaal én mobiel vóór je pusht of een review-link deelt.');
+    items.push('Zet pas daarna externe uitnodigingen klaar als de staat klopt.');
+  } else if (items.length === 1 && hasPencil) {
+    items.push('Zet pas daarna externe uitnodigingen klaar als de staat klopt.');
+  }
+  items = items.slice(0, 2);
+
+  let rp = String(parsed.day_review.review_prompt || '').trim();
+  const weakReview = !rp || rp.length < 18 || /^wil je de potlood/i.test(rp) || /^kloppen de/i.test(rp);
+  if (weakReview) rp = 'Wat is af genoeg om online te tonen, en wat schuift bewust door?';
+
+  let nm = String(parsed.day_review.now_first_move || '').trim();
+  const nml = nm.toLowerCase();
+  if (nm && titlesToday.has(nml)) {
+    nm = '';
+  }
+  if (!nm) {
+    const first = agenda.find(
+      (i) => i && (i.date || today) === today && i.start_time && String(i.title || '').trim() && i.status !== 'needs_time'
+    );
+    if (first) {
+      const title = String(first.title || '').trim();
+      const blob = `${title} ${first.project || ''}`.toLowerCase();
+      const why = /core|lab|mobiel|marlon|push|vercel/.test(blob)
+        ? 'dat bepaalt of Marlon straks redelijk mee kan kijken.'
+        : /lalampe|lampe/.test(blob)
+          ? 'daarna kun je gerichter workshop/materiaal oppakken.'
+          : 'dat zet volgorde en tempo voor de rest van de dag.';
+      nm = `Start met ${title}; ${why}`;
+    } else {
+      nm = 'Begin met het blok dat de meeste onzekerheid wegneemt voordat je verder indeelt.';
+    }
+  }
+
+  parsed.day_review = {
+    ...parsed.day_review,
+    now_first_move: nm.slice(0, 320),
+    items_to_check: items,
+    review_prompt: rp.slice(0, 280),
+    rollover_candidates: Array.isArray(parsed.day_review.rollover_candidates)
+      ? parsed.day_review.rollover_candidates.map((s) => String(s || '').trim()).filter(Boolean).slice(0, 3)
+      : []
+  };
+  return parsed;
+}
+
+function enforceStartupAgendaMetadata(parsed, today, tomorrow) {
+  if (!parsed?.clara_agenda) return parsed;
+  const allowedDates = new Set([today, tomorrow]);
+  const agenda = parsed.clara_agenda.map((item) => {
+    const base = { ...item };
+    if (base.status !== 'external_busy' && base.status !== 'confirmed') {
+      if (base.status !== 'needs_time') {
+        base.status = 'pencil';
+        base.confirmation_required = true;
+      }
+      base.source = 'projectbrain_startup';
+    }
+    return base;
+  });
+  const timed = agenda.filter(
+    (i) =>
+      i.start_time &&
+      /^\d{1,2}:[0-5]\d$/.test(String(i.start_time)) &&
+      i.date &&
+      allowedDates.has(String(i.date)) &&
+      i.status !== 'needs_time'
+  );
+  const picked = [];
+  const seenProjDay = new Set();
+  for (const it of timed) {
+    const key = `${it.date}|${String(it.project || '').toLowerCase()}`;
+    if (seenProjDay.has(key)) continue;
+    seenProjDay.add(key);
+    picked.push(it);
+    if (picked.length >= 5) break;
+  }
+  const rest = agenda.filter((i) => {
+    if (picked.includes(i)) return false;
+    if (i.start_time && i.date && allowedDates.has(String(i.date)) && i.status !== 'needs_time') {
+      const key = `${i.date}|${String(i.project || '').toLowerCase()}`;
+      if (seenProjDay.has(key)) return false;
+    }
+    return true;
+  });
+  parsed.clara_agenda = [...picked, ...rest];
+  return parsed;
+}
+
 async function githubRequest({ token, url }) {
   const response = await fetch(url, {
     headers: {
@@ -345,6 +460,36 @@ function detectProjectbrainPlanningRequest(text, requestedDays) {
 
 const ATTENTION_KINDS = new Set(['risico', 'keuze', 'check', 'wacht', 'past_niet', 'project']);
 
+function isGenericAttentionText(s) {
+  const t = String(s || '')
+    .toLowerCase()
+    .trim();
+  if (t.length < 10) return false;
+  const bans = [
+    /projectbrain.*(aandacht|bewaren|opnemen)/,
+    /bewaar.*(keuzes|risico).*projectbrain/,
+    /geen\s+overlap/,
+    /plan\s+geen\s+overlap/,
+    /voorkom.*overlap/,
+    /verkorten\s+van\s+taken/,
+    /taken\s+niet\s+verkorten/,
+    /niet\s+.*verkorten/,
+    /geen\s+projectbrain[-\s]?dump/,
+    /geen\s+dump/,
+    /maak\s+geen\s+dump/,
+    /projectbrain\s+als\s+context/,
+    /gebruik\s+projectbrain\s+als/,
+    /context\s+uit\s+projectbrain/,
+    /^twijfel:\s*projectbrain\s+is\s+beperkt/,
+    /potloodblokken\s+zijn\s+geen\s+harde/,
+    /controleer\s+per\s+project\s+of\s+de\s+duur/i,
+    /schuif\s+desnoods\s+in\s+de\s+ui/i,
+    /bewaar\s+.*\s+in\s+de\s+aandacht/i,
+    /risico.*s\s+en\s+keuzes.*vanuit\s+projectbrain/i
+  ];
+  return bans.some((re) => re.test(t));
+}
+
 function normalizeAttentionEntry(entry, index) {
   if (entry == null) return null;
   if (typeof entry === 'string') {
@@ -375,11 +520,12 @@ function normalizeDashboardAttention(parsed) {
   for (let i = 0; i < arr.length; i++) {
     const n = normalizeAttentionEntry(arr[i], i);
     if (!n || !n.text) continue;
+    if (isGenericAttentionText(n.text)) continue;
     const key = n.text.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(n);
-    if (out.length >= 8) break;
+    if (out.length >= 5) break;
   }
   parsed.dashboard_output.attention = out;
   return parsed;
@@ -429,20 +575,16 @@ function ensurePencilMultiProjectAgenda(result, requestedDays) {
   result.clara_agenda = [...agenda, ...blocks];
   result.dashboard_output = result.dashboard_output || { today: [], attention: [], waiting_for: [], agenda: [], project_signals: [], suggestions: [] };
   const att = Array.isArray(result.dashboard_output.attention) ? result.dashboard_output.attention : [];
-  const extra = [
-    { text: 'Twijfel: Projectbrain is beperkt — potloodblokken zijn geen harde commitment.', kind: 'check' },
-    { text: 'Controleer per project of de duur past; schuif desnoods in de UI.', kind: 'check' }
-  ];
   const unc = Array.isArray(result.uncertainties) ? result.uncertainties : [];
-  const uncObjs = unc.map((u) => normalizeAttentionEntry(u, 0)).filter(Boolean);
-  const merged = [...att.map((x) => normalizeAttentionEntry(x, 0)).filter(Boolean), ...extra, ...uncObjs];
+  const uncObjs = unc.map((u) => normalizeAttentionEntry(u, 0)).filter((x) => x && !isGenericAttentionText(x.text));
+  const merged = [...att.map((x) => normalizeAttentionEntry(x, 0)).filter((x) => x && !isGenericAttentionText(x.text)), ...uncObjs];
   const seen = new Set();
   result.dashboard_output.attention = merged.filter((x) => {
     const k = x.text.toLowerCase();
     if (seen.has(k)) return false;
     seen.add(k);
     return true;
-  }).slice(0, 8);
+  }).slice(0, 5);
   if (!String(result.summary || '').trim()) {
     result.summary = 'Ik zet voorzichtige potloodblokken klaar over de gevraagde dagen op basis van je projectnamen en Projectbrain; geen harde afspraken toegevoegd.';
   } else if (!/potlood|voorzichtig|voorstel/i.test(result.summary)) {
@@ -454,6 +596,9 @@ function ensurePencilMultiProjectAgenda(result, requestedDays) {
   if (!result.day_review.review_prompt) result.day_review.review_prompt = 'Wil je de potloodblokken behouden of verschuiven?';
   result.day_review.items_to_check = Array.isArray(result.day_review.items_to_check) ? result.day_review.items_to_check : [];
   result.day_review.rollover_candidates = Array.isArray(result.day_review.rollover_candidates) ? result.day_review.rollover_candidates : [];
+  if (!String(result.day_review.now_first_move || '').trim()) {
+    result.day_review.now_first_move = '';
+  }
   return result;
 }
 
@@ -517,11 +662,12 @@ function buildCompactAcceptanceAndSituational(intent) {
 3) Afgeleide werksessies: status pencil + confirmation_required true; alleen echte afspraken met door de gebruiker gegeven datum+tijd ⇒ confirmed appointment.
 4) Geen harde externe afspraken of vaste tijden met derden verzinnen.
 5) Twijfel en hiaten ⇒ dashboard_output.attention en uncertainties; dat mag potloodplanning niet laten verdwijnen als de gebruiker wél expliciet wil plannen.
-6) Scheiding: clara_agenda = uitvoering in tijd; proposed_items alleen task/reminder (geen attention-type); dashboard_output.attention = korte regels met velden text + kind (risico|keuze|check|wacht|past_niet|project) — geen Projectbrain-dump, geen algemene rommelbak.
+6) Scheiding: clara_agenda = uitvoering in tijd; proposed_items alleen task/reminder (geen attention-type); dashboard_output.attention = korte regels met text + kind (risico|keuze|check|wacht|past_niet|project). Elk punt moet inhoudelijk zijn: antwoord op "wat mag ik niet uit het oog verliezen?" per project. Geen metaregels of procesinstructies (zoals overlap vermijden, geen dump maken, Projectbrain "in aandacht bewaren", taken niet verkorten).
 7) Realistische duur: gewone werksessie 45–90 min; korte app/follow-up 10–20; diep werk 90–120; duur niet kunstmatig verkorten om te passen.
 8) Geen overlap tussen flexibele blokken; harde items blijven; wat echt niet past ⇒ needs_time + scheduling_needs.
 9) Titels eerlijk en breed ("Project — onderwerp nalopen"); geen schijnzekerheid over details die niet in input of Projectbrain staan.
-10) JSON-blok "Actuele lokale Clara Lab State" in de gebruikerstekst is leidend: handmatige edits gaan vóór eerdere AI-voorstellen.`;
+10) JSON-blok "Actuele lokale Clara Lab State" in de gebruikerstekst is leidend: handmatige edits gaan vóór eerdere AI-voorstellen.
+11) day_review.now_first_move: 1–2 zinnen die sturen — waarom déze eerste stap nu logisch is; geen letterlijke agendatitel alleen. day_review.items_to_check: max. 2 korte checks/reminders, géén herhaling van agendablokken. day_review.review_prompt: één scherpe einde-dag-reviewvraag (geen generieke potloodvraag).`;
 
   const situational = [];
   if (intent.attentionOnly) {
@@ -607,7 +753,7 @@ function buildAttentionOnlyAppendix(labState) {
     ? `\n- Lab State bevat nu: agenda ${labState.agenda?.length || 0}, aandacht ${labState.attention?.length || 0}, taken ${labState.tasks?.length || 0}, checken ${labState.day_regie?.items_to_check?.length || 0}, doorschuiven ${labState.day_regie?.rollover_candidates?.length || 0}.`
     : '\n- Lab State is visueel leeg; zeg niet dat er "niets" speelt zonder dat te onderbouwen.';
 
-  return `\n\nAttention-only modus:\n- Voeg geen nieuwe getimede clara_agenda-items toe tenzij de gebruiker een **echte** tijdkritische afspraak met concreet tijdstip noemt (nu/spoed/deadline + tijd).\n- Lees verplicht het **lab_state JSON** én de ingesloten Lab State in de tekst: neem agenda (ook needs_time/conflict), attention, tasks, day_regie (items_to_check, rollover_candidates, review_prompt, suggested_time) en signalen uit het chatverloop mee.${preview}\n- dashboard_output.attention: max. 5 zinvolle punten; elk object heeft \`text\` (kort) en \`kind\`; geen lange notities; geen pure taken die in taken/agenda horen.\n- day_review.items_to_check max. 2 korte checks; review_prompt één zin voor einde dag.\n- Summary: korte uitsplitsing met koppen **Aandacht**, **Doorschuiven**, **Checken**, **Tijdkritisch**, **Agenda / needs_time** — alleen secties vullen die echt inhoud hebben.\n- Zeg **niet** dat er niets te doen is als een van die lijsten inhoud heeft.\n`;
+  return `\n\nAttention-only modus:\n- Voeg geen nieuwe getimede clara_agenda-items toe tenzij de gebruiker een **echte** tijdkritische afspraak met concreet tijdstip noemt (nu/spoed/deadline + tijd).\n- Lees verplicht het **lab_state JSON** én de ingesloten Lab State in de tekst: neem agenda (ook needs_time/conflict), attention, tasks, day_regie (items_to_check, rollover_candidates, review_prompt, suggested_time) en signalen uit het chatverloop mee.${preview}\n- dashboard_output.attention: max. 5 punten; concreet inhoudelijk (risico/keuze/check) uit projectcontext; geen systeemregels.\n- day_review.now_first_move: waarom nu eerst deze stap (stuurt), niet agendakopie.\n- day_review.items_to_check max. 2 checks (geen agendatitels); review_prompt één scherpe reviewvraag.\n- Summary: korte uitsplitsing met koppen **Aandacht**, **Doorschuiven**, **Checken**, **Tijdkritisch**, **Agenda / needs_time** — alleen secties vullen die echt inhoud hebben.\n- Zeg **niet** dat er niets te doen is als een van die lijsten inhoud heeft.\n`;
 }
 
 function buildWeekDirectionAppendix(projectbrainContext) {
@@ -622,7 +768,7 @@ function buildWeekDirectionAppendix(projectbrainContext) {
 
 function buildProjectbrainPlanningAppendix(today, tomorrow, requestedDays) {
   const days = Array.isArray(requestedDays) && requestedDays.length ? requestedDays.join(', ') : `${today}, ${tomorrow}`;
-  return `\n\nProjectbrain → planning (deze ronde):\n- Projectbrain = context; geen dump van markdown of secties; geen automatische algemene samenvatting in attention.\n- Per relevant project max. 1–2 eerstvolgende acties als potlood in clara_agenda over: ${days}; status pencil, confirmation_required true; geen overlap tussen potloodblokken op dezelfde dag.\n- Gewone uitvoerbare acties: clara_agenda en/of proposed_items als task/reminder (niet als attention).\n- Risico's, twijfel, open keuzes, wachten, needs_time-uitleg: **dashboard_output.attention** met korte regels; elk item heeft kind: risico | keuze | check | wacht | past_niet | project.\n- Wat niet eerlijk past: needs_time + scheduling_needs, niet forceren.\n- **day_review**: korte review_prompt; items_to_check max. 2 korte reminders; rollover_candidates alleen echte doorschuivers.\n`;
+  return `\n\nProjectbrain → planning (deze ronde):\n- Projectbrain = context; geen dump van markdown of secties; geen automatische algemene samenvatting in attention.\n- Per relevant project max. 1–2 eerstvolgende acties als potlood in clara_agenda over: ${days}; status pencil, confirmation_required true; geen overlap tussen potloodblokken op dezelfde dag.\n- Gewone uitvoerbare acties: clara_agenda en/of proposed_items als task/reminder (niet als attention).\n- Risico's, twijfel, open keuzes, wachten, needs_time-uitleg: **dashboard_output.attention** met korte regels; elk item heeft kind: risico | keuze | check | wacht | past_niet | project.\n- Wat niet eerlijk past: needs_time + scheduling_needs, niet forceren.\n- **day_review**: now_first_move = eerste beweging nu (met korte waarom); items_to_check = max. 2 checks/reminders, géén agendakopie; review_prompt = één scherpe einde-dag-vraag; rollover_candidates alleen echte doorschuivers.\n`;
 }
 
 export default async function handler(req, res) {
@@ -636,17 +782,33 @@ export default async function handler(req, res) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
 
+    const isStartup = source === 'projectbrain_startup';
     const { today, tomorrow } = getAmsterdamDateInfo();
-    const requestedDays = detectRequestedPlanningDays(text, today);
+    const requestedDays = isStartup ? [today, addDaysIso(today, 1)] : detectRequestedPlanningDays(text, today);
     const projectbrainContext = await loadProjectbrainContext();
-    const intent = inferUserIntentHints(text);
-    const todayOnlyReplan = detectTodayOnlyReplan(text, requestedDays, today);
+    let intent = inferUserIntentHints(text);
+    if (isStartup) {
+      intent = {
+        ...intent,
+        wantsProjectbrainPlanning: true,
+        attentionOnly: false,
+        weekDirectionOnly: false,
+        wantsExplicitTimedPlanning: false,
+        projectQuestionOnly: false
+      };
+    }
+    const todayOnlyReplan = isStartup ? false : detectTodayOnlyReplan(text, requestedDays, today);
+
+    const startupAppendix = isStartup
+      ? `\n\n**Automatische Core Lab-start (bron projectbrain_startup):**\n- Rustige conceptplanning voor ${today}; gebruik ${tomorrow} alleen als ${today} te vol wordt.\n- Max. één eerstvolgende potloodblok per actief project (o.a. clara, lalampe, begeister, afk-landjuweel-amarte, clara-core-lab).\n- Max. 3–5 getimede potloodblokken totaal; status pencil, confirmation_required true; zet op elk blok source exact de string \`projectbrain_startup\`.\n- Duurrichtlijn: clara-core-lab 60–90 min; lalampe, begeister, afk elk 45–75 min; optioneel één korte dagcheck 10–15 min.\n- Geen harde externe afspraken verzinnen; geen confirmed appointments tenzij gebruiker ze letterlijk noemde.\n- Vandaag niet overvol; overlap vermijden; wat niet past → needs_time + scheduling_needs.\n- Aandacht: concrete checks (mobiel/Marlon, LaLampe materiaal, Begeister-grens, AFK ecologie); geen systeem- of overlap-instructies.\n- summary: max. twee korte zinnen.\n`
+      : '';
 
     const promptAddenda =
       buildDateDisciplineAppendix(today, tomorrow, todayOnlyReplan) +
       (intent.attentionOnly ? buildAttentionOnlyAppendix(labStateRaw) : '') +
       (intent.weekDirectionOnly ? buildWeekDirectionAppendix(projectbrainContext) : '') +
-      (intent.wantsProjectbrainPlanning ? buildProjectbrainPlanningAppendix(today, tomorrow, requestedDays) : '');
+      ((intent.wantsProjectbrainPlanning || isStartup) ? buildProjectbrainPlanningAppendix(today, tomorrow, requestedDays) : '') +
+      startupAppendix;
 
     const schema = {
       name: 'clara_core_analysis',
@@ -661,7 +823,7 @@ export default async function handler(req, res) {
           dashboard_output: { type: 'object', additionalProperties: false, required: ['today','attention','waiting_for','agenda','project_signals','suggestions'], properties: { today: { type: 'array', items: { type: 'string' } }, attention: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['text','kind'], properties: { text: { type: 'string' }, kind: { type: 'string', enum: ['risico','keuze','check','wacht','past_niet','project'] } } } }, waiting_for: { type: 'array', items: { type: 'string' } }, agenda: { type: 'array', items: { type: 'string' } }, project_signals: { type: 'array', items: { type: 'string' } }, suggestions: { type: 'array', items: { type: 'string' } } } },
           clara_agenda: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['title','kind','date','start_time','end_time','estimated_duration_minutes','status','project','source','reason','confirmation_required','confidence'], properties: { title: { type: 'string' }, kind: { type: 'string', enum: ['appointment','planned_task','focus_block','deadline','reminder','external_busy','day_review'] }, date: { type: ['string','null'] }, start_time: { type: ['string','null'] }, end_time: { type: ['string','null'] }, estimated_duration_minutes: { type: ['number','null'] }, status: { type: 'string', enum: ['confirmed','pencil','needs_time','external_busy','conflict','done','cancelled'] }, project: { type: ['string','null'] }, source: { type: 'string' }, reason: { type: 'string' }, confirmation_required: { type: 'boolean' }, confidence: { type: 'number', minimum: 0, maximum: 1 } } } },
           scheduling_needs: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['title','preferred_date','estimated_duration_minutes','priority','reason'], properties: { title: { type: 'string' }, preferred_date: { type: ['string','null'] }, estimated_duration_minutes: { type: ['number','null'] }, priority: { type: 'string', enum: ['low','normal','high'] }, reason: { type: 'string' } } } },
-          day_review: { type: 'object', additionalProperties: false, required: ['review_needed','suggested_time','review_prompt','items_to_check','rollover_candidates'], properties: { review_needed: { type: 'boolean' }, suggested_time: { type: ['string','null'] }, review_prompt: { type: 'string' }, items_to_check: { type: 'array', items: { type: 'string' } }, rollover_candidates: { type: 'array', items: { type: 'string' } } } },
+          day_review: { type: 'object', additionalProperties: false, required: ['review_needed','suggested_time','review_prompt','items_to_check','rollover_candidates','now_first_move'], properties: { review_needed: { type: 'boolean' }, suggested_time: { type: ['string','null'] }, review_prompt: { type: 'string' }, items_to_check: { type: 'array', items: { type: 'string' } }, rollover_candidates: { type: 'array', items: { type: 'string' } }, now_first_move: { type: 'string' } } },
           uncertainties: { type: 'array', items: { type: 'string' } },
           questions: { type: 'array', items: { type: 'string' } },
           ignored_noise: { type: 'array', items: { type: 'string' } }
@@ -672,13 +834,17 @@ export default async function handler(req, res) {
 
     const multiProjectPlanningBlock =
       requestedDays.length >= 2 && !intent.attentionOnly && !intent.weekDirectionOnly
-        ? `\n\nMeerdaagse projectplanning (verplicht wanneer de gebruiker dit zo vraagt):\n- Als de gebruiker expliciet om een planning over meerdere dagen vraagt én minstens twee van deze namen noemt (Clara, LaLampe, Begeister, AFK/Landjuweel/Amarte), en Projectbrain-context technisch beschikbaar is (dus geen token- of repo-fouttekst): mag clara_agenda voor die dagen niet leeg blijven zonder getimede potloodblokken.\n- Zet dan per genoemd project minstens één werksessie (kind focus_block of planned_task, status pencil, confirmation_required true, duur 45–90 minuten) verdeeld over: ${requestedDays.join(', ')}.\n- Geen overlap tussen potloodblokken op dezelfde dag.\n- Gebruik Projectbrain voor thema/hoofdlijn in titel en reason; geen 1:1 dump van Markdown-secties als takenlijst.\n- Verzin geen externe afspraken of bevestigde meetings met derden.\n- Parkeer twijfel en ontbrekende feiten in dashboard_output.attention en uncertainties.\n`
+        ? `\n\nMeerdaagse projectplanning (verplicht wanneer de gebruiker dit zo vraagt, of bij automatische startup):\n- Bij startup of expliciete meerdaagse vraag: als Projectbrain-context technisch beschikbaar is (geen token-/repo-fouttekst), mag clara_agenda voor de gevraagde dagen niet leeg blijven zonder getimede potloodblokken.\n- Zet per relevant project minstens één werksessie (kind focus_block of planned_task, status pencil, confirmation_required true, duur volgens appendix) verdeeld over: ${requestedDays.join(', ')}.\n- Geen overlap tussen potloodblokken op dezelfde dag.\n- Gebruik Projectbrain voor thema/hoofdlijn in titel en reason; geen 1:1 dump van Markdown-secties als takenlijst.\n- Verzin geen externe afspraken of bevestigde meetings met derden.\n- Parkeer twijfel en ontbrekende feiten in dashboard_output.attention en uncertainties.\n`
         : '';
 
-    const systemPrompt = `Je bent Clara Core Lab: de interpretatielaag achter Clara.\n\nVandaag is ${today}. Morgen is ${tomorrow}. Gebruik deze datums als absolute basis voor relatieve woorden zoals vandaag, morgen en vrijdag.\n\nClara is vooral een AI-assistent met een dagagenda als spoor/geheugen. De UI heeft een sterk visuele messenger-chat. Gebruik de summary als korte, menselijke Clara-reactie: 1 tot 3 rustige zinnen, geen rapporttaal.\n\nJe krijgt naast de lokale Clara Lab State ook Projectbrain-context uit GitHub. Behandel Projectbrain als projectgeheugen: gebruik het om projecten, beslissingen, open acties en onzekerheden beter te begrijpen. Zet Projectbrain-informatie niet automatisch als taak op vandaag, tenzij de gebruiker daar expliciet om vraagt.\n\nPlanningskern:\n- Clara moet een realistische planning maken, niet alleen taken herkennen.\n- Verdeel werk over beschikbare dagen wanneer de gebruiker om meerdere dagen vraagt.\n- Gevraagde planningsdagen in deze input: ${requestedDays.join(', ')}.\n- Plan potloodtaken, focusblokken en reminders nooit bewust over elkaar heen.\n- Overlap is alleen toegestaan voor harde afspraken die echt botsen, of wanneer iets onmogelijk past.\n- Als iets niet past: zet status needs_time en benoem waarom.\n\nActieregels:\n- Als de input een eerdere Clara-analyse bevat plus een nieuw bericht of aangeklikte actie, werk dan voort op die eerdere analyse.\n- Als de gebruiker vraagt 'los het op' of een suggestieknop aanklikt, pas de planning concreet aan. Vraag niet eerst om toestemming. Maak een beste potloodoplossing en laat resterende conflicten zichtbaar.\n- Als je iets hebt aangepast, benoem kort wat je deed.\n\nAgendaweergave-regels:\n- De agenda loopt van 10:00 tot 23:00.\n- De UI splitst die in Dag 10:00–19:00 en Avond 19:00–24:00.\n- Items zonder starttijd, needs_time of zeer lange blokken mogen boven de agenda als dagbrede/all-day items verschijnen.\n- Zet echte tijdsblokken met start_time en end_time in clara_agenda zodat ze zichtbaar zijn.\n\nBasisregels:\n- Antwoord altijd in het Nederlands.\n- Dashboard today mag alleen items tonen die vandaag (${today}) spelen. Morgen-items horen niet in today.\n- action_for_jeroen = Jeroen moet iets doen of iemand wacht op Jeroen.\n- waiting_for_other = Jeroen wacht op iemand anders.\n- Tijd die in dashboard_output.agenda staat moet ook in clara_agenda staan.\n\nHarde afspraken en conflicten:\n- Een afspraak met datum en tijd is appointment confirmed, confirmation_required=false.\n- Als twee confirmed afspraken overlappen, zet allebei in clara_agenda. De overlappende afspraak mag status='conflict' krijgen als dat nodig is om het zichtbaar te maken, maar hij blijft inhoudelijk een harde afspraak.\n- Conflicten nooit gladstrijken of verbergen.\n\nTaken zonder tijd verspreiden:\n- Als input zegt dat taken morgen/vandaag moeten maar geen tijd geeft, mag Clara vrije ruimtes zoeken tussen harde afspraken en daar planned_task pencil plaatsen.\n- Zet zulke taken niet allemaal onder needs_time als er duidelijke dagruimte is.\n- Plaats korte taken liefst eerst na een overleg en lange blokken daarna, tenzij de input een andere prioriteit of deadline noemt.\n- Pencil betekent voorstel: confirmation_required=true.\n\nEerlijke duurregels:\n- Schat duur op basis van de aard van de taak, niet op basis van beschikbare ruimte.\n- Maak taken niet korter om ze passend te krijgen.\n- Korte follow-up: 10-15 min. Simpel antwoord: 15-25 min. Zorgvuldige mail/inhoudelijke reactie: 25-40 min. Bestellen/regelen: 30-45 min. Administratie/ordenen: 45-90 min. Btw-administratie/financieel uitzoeken: 120-180 min. Nieuw concept schrijven: 120-240 min. Denkwerk: 45-90 min. Deep work: 90-120 min. Overleg zonder eindtijd: 60 min. Dagcheck: 15 min.\n\nTijdsdruk zichtbaar maken:\n- Als Clara zegt dat iets krap wordt of niet past, moet dat zichtbaar zijn in clara_agenda via overlap, conflict of een needs_time item plus high scheduling_need.\n- Tijdsdruk nooit alleen in summary, attention of scheduling_needs laten staan.\n\nDagafsluiting:\n- Maak day_review.review_needed=true zodra er geplande of potlood-acties zijn.\n- Stel meestal 17:30 of 18:00 voor als suggested_time, tenzij input iets anders noemt.\n\nDashboardrust:\n- Suggestions alleen tonen als ze echt helpen en aan een keuze hangen.\n- Project_signals alleen vullen met echte projectcontext, beslissingen of inhoudelijke projectinformatie, niet met gewone projecttaken.${multiProjectPlanningBlock}${promptAddenda}${buildCompactAcceptanceAndSituational(intent)}`;
+    const systemPrompt = `Je bent Clara Core Lab: de interpretatielaag achter Clara.\n\nVandaag is ${today}. Morgen is ${tomorrow}. Gebruik deze datums als absolute basis voor relatieve woorden zoals vandaag, morgen en vrijdag.\n\nClara is vooral een AI-assistent met een dagagenda als spoor/geheugen. De UI heeft een sterk visuele messenger-chat. Gebruik de summary als korte, menselijke Clara-reactie: 1 tot 3 rustige zinnen, geen rapporttaal.\n\nJe krijgt naast de lokale Clara Lab State ook Projectbrain-context uit GitHub. Behandel Projectbrain als projectgeheugen: gebruik het om projecten, beslissingen, open acties en onzekerheden beter te begrijpen. Zet Projectbrain-informatie niet automatisch als taak op vandaag, tenzij de gebruiker daar expliciet om vraagt.\n\nPlanningskern:\n- Clara moet een realistische planning maken, niet alleen taken herkennen.\n- Verdeel werk over beschikbare dagen wanneer de gebruiker om meerdere dagen vraagt.\n- Gevraagde planningsdagen in deze input: ${requestedDays.join(', ')}.\n- Plan potloodtaken, focusblokken en reminders nooit bewust over elkaar heen.\n- Overlap is alleen toegestaan voor harde afspraken die echt botsen, of wanneer iets onmogelijk past.\n- Als iets niet past: zet status needs_time en benoem waarom.\n\nActieregels:\n- Als de input een eerdere Clara-analyse bevat plus een nieuw bericht of aangeklikte actie, werk dan voort op die eerdere analyse.\n- Als de gebruiker vraagt 'los het op' of een suggestieknop aanklikt, pas de planning concreet aan. Vraag niet eerst om toestemming. Maak een beste potloodoplossing en laat resterende conflicten zichtbaar.\n- Als je iets hebt aangepast, benoem kort wat je deed.\n\nAgendaweergave-regels:\n- De agenda loopt van 10:00 tot 23:00.\n- De UI splitst die in Dag 10:00–19:00 en Avond 19:00–24:00.\n- Items zonder starttijd, needs_time of zeer lange blokken mogen boven de agenda als dagbrede/all-day items verschijnen.\n- Zet echte tijdsblokken met start_time en end_time in clara_agenda zodat ze zichtbaar zijn.\n\nBasisregels:\n- Antwoord altijd in het Nederlands.\n- Dashboard today mag alleen items tonen die vandaag (${today}) spelen. Morgen-items horen niet in today.\n- action_for_jeroen = Jeroen moet iets doen of iemand wacht op Jeroen.\n- waiting_for_other = Jeroen wacht op iemand anders.\n- Tijd die in dashboard_output.agenda staat moet ook in clara_agenda staan.\n\nHarde afspraken en conflicten:\n- Een afspraak met datum en tijd is appointment confirmed, confirmation_required=false.\n- Als twee confirmed afspraken overlappen, zet allebei in clara_agenda. De overlappende afspraak mag status='conflict' krijgen als dat nodig is om het zichtbaar te maken, maar hij blijft inhoudelijk een harde afspraak.\n- Conflicten nooit gladstrijken of verbergen.\n\nTaken zonder tijd verspreiden:\n- Als input zegt dat taken morgen/vandaag moeten maar geen tijd geeft, mag Clara vrije ruimtes zoeken tussen harde afspraken en daar planned_task pencil plaatsen.\n- Zet zulke taken niet allemaal onder needs_time als er duidelijke dagruimte is.\n- Plaats korte taken liefst eerst na een overleg en lange blokken daarna, tenzij de input een andere prioriteit of deadline noemt.\n- Pencil betekent voorstel: confirmation_required=true.\n\nEerlijke duurregels:\n- Schat duur op basis van de aard van de taak, niet op basis van beschikbare ruimte.\n- Maak taken niet korter om ze passend te krijgen.\n- Korte follow-up: 10-15 min. Simpel antwoord: 15-25 min. Zorgvuldige mail/inhoudelijke reactie: 25-40 min. Bestellen/regelen: 30-45 min. Administratie/ordenen: 45-90 min. Btw-administratie/financieel uitzoeken: 120-180 min. Nieuw concept schrijven: 120-240 min. Denkwerk: 45-90 min. Deep work: 90-120 min. Overleg zonder eindtijd: 60 min. Dagcheck: 15 min.\n\nTijdsdruk zichtbaar maken:\n- Als Clara zegt dat iets krap wordt of niet past, moet dat zichtbaar zijn in clara_agenda via overlap, conflict of een needs_time item plus high scheduling_need.\n- Tijdsdruk nooit alleen in summary, attention of scheduling_needs laten staan.\n\nDagafsluiting:\n- Maak day_review.review_needed=true zodra er geplande of potlood-acties zijn.\n- Stel meestal 17:30 of 18:00 voor als suggested_time, tenzij input iets anders noemt.\n- day_review.now_first_move: stuur op de eerste zinvolle actie (waarom nu), niet de agendalijst herhalen.\n- day_review.items_to_check: max. twee checkzinnen (kwaliteit/moment), geen taak- of agendakopie.\n- day_review.review_prompt: één concrete einde-dagvraag over afronden versus doorschuiven.\n\nDashboardrust:\n- Suggestions alleen tonen als ze echt helpen en aan een keuze hangen.\n- Project_signals alleen vullen met echte projectcontext, beslissingen of inhoudelijke projectinformatie, niet met gewone projecttaken.${multiProjectPlanningBlock}${promptAddenda}${buildCompactAcceptanceAndSituational(intent)}`;
 
     const structuredLab =
-      intent.attentionOnly || intent.weekDirectionOnly || todayOnlyReplan || intent.wantsProjectbrainPlanning
+      intent.attentionOnly ||
+      intent.weekDirectionOnly ||
+      todayOnlyReplan ||
+      intent.wantsProjectbrainPlanning ||
+      isStartup
         ? `\n\n## lab_state (gestructureerd JSON, leidend naast vrije tekst)\n${JSON.stringify(labStateRaw ?? {})}\n`
         : '';
 
@@ -705,7 +871,7 @@ export default async function handler(req, res) {
     parsed = sanitizeClaraAgenda(parsed, { requestedDays });
 
     const timeCritical = hasTimeCriticalBypassAttention(text);
-    if (intent.attentionOnly && !timeCritical) {
+    if (intent.attentionOnly && !timeCritical && !isStartup) {
       if (Array.isArray(labStateRaw?.agenda) && labStateRaw.agenda.length) {
         parsed.clara_agenda = JSON.parse(JSON.stringify(labStateRaw.agenda));
       } else {
@@ -713,7 +879,7 @@ export default async function handler(req, res) {
           (i) => !(i?.start_time && /^\d{1,2}:[0-5]\d$/.test(String(i.start_time)))
         );
       }
-    } else if (intent.weekDirectionOnly) {
+    } else if (intent.weekDirectionOnly && !isStartup) {
       if (Array.isArray(labStateRaw?.agenda) && labStateRaw.agenda.length) {
         parsed.clara_agenda = JSON.parse(JSON.stringify(labStateRaw.agenda));
       } else {
@@ -732,7 +898,7 @@ export default async function handler(req, res) {
     if (
       !intent.attentionOnly &&
       !intent.weekDirectionOnly &&
-      (explicitMulti || projectbrainPlan) &&
+      (explicitMulti || projectbrainPlan || (isStartup && projectbrainContextUsable(projectbrainContext))) &&
       projectbrainContextUsable(projectbrainContext) &&
       countTimedAgendaBlocksInDays(parsed.clara_agenda, requestedDays) === 0
     ) {
@@ -740,6 +906,11 @@ export default async function handler(req, res) {
       parsed = sanitizeClaraAgenda(parsed, { requestedDays });
     }
     parsed = normalizeDashboardAttention(parsed);
+    if (isStartup) parsed = enforceStartupAgendaMetadata(parsed, today, tomorrow);
+    parsed = sanitizeDayReview(parsed, today);
+    if (isStartup && parsed.summary) {
+      parsed.summary = String(parsed.summary).replace(/\s+/g, ' ').trim().slice(0, 320);
+    }
     return res.status(200).json(parsed);
   } catch (error) {
     return res.status(500).json({ error: 'Analyze failed', message: error?.message || String(error) });
