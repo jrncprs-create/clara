@@ -32,15 +32,17 @@ Roep de action aan met:
 
 Schrijf de update naar GitHub via de Projectbrain API.
 
-Roep de action aan met:
+Werkende standaard op dit moment:
 
 ```json
 {
   "mode": "push",
-  "create_pr": true,
+  "create_pr": false,
   "source": "chatgpt"
 }
 ```
+
+Dit schrijft direct naar `main`. De PR-route bestaat technisch nog, maar is niet de huidige standaard omdat de eerder geteste GitHub-tokenconfiguratie branch-aanmaak blokkeerde.
 
 ## Gedrag
 
@@ -51,6 +53,7 @@ Roep de action aan met:
 - Als meerdere projecten geraakt zijn, maak per project een aparte action-call.
 - Bij twijfel: gebruik `PB check`, niet `PB push`.
 - Noem duidelijk naar welk bestand wordt geschreven, bijvoorbeeld `projectbrain/projects/lalampe.md`.
+- Meld bij `PB push` ook de commit-sha als de API die teruggeeft.
 
 ## Bekende projecten
 
