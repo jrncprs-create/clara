@@ -1,5 +1,11 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.3 — 2026-05-03
+
+- Agenda-items **kaartlayout**: titel links (`agenda-item-title`), rechts meta **project (uppercase) · tijd · ✓ · ×** (`agenda-item-meta`); geen aparte projectregel meer; vink/sluit behouden.
+- **Projectkleur** vult het hele blok; **conflict** behoudt projecttint + rustige **rode inset-outline**; **potlood/voorstel** via `rgba` (~0.18–0.20) zonder `opacity` op heel het item; **non-project** wit/neutraal zonder projectlabel; legenda alleen CLARA/LALAMPE/BEGEISTER/AFK, compacter + `pointer-events: none`.
+- **planned_task** telt mee bij voorsteldetectie; AFK-match iets ruimer.
+
 ## 0.14.2 — 2026-05-03
 
 - **Wis lokale teststaat:** zelfde scope; verwijdert nu ook losse **proposal-opties** in de chat (`#chatLog .options`); overige gedrag ongewijzigd (Lab `localStorage`/`sessionStorage`, `current_context`, lege `labState`, eindprompts, ⌥⇧R buiten invoervelden).
