@@ -1,5 +1,29 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.2 — 2026-05-03
+
+- **Wis lokale teststaat:** zelfde scope; verwijdert nu ook losse **proposal-opties** in de chat (`#chatLog .options`); overige gedrag ongewijzigd (Lab `localStorage`/`sessionStorage`, `current_context`, lege `labState`, eindprompts, ⌥⇧R buiten invoervelden).
+- **Projectkleuren:** `getProjectVisual` met `hasProject`, uitgebreidere match (o.a. *clara lab*, *core lab*, AFK-varianten); alleen bekende projecten krijgen gekleurde achtergrond.
+- **Zonder project:** wit/neutraal, **geen** projectlabel in het blok, **geen** extra legenda-entry; voorstel blijft licht/subtiel op neutraal.
+- **CSS-classes:** `agenda-item--pencil` / `--confirmed` / `--conflict` / `--suggest` / `--done`; subtiele hoekhint (*voorstel*, `!`, `✓`); conflict met zachte inset-outline; legenda alleen CLARA · LALAMPE · BEGEISTER · AFK, `pointer-events: none`.
+- **Overlap/layout:** iets grotere verticale marge in `top`/`height`-%; events `min-height: 0`; `.events` `min-height: 100%` i.v.m. tijdlijn-hoogte.
+
+## 0.14.1 — 2026-05-03
+
+- **Teststaat:** rustige tekstknop *Wis lokale teststaat* in Dagregie (boven Lab State); wist alleen Clara Lab `localStorage`/`sessionStorage` keys (`clara_core_lab_state_v1`, startmarker, `clara_last_greeting_ix`, optioneel `clara_core_lab_current_context`), reset `labState`, agendaeindprompt, analyse-flow; status *Lokale teststaat gewist.*; sneltoets **⌥⇧R** (niet in invoerveld/contenteditable).
+- **Agenda-items:** volle projectkleur als achtergrond; `project-none` = licht/wit + donkere tekst, label **GEEN PROJECT**; potlood/voorstel (`pencil`, `confirmation_required`, `source: projectbrain_startup`) als `.event-suggest` met lage opacity-kleur (~0.24–0.26); bevestigd voller; conflict blijft herkenbaar; meta: **PROJECT** in kapitalen, tijd `–` niet bold, titel max ~450; compacte meta-regel bij lage blokhoogte (`rawH<7%`).
+
+## 0.14.0 — 2026-05-03
+
+- **Agenda end prompts:** periodieke check (`setInterval` 60s + na elke `renderFromState`) of een gepland blok op **vandaag** net is afgelopen (venster: vanaf `end_time` tot 30 min daarna); rustige kaart boven Dagregie met *Blok afgelopen* en acties **Voltooid** (status `done` + `completed_at`), **15 min erbij** (einde verlengd, overlap opnieuw gecontroleerd, `_end_prompt_snoozed_until` tot nieuwe eindtijd), **Doorschuiven** (`needs_time`, tijden leeg, rollover + aandacht `[Doorschuiven] …`), **Later** (15 min snooze). Geen browser-alerts, geen AI-call; max. één actieve prompt; `external_busy` en afgeronde items worden overgeslagen.
+
+## 0.13.9 — 2026-05-03
+
+- Agenda: tab **Dag** → **Overdag**; subkop **Vandaag · Overdag** / Avond; tabs staan rechts naast de titel **Agenda** in de header.
+- Dagbrede pill rustiger (kleiner, zachter); tijdlijn vult de agenda-card verticaal (`flex` / `grid-template-rows: auto 1fr`).
+- Eventtitels niet meer vet (`font-weight` ~500); tijden compacter; subtiele projectaccenten via linker rand + klassen `project-clara` / `project-lalampe` / `project-begeister` / `project-afk`.
+- Rechtsonder vaste kleine projectlegenda (Clara · LaLampe · Begeister · AFK).
+
 ## 0.13.8 — 2026-05-02
 
 - **Eerste start:** bij lege Lab State (geen agenda/aandacht/taken/dagregie) en nog geen geslaagde auto-start in deze sessie (`sessionStorage`): automatisch één lichte `/api/analyze` met `source: projectbrain_startup` en vaste interne prompt (niet als gebruikersbericht); denkbolletjes + bestaande statusflow; daarna korte Clara-tekst in het eerste chatbericht en potloodagenda/Aandacht/Dagregie direct gevuld.
