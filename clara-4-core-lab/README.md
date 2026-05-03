@@ -45,6 +45,15 @@ OPENAI_API_KEY="jouw_key" npm run dev
 
 Open daarna de lokale Vercel-url en test met losse input.
 
+## Online bekijken (thuis / Vercel)
+
+De app staat in **`clara-4-core-lab/`** binnen de GitHub-repo. Vercel moet die map als project-root gebruiken, anders deploy je de verkeerde map of faalt de build.
+
+1. **Vercel** → jouw project (gekoppeld aan deze GitHub-repo) → **Settings** → **General** → **Root Directory** = **`clara-4-core-lab`** (exact deze naam, zonder slash aan het eind).
+2. **Settings** → **Environment Variables** (minstens **Production**): zet **`OPENAI_API_KEY`** (zelfde als lokaal). Optioneel: **`OPENAI_MODEL`** (bijv. `gpt-4.1-mini`).
+3. **Deployments**: na elke push naar **`main`** hoort een nieuwe deployment te starten. Open de **Production**-URL onder **Domains** (bijv. `https://<projectnaam>.vercel.app`) — daar laad je de lab-UI (`index.html`); analyse gaat via **`/api/analyze`** op hetzelfde domein.
+4. Werkt de site niet: controleer Root Directory, of de laatste deployment **Succeeded** is, en of env-vars voor Production gezet zijn (herdeploy na wijziging).
+
 Optioneel:
 
 ```bash
