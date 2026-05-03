@@ -1,5 +1,79 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.17 — 2026-05-04
+
+- `/api/ace` geschikt gemaakt voor ChatGPT Actions via `X-ACE-SECRET` auth; lokaal zonder secret blijft testen mogelijk met waarschuwing.
+- `.env.example` en `docs/ace-action-openapi.yaml` toegevoegd voor Vercel/GPT Action-configuratie.
+
+## 0.14.16 — 2026-05-04
+
+- Lokaal dev-script laadt `.env.local` vóór `vercel dev`, zodat `OPENAI_API_KEY`, `OPENAI_MODEL_ANALYZE` en `OPENAI_MODEL_ACE` beschikbaar zijn voor serverless API-routes.
+
+## 0.14.15 — 2026-05-03
+
+- OpenAI-modelconfig gesplitst: `/api/analyze` gebruikt `OPENAI_MODEL_ANALYZE` met default `gpt-5.5`; `/api/ace` gebruikt `OPENAI_MODEL_ACE` met default `gpt-4.1-mini`; `OPENAI_MODEL` blijft fallback.
+
+## 0.14.14 — 2026-05-03
+
+- ACE v1 endpoint toegevoegd: `POST /api/ace` routeert ChatGPT-achtige input naar project raw, misc, inbox, category suggestions of ignore.
+- ACE gebruikt veilige allowlists voor projecten en target-bestanden; `check` schrijft nooit, `write` appendt alleen naar vaste Projectbrain-paden.
+- Heuristische fallback toegevoegd wanneer OpenAI-config ontbreekt of faalt, zodat lokale tests blijven draaien.
+
+## 0.14.13 — 2026-05-03
+
+- Terminologie naar **open items** in zichtbare chat/UI-copy; interne `open_threads` blijft bestaan.
+- Aparte open-items-lijst rechts wordt niet meer gerenderd; open items worden primair via chat besproken.
+- Harde backend planning guard toegevoegd: gewone werkblokken worden na AI-output verplaatst naar geldige werktijd, inclusief weekend/avond/verleden en vaste plus beweeglijke Nederlandse feestdagen.
+- Korte antwoorden op open items blijven contextueel en kunnen een concrete potloodtaak binnen werktijd opleveren.
+
+## 0.14.12 — 2026-05-03
+
+- Niet-plannen intentie aangescherpt: bij "niet plannen", "geen agenda" of open-itemsvragen maakt Clara geen agenda-items, dagplan, checktijd of planningbevestiging.
+- Startup/chattekst is nu conditioneel: "conceptdag klaargezet" verschijnt alleen bij echte agenda-items; open punten/items krijgen neutrale tekst.
+- Open items worden visueel duidelijker los van gewone Aandacht getoond, met vraag/context en acties *laten hangen* / *sluiten*.
+- Korte antwoorden op open items, zoals "marketing" of "technisch", worden nu als item-antwoord verwerkt en kunnen een concrete potloodtaak opleveren.
+- Tijdbeleid toegevoegd: geen werkblokken in het verleden, zondag/laat op de avond doorschuiven naar de eerstvolgende werkdag, maandag niet vroeg starten en weekend alleen bij expliciete wens/deadline.
+
+## 0.14.11 — 2026-05-03
+
+- `open_threads` toegevoegd aan Clara Lab State en analyse-output: inhoudelijke open items blijven los van taken, afspraken en agenda-items.
+- Open items worden gemerged met bestaande Lab State, dedupliceren op project/titel/context en verschijnen voorlopig compact onder Aandacht met label **Open item** en acties *laten hangen* / *sluiten*.
+
+## 0.14.10 — 2026-05-03
+
+- Startup-outputfilter aangescherpt: visible attention, dagregie, suggestions en reviewtekst blijven alleen staan als ze expliciet aan raw-actieve projecten hangen.
+- Voorkomt dat stable-context signalen zoals Begeister-grens/projectgrenzen zichtbaar lekken wanneer alleen LaLampe betekenisvolle raw heeft.
+
+## 0.14.9 — 2026-05-03
+
+- Projectbrain-loader leest in lokale/dev-omgeving eerst lokale `projectbrain/projects/*.md` en `projectbrain/raw/*.md`, zodat lokale raw-wijzigingen direct zichtbaar zijn.
+- GitHub Contents API blijft fallback wanneer lokale Projectbrain-bestanden niet beschikbaar zijn; raw-status blijft leidend voor startup.
+
+## 0.14.8 — 2026-05-03
+
+- Startup-planning wordt nu primair door betekenisvolle `projectbrain/raw/*.md` gestuurd; template-only, ontbrekende of lege raw-bestanden leveren geen startup-blokken op.
+- Stable `projectbrain/projects/*.md` blijft achtergrondcontext, maar kan op startup niet meer zelfstandig Clara/AFK/Begeister/etc. agenda, attention of dagregie vullen.
+
+## 0.14.7 — 2026-05-03
+
+- Single-project planningconsistentie: als Clara een potloodblok claimt of de vraag om een logisch potloodblok vraagt, wordt er ook echt een `clara_agenda` pencil item voor het expliciete project gemaakt.
+- Single-project output wordt na dagregie-normalisatie opnieuw gefilterd, inclusief summary en day_review-teksten, zodat AFK/Begeister/Clara Core Lab niet in LaLampe-antwoorden lekken.
+
+## 0.14.6 — 2026-05-03
+
+- Expliciete single-project vragen, zoals LaLampe, krijgen een sterke projectfocus: raw van dat project weegt zwaarder en output voor andere projecten wordt weggefilterd.
+- Multi-project/startup fallback-planning wordt overgeslagen bij één expliciet genoemd project, zodat AFK/Begeister/Clara Core Lab niet in attention, dagregie of potloodsuggesties lekken.
+
+## 0.14.5 — 2026-05-03
+
+- MacBook-desktoplayout: laptop-breakpoint toegevoegd met drie leesbare zones, smallere agenda en gestapelde rechterkolom voor klok, Aandacht en Dagregie.
+- Rechterpanelen krijgen meer effectieve breedte, rustiger tekstafbreking en compactere klok/gaps zonder AI-gedrag te wijzigen.
+
+## 0.14.4 — 2026-05-03
+
+- Projectbrain-context splitst nu stabiele `projectbrain/projects/*.md` en recente `projectbrain/raw/*.md` signalen; ontbrekende raw-bestanden blokkeren analyse niet.
+- Promptregel toegevoegd: raw mag alleen aandacht, dagregie, onzekerheden en potloodsuggesties informeren, niet confirmed taken of harde afspraken zonder expliciete bevestiging.
+
 ## 0.14.3 — 2026-05-03
 
 - Agenda-items **kaartlayout**: titel links (`agenda-item-title`), rechts meta **project (uppercase) · tijd · ✓ · ×** (`agenda-item-meta`); geen aparte projectregel meer; vink/sluit behouden.

@@ -1,0 +1,120 @@
+openapi: 3.1.0
+info:
+  title: Clara ACE API
+  version: 0.14.17
+servers:
+  - url: https://YOUR-VERCEL-DOMAIN.vercel.app
+paths:
+  /api/ace:
+    post:
+      operationId: aceRouteAndWrite
+      summary: Route ChatGPT-like input to Clara Projectbrain via ACE.
+      security:
+        - AceSecretAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - input
+              properties:
+                input:
+                  type: string
+                  description: ChatGPT-like source text to classify and optionally export.
+                source:
+                  type: string
+                  default: chatgpt
+                mode:
+                  type: string
+                  enum:
+                    - check
+                    - write
+                  default: check
+                conversation_title:
+                  type: string
+                  description: Optional source conversation title.
+                project_hint:
+                  type: string
+                  description: Optional project hint from the caller.
+      responses:
+        "200":
+          description: ACE route result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AceResponse"
+        "401":
+          description: Missing or invalid ACE secret.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - ok
+                  - error
+                  - written
+                properties:
+                  ok:
+                    type: boolean
+                  error:
+                    type: string
+                  written:
+                    type: boolean
+components:
+  securitySchemes:
+    AceSecretAuth:
+      type: apiKey
+      in: header
+      name: X-ACE-SECRET
+  schemas:
+    AceResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - ok
+        - mode
+        - route
+        - project
+        - target_file
+        - summary
+        - written
+        - requires_user_approval
+        - reason
+        - warnings
+      properties:
+        ok:
+          type: boolean
+        mode:
+          type: string
+        route:
+          type: string
+          enum:
+            - project
+            - misc
+            - inbox
+            - category_suggestion
+            - ignore
+        project:
+          type:
+            - string
+            - "null"
+        target_file:
+          type:
+            - string
+            - "null"
+        summary:
+          type: string
+        written:
+          type: boolean
+        requires_user_approval:
+          type: boolean
+        reason:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string

@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.3`
+Versie: `0.14.17`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 
@@ -43,6 +43,8 @@ npm install
 OPENAI_API_KEY="jouw_key" npm run dev
 ```
 
+`npm run dev` laadt lokaal `.env.local` vóór `vercel dev` start. Zet daarin bijvoorbeeld `OPENAI_API_KEY`, `OPENAI_MODEL_ANALYZE` en `OPENAI_MODEL_ACE`. `.env*.local` blijft genegeerd door git.
+
 Open daarna de lokale Vercel-url en test met losse input.
 
 ## Online bekijken (thuis / Vercel)
@@ -50,7 +52,7 @@ Open daarna de lokale Vercel-url en test met losse input.
 De app staat in **`clara-4-core-lab/`** binnen de GitHub-repo. Vercel moet die map als project-root gebruiken, anders deploy je de verkeerde map of faalt de build.
 
 1. **Vercel** → jouw project (gekoppeld aan deze GitHub-repo) → **Settings** → **General** → **Root Directory** = **`clara-4-core-lab`** (exact deze naam, zonder slash aan het eind).
-2. **Settings** → **Environment Variables** (minstens **Production**): zet **`OPENAI_API_KEY`** (zelfde als lokaal). Optioneel: **`OPENAI_MODEL`** (bijv. `gpt-4.1-mini`).
+2. **Settings** → **Environment Variables** (minstens **Production**): zet **`OPENAI_API_KEY`** (zelfde als lokaal). Optioneel: **`OPENAI_MODEL_ANALYZE`** voor Clara planning/dagregie (default `gpt-5.5`) en **`OPENAI_MODEL_ACE`** voor ACE-router/export (default `gpt-4.1-mini`). **`OPENAI_MODEL`** blijft fallback voor allebei.
 3. **Deployments**: na elke push naar **`main`** hoort een nieuwe deployment te starten. Open de **Production**-URL onder **Domains** (bijv. `https://<projectnaam>.vercel.app`) — daar laad je de lab-UI (`index.html`); analyse gaat via **`/api/analyze`** op hetzelfde domein.
 4. Werkt de site niet: controleer Root Directory, of de laatste deployment **Succeeded** is, en of env-vars voor Production gezet zijn (herdeploy na wijziging).
 
@@ -59,6 +61,21 @@ Optioneel:
 ```bash
 OPENAI_MODEL="gpt-4.1-mini" OPENAI_API_KEY="jouw_key" npm run dev
 ```
+
+Modelconfig:
+
+- `OPENAI_MODEL_ANALYZE` — model voor `/api/analyze` (planning/dagregie), default `gpt-5.5`.
+- `OPENAI_MODEL_ACE` — model voor `/api/ace` (ACE-router/export), default `gpt-4.1-mini`.
+- `OPENAI_MODEL` — fallback wanneer een specifieke modelvariabele ontbreekt.
+
+## ACE als ChatGPT Action
+
+ChatGPT Actions kunnen niet naar `localhost`; deploy Clara Core Lab eerst naar Vercel en gebruik de Vercel-url als server in `docs/ace-action-openapi.yaml`.
+
+1. Zet `ACE_ACTION_SECRET` in Vercel Environment Variables.
+2. Zet hetzelfde secret in de GPT Action authentication als API key met custom header `X-ACE-SECRET`.
+3. Plak `docs/ace-action-openapi.yaml` in het GPT Action schema en vervang `https://YOUR-VERCEL-DOMAIN.vercel.app`.
+4. Begin met `mode: "check"`; gebruik `mode: "write"` pas wanneer routing betrouwbaar genoeg is.
 
 ## Clara-principe
 
