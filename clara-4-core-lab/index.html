@@ -3,25 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clara 4 Core Lab v0.14.34</title>
+<title>Clara 4 Core Lab v0.14.32</title>
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./layout-target.css">
 <script src="./app.js" defer></script>
 <script src="./startup-boost.js" defer></script>
 </head>
 <body>
+<div class="startup-overlay hidden" id="startupOverlay" role="dialog" aria-modal="true" aria-labelledby="startupOverlayTitle">
+  <div class="startup-overlay__backdrop" data-startup-overlay-close></div>
+  <div class="startup-overlay__panel">
+    <div class="startup-overlay__head">
+      <div class="brand"><span class="mark">✦</span><span class="title" id="startupOverlayTitle">Startvoorstellen</span></div>
+      <button type="button" class="plain" data-startup-overlay-close aria-label="Sluit">×</button>
+    </div>
+    <div class="startup-overlay__body">
+      <p class="startup-overlay__intro" id="startupOverlayIntro">—</p>
+      <div class="startup-overlay__list" id="startupOverlayList"></div>
+    </div>
+    <div class="startup-overlay__foot">
+      <button type="button" class="startup-overlay__btn" data-startup-overlay-action="start-empty">Start zonder voorstellen</button>
+      <button type="button" class="startup-overlay__btn primary" data-startup-overlay-action="close">Open laten</button>
+    </div>
+  </div>
+</div>
+<header class="cockpit-header" aria-label="Clara cockpit header">
+  <div class="cockpit-top">
+    <div class="cockpit-logo" aria-hidden="true">
+      <svg viewBox="0 0 64 64" class="cockpit-logo-svg">
+        <path d="M32 6v52M6 32h52M14 14l36 36M50 14L14 50" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="cockpit-time">
+      <div class="cockpit-digits"><span id="clockHour">--</span><span class="cockpit-colon">:</span><span id="clockMinute">--</span></div>
+    </div>
+    <div class="cockpit-weather" aria-label="Weerverwachting">
+      <div class="weather-strip" id="weatherStrip">
+        <div class="wcol"><div class="wicon" data-wicon></div><div class="wtime">Now</div><div class="wtemp" data-wtemp>—</div></div>
+        <div class="wcol"><div class="wicon" data-wicon></div><div class="wtime" data-wtime>21:00</div><div class="wtemp" data-wtemp>—</div></div>
+        <div class="wcol"><div class="wicon" data-wicon></div><div class="wtime" data-wtime>22:00</div><div class="wtemp" data-wtemp>—</div></div>
+        <div class="wcol"><div class="wicon" data-wicon></div><div class="wtime" data-wtime>23:00</div><div class="wtemp" data-wtemp>—</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="cockpit-bottom">
+    <div class="cockpit-date">
+      <div class="cockpit-date-line" id="agendaDateHeader">—</div>
+    </div>
+    <div class="cockpit-tabs" id="agendaHeadTabs" aria-label="Agenda-weergave"></div>
+  </div>
+</header>
 <main class="app">
   <div class="left-stack">
-    <section class="clock">
-      <div class="clock-widget">
-        <div class="clock-digits"><span id="clockHour">--</span><span id="clockMinute">--</span></div>
-        <div class="clock-meta">
-          <strong id="clockWeekday">--</strong>
-          <span id="clockDate">--</span>
-          <span id="clockYear">----</span>
-          <div class="weather"><span>Amsterdam</span><span class="weather-icon">☁</span></div>
-        </div>
-      </div>
+    <section class="clock clock-nav-only" aria-label="Dag navigatie">
       <div class="nav"><button id="agendaPrevBtn">←</button><button id="agendaNextBtn">→</button></div>
     </section>
     <section class="col chat">
@@ -44,12 +78,6 @@
   </div>
 
   <section class="col agenda">
-    <div class="head agenda-head">
-      <div class="agenda-head-left">
-        <div class="agenda-date" id="agendaDateHeader">—</div>
-      </div>
-      <div class="agenda-tab-group" id="agendaHeadTabs" aria-label="Agenda-weergave"></div>
-    </div>
     <div class="body agenda-body" id="agendaCol"><p class="empty">Analyseer input om de dagagenda te vullen.</p></div>
   </section>
 

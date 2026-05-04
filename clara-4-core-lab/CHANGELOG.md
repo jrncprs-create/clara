@@ -1,18 +1,18 @@
 # Changelog — Clara 4 Core Lab
 
-## 0.14.34 — 2026-05-04
+## 0.14.32 — 2026-05-04
 
-- Verfijnt cockpit-kolomverhoudingen; maakt rechterkolom weer bruikbaar breed.
-- Verbetert klok/agenda-layout richting gewenste screenshot (desktop focus).
-- Voegt automatische startup-planning toe bij lege agenda.
-- Startup vraagt ook relevante open vragen en lang genegeerde onderwerpen uit.
+- Inhoudelijke stabilisatie: agenda blijft **waarheid**; confirmed en pencil verdwijnen niet bij reload/analyze/refresh; voorstellen mergen in plaats van overschrijven.
+- Rechterkolom rustiger en herleidbaar: agenda-suggesties en open items worden gefilterd/geclusterd; elk item toont **project + herkomst + korte reden**; max. 1–3 open items zichtbaar.
+- Startup via **overlay** (geen automatisch chatbericht) met plan/weg/open-laten acties; dismissed blijft dismissed.
+- Header update: logo, grote klok, mock-weerstrip en datumregel met Overdag/Avond tabs (volgt `activeAgendaDate`).
 
 ## 0.14.33 — 2026-05-04
 
 - Desktop-cockpitlayout gericht op de referentiescreenshot (alleen linker- en middelkolom): **grote klok boven chat**, en **datumheader in de agenda-kolom** met **Overdag/Avond-tabs rechts**.
 - Rechterkolom (Agenda suggesties / Open items) bewust niet aangepast.
 
-## 0.14.32 — 2026-05-04
+## 0.14.31 — 2026-05-04
 
 - Verwijdert **Doe nu** en **Parkeer** uit agenda-suggesties; alleen **Plan** en **Weg**; geen aparte “nu”-handlers meer.
 - **Agenda suggesties** en **open items** worden gefilterd op interne/debugtermen; centrale `sanitizeUserFacingText` / `filterUserFacingLine` voor panel- en chattekst waar zichtbaar.
@@ -21,8 +21,6 @@
 - Neutrale agendablokken tonen **Algemeen** duidelijker; subtiele leesbaarheid in CSS.
 - **Ververs suggesties**: wist alleen dismiss-filters, herbouwt lijsten, duidelijke status- en kolomhint zonder chatbubble.
 - Status- en startteksten zonder “Lab State” / **Projectbrain** in de zichtbare UI.
-
-## 0.14.31 — 2026-05-04
 
 - Layout volgens referentie: **klok + Clara/chat links**, agenda **centraal** (meer ruimte), rechts compacte kolom alleen **Agenda suggesties** en **Open eindjes** (`left-stack` + `side-rail`).
 - **Ververs suggesties** (↻): wist dismiss/hide-filters, herberekent panelen, toont *Net ververst.* of *Geen nieuwe suggesties. Net ververst.* in de rechterkolom + status; geen chatbubble; geen agenda-reset.

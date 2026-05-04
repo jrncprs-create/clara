@@ -120,6 +120,53 @@
 .refresh-guidance{position:fixed;right:16px;bottom:16px;z-index:20;width:34px;height:34px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(35,35,35,.76);color:rgba(245,245,245,.82);box-shadow:0 6px 22px rgba(0,0,0,.28);backdrop-filter:blur(8px);cursor:pointer;font-size:16px;line-height:1;display:grid;place-items:center}
 .refresh-guidance:hover{background:rgba(48,48,48,.92);color:#fff;border-color:rgba(255,255,255,.26)}
 
+.startup-overlay.hidden{display:none}
+.startup-overlay{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:18px}
+.startup-overlay__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px)}
+.startup-overlay__panel{position:relative;width:min(720px,92vw);max-height:min(78vh,640px);overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(28,28,28,.98);display:flex;flex-direction:column}
+.startup-overlay__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
+.startup-overlay__body{padding:14px 16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.startup-overlay__intro{margin:0;color:rgba(235,235,235,.9);font-size:13.5px;line-height:1.45}
+.startup-overlay__list{display:grid;gap:10px}
+.startup-overlay__item{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px 12px;background:rgba(255,255,255,.03)}
+.startup-overlay__item-title{font-size:13.5px;line-height:1.35;color:rgba(245,245,245,.97);margin:0 0 6px}
+.startup-overlay__item-sub{font-size:11px;color:rgba(175,175,175,.9);margin:0 0 10px}
+.startup-overlay__item-actions{display:flex;flex-wrap:wrap;gap:8px}
+.startup-overlay__btn,.startup-overlay__item-actions button{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e6e6e6;padding:7px 10px;cursor:pointer}
+.startup-overlay__btn.primary,.startup-overlay__item-actions button.primary{border-color:rgba(116,212,130,.45);background:rgba(116,212,130,.12);color:#dff5e2}
+.startup-overlay__btn:hover,.startup-overlay__item-actions button:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26)}
+.startup-overlay__foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:flex-end;gap:10px}
+
+.cockpit-header{padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px}
+.cockpit-top{display:flex;align-items:center;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;overflow:hidden}
+.cockpit-logo{width:56px;height:56px;display:grid;place-items:center;color:rgba(245,245,245,.92);flex:0 0 auto}
+.cockpit-logo-svg{width:52px;height:52px;opacity:.95}
+.cockpit-time{flex:0 0 auto;min-width:0}
+.cockpit-digits{font-size:clamp(54px,5.8vw,96px);line-height:.78;letter-spacing:-.09em;font-weight:260;color:rgba(245,245,245,.98);white-space:nowrap}
+.cockpit-colon{padding:0 .05em}
+.cockpit-weather{flex:1 1 auto;min-width:0;display:flex;justify-content:flex-start}
+.weather-strip{display:flex;gap:0;align-items:stretch;border-left:1px solid rgba(255,255,255,.1);padding-left:14px;overflow:hidden}
+.wcol{width:62px;display:grid;grid-template-rows:20px 18px 18px;align-items:center;justify-items:center;border-right:1px solid rgba(255,255,255,.08);padding:4px 6px}
+.wcol:last-child{border-right:0}
+.wicon{width:18px;height:18px;border-radius:999px;border:1px solid rgba(255,255,255,.18);opacity:.9}
+.wtime{font-size:10px;color:rgba(200,200,200,.9)}
+.wtemp{font-size:10px;color:rgba(225,225,225,.95);font-weight:650}
+.cockpit-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.cockpit-date-line{font-size:clamp(22px,2.2vw,34px);font-weight:850;letter-spacing:-.04em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cockpit-tabs{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.cockpit-tabs .tab{padding:8px 14px;font-size:12px}
+.app{height:calc(100dvh - 220px);padding-top:0!important}
+.clock-nav-only{padding:10px 12px}
+.clock-nav-only .nav{width:100%;justify-content:flex-start}
+
+@media(max-width:760px){
+  .cockpit-header{padding:12px}
+  .cockpit-top{flex-direction:column;align-items:flex-start;gap:10px}
+  .weather-strip{padding-left:0;border-left:0;overflow-x:auto}
+  .wcol{min-width:58px}
+  .app{height:auto}
+}
+
 @media(max-width:1600px) and (min-width:1101px){
   .app{
     grid-template-columns:minmax(300px,.9fr) minmax(0,1fr) minmax(280px,.78fr);

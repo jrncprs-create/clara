@@ -8,27 +8,21 @@
   }
   .left-stack{display:flex !important;flex-direction:column !important;gap:12px !important;min-height:0 !important;min-width:0 !important;}
   .side-rail{min-width:0 !important;width:auto !important;}
-  .left-stack .clock{min-height:clamp(142px,18vh,190px) !important;padding:18px 22px !important;align-items:center !important;justify-content:space-between !important;gap:18px !important;}
-  .left-stack .clock-widget{display:flex !important;flex-direction:row !important;align-items:center !important;gap:18px !important;min-width:0 !important;flex:1 1 auto !important;}
-  .left-stack .clock-digits{display:flex !important;align-items:baseline !important;gap:0 !important;font-size:clamp(88px,7.1vw,132px) !important;line-height:.78 !important;letter-spacing:-.095em !important;font-weight:260 !important;white-space:nowrap !important;}
-  .left-stack .clock-digits span:first-child::after{content:':' !important;padding:0 .045em 0 .025em !important;}
-  .left-stack .clock-meta{display:grid !important;gap:4px !important;padding-top:2px !important;min-width:90px !important;}
-  .left-stack .clock-meta strong{font-size:clamp(14px,1.05vw,20px) !important;line-height:1.05 !important;letter-spacing:.04em !important;}
-  .left-stack .clock-meta span,.left-stack .weather{font-size:clamp(12px,.9vw,15px) !important;line-height:1.14 !important;}
-  .left-stack .weather-icon{font-size:1.35em !important;}
+  .cockpit-top{padding:18px 22px !important;gap:18px !important;}
+  .cockpit-digits{font-size:clamp(88px,7.1vw,132px) !important;line-height:.78 !important;letter-spacing:-.095em !important;font-weight:260 !important;}
+  .wcol{width:66px !important;}
   .left-stack .nav{align-self:flex-start !important;padding-top:0 !important;flex-shrink:0 !important;}
   .left-stack .nav button{width:38px !important;height:38px !important;}
   .left-stack .col.chat{flex:1 1 auto !important;min-height:0 !important;}
-  .col.agenda > .head.agenda-head{min-height:clamp(88px,12vh,120px) !important;padding:18px 20px !important;align-items:center !important;}
-  .agenda-date{font-size:clamp(30px,2.5vw,44px) !important;line-height:1.05 !important;letter-spacing:-.045em !important;font-weight:850 !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}
-  .agenda-tab-group{align-self:center !important;margin-left:auto !important;}
-  .agenda-tab-group .tab{padding:8px 13px !important;font-size:12px !important;}
+  .cockpit-bottom{padding:18px 20px !important;align-items:center !important;}
+  .cockpit-date-line{font-size:clamp(30px,2.5vw,44px) !important;line-height:1.05 !important;letter-spacing:-.045em !important;font-weight:850 !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}
+  .cockpit-tabs .tab{padding:8px 13px !important;font-size:12px !important;}
 }
 
 @media (max-width:1320px) and (min-width:761px){
   .app{grid-template-columns:minmax(360px,.95fr) minmax(460px,1.18fr) minmax(320px,.82fr) !important;}
-  .left-stack .clock-digits{font-size:clamp(72px,6.2vw,104px) !important;}
-  .agenda-date{font-size:clamp(26px,2.25vw,36px) !important;}
+  .cockpit-digits{font-size:clamp(72px,6.2vw,104px) !important;}
+  .cockpit-date-line{font-size:clamp(26px,2.25vw,36px) !important;}
 }
 
 @media (max-width:1180px) and (min-width:761px){

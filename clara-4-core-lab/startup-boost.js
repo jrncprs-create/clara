@@ -18,9 +18,11 @@
       if(stamped===today)return;
       sessionStorage.setItem(KEY,today);
     }catch(_){}
-    input.value='Maak automatisch een rustige opstartplanning voor vandaag op basis van de beschikbare projectcontext. Kies 3 tot 5 concrete potloodblokken over de relevante projecten. Zet ook 1 tot 3 relevante open vragen klaar en meld kort welke projecten of onderwerpen al een tijdje geen aandacht hebben gehad. Maak geen harde afspraken zonder expliciete tijd, geen overlap, geen technische uitleg en geen brede producttour.';
-    input.dispatchEvent(new Event('input',{bubbles:true}));
-    setTimeout(()=>btn.click(),450);
+    // Ask app.js to run silent startup overlay flow (no chat injection).
+    if(typeof window.__claraRunStartupOverlay==='function'){
+      window.__claraRunStartupOverlay();
+      return;
+    }
   }
   window.addEventListener('DOMContentLoaded',()=>setTimeout(trigger,1100));
 })();
