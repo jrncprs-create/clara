@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.27 — 2026-05-04
+
+- Chat-analyse fallback gefixt: na mislukte, afgebroken of vastgelopen analyse plaatst Clara altijd een vriendelijk zichtbaar antwoord en blijft de input bruikbaar.
+
 ## 0.14.26 — 2026-05-04
 
 - Startup fallback gefixt: bij afgebroken of mislukte startanalyse blijft Clara demo-waardig starten met een vriendelijke tekst en bruikbare rechterkolom.
