@@ -1,5 +1,11 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.22 — 2026-05-04
+
+- BIU v2 toegevoegd: `scripts/biu-run.mjs` splitst multi-project BIU-input in secties en roept ACE per sectie aan.
+- `biu-check.sh` en `biu-write.sh` zijn nu wrappers rond de Node-helper; ACE blijft single-target, BIU v2 verzorgt multi-target orchestration.
+- BIU-docs bijgewerkt met sectiekoppen, check-first/write-bewust en onderscheid `BIU` versus `B I U`.
+
 ## 0.14.21 — 2026-05-04
 
 - Eerste BIU-laag toegevoegd bovenop ACE: `scripts/biu-check.sh` en `scripts/biu-write.sh` sturen `source:"biu"` naar de production ACE endpoint.

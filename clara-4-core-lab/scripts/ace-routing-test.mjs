@@ -16,11 +16,17 @@ const cases = [
     input: 'Landjuweel en Amarte planning rond lichtbeeldenroute aanscherpen.',
     project: 'afk-landjuweel-amarte',
     target_file: 'projectbrain/raw/afk-landjuweel-amarte.md'
+  },
+  {
+    input: 'Project Begeister: grenzen tussen Begeister, LaLampe en autonoom werk blijven een open aandachtspunt.',
+    hint: 'begeister',
+    project: 'begeister',
+    target_file: 'projectbrain/raw/begeister.md'
   }
 ];
 
 for (const item of cases) {
-  const result = __testables.classifyHeuristically({ input: item.input, project_hint: '' });
+  const result = __testables.classifyHeuristically({ input: item.input, project_hint: item.hint || '' });
   assert.equal(result.route, 'project', item.input);
   assert.equal(result.project, item.project, item.input);
   assert.equal(__testables.resolveTargetFile(result.route, result.project), item.target_file, item.input);

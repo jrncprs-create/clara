@@ -92,7 +92,10 @@ function summarize(input) {
 }
 
 function detectProject(input, hint = '') {
-  const text = `${hint}\n${input}`;
+  for (const [project, pattern] of PROJECT_ALIASES) {
+    if (pattern.test(String(hint || ''))) return project;
+  }
+  const text = String(input || '');
   let best = null;
   for (const [project, pattern, score] of PROJECT_ALIASES) {
     if (!pattern.test(text)) continue;
