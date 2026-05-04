@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.26 — 2026-05-04
+
+- Startup fallback gefixt: bij afgebroken of mislukte startanalyse blijft Clara demo-waardig starten met een vriendelijke tekst en bruikbare rechterkolom.
+
 ## 0.14.25 — 2026-05-04
 
 - Rechterkolom herwerkt naar **Clara vraagt / Route vooruit / Open eindjes** als actief regiepaneel.
