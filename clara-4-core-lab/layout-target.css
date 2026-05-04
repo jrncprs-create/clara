@@ -1,0 +1,110 @@
+/* Clara Core Lab targeted cockpit layout override.
+   Purpose: match the requested left + middle column layout without touching right-column behavior. */
+
+@media (min-width: 761px){
+  .app{
+    grid-template-columns:minmax(360px,.42fr) minmax(560px,1fr) minmax(248px,.28fr) !important;
+    align-items:stretch !important;
+  }
+
+  .left-stack{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:12px !important;
+    min-height:0 !important;
+  }
+
+  .left-stack .clock{
+    min-height:clamp(190px,24vh,285px) !important;
+    padding:22px 20px !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+  }
+
+  .left-stack .clock-widget{
+    display:flex !important;
+    align-items:center !important;
+    gap:18px !important;
+    min-width:0 !important;
+  }
+
+  .left-stack .clock-digits{
+    font-size:clamp(92px,8.8vw,154px) !important;
+    line-height:.68 !important;
+    letter-spacing:-.09em !important;
+    font-weight:260 !important;
+  }
+
+  .left-stack .clock-meta{
+    gap:7px !important;
+    padding-top:4px !important;
+  }
+
+  .left-stack .clock-meta strong{
+    font-size:clamp(18px,1.45vw,25px) !important;
+    line-height:1.05 !important;
+  }
+
+  .left-stack .clock-meta span,
+  .left-stack .weather{
+    font-size:clamp(14px,1.05vw,17px) !important;
+    line-height:1.16 !important;
+  }
+
+  .left-stack .weather-icon{
+    font-size:2.15em !important;
+  }
+
+  .left-stack .nav{
+    align-self:flex-start !important;
+    padding-top:4px !important;
+  }
+
+  .left-stack .nav button{
+    width:38px !important;
+    height:38px !important;
+  }
+
+  .left-stack .col.chat{
+    flex:1 1 auto !important;
+    min-height:0 !important;
+  }
+
+  .col.agenda > .head.agenda-head{
+    min-height:clamp(82px,11vh,118px) !important;
+    padding:18px 20px !important;
+    align-items:center !important;
+  }
+
+  .agenda-date{
+    font-size:clamp(28px,2.65vw,44px) !important;
+    line-height:1.05 !important;
+    letter-spacing:-.045em !important;
+    font-weight:850 !important;
+  }
+
+  .agenda-tab-group{
+    align-self:center !important;
+    margin-left:auto !important;
+  }
+
+  .agenda-tab-group .tab{
+    padding:8px 13px !important;
+    font-size:12px !important;
+  }
+}
+
+@media (max-width:1180px) and (min-width:761px){
+  .app{
+    grid-template-columns:minmax(340px,.42fr) minmax(500px,1fr) minmax(240px,.28fr) !important;
+  }
+
+  .app > .agenda,
+  .app > .side-rail{
+    display:flex !important;
+  }
+
+  .left-stack{grid-column:1 !important;grid-row:1 !important;}
+  .agenda{grid-column:2 !important;grid-row:1 !important;}
+  .side-rail{grid-column:3 !important;grid-row:1 !important;}
+}
