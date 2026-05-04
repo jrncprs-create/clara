@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.28`
+Versie: `0.14.29`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 
@@ -123,8 +123,8 @@ Bronnen zoals chat, mail en agenda worden uiteindelijk gelezen door Clara. Clara
 
 De rechterkolom is Clara's lichte regiepaneel:
 
-- **Agenda suggesties** — concrete dashboardvoorstellen die je nu kunt doen, plannen of parkeren.
-- **Open eindjes** — prangende vragen bovenaan in rood, daarna gewone losse punten die mogen blijven hangen, sluiten of naar planning gaan.
+- **Agenda suggesties** — concrete dashboardvoorstellen die je direct als potloodblok kunt plannen of lokaal kunt wegklikken.
+- **Open eindjes** — prangende vragen bovenaan in rood, daarna gewone losse punten met een kleine antwoordregel en lokaal verwijderkruisje.
 
 ## Niet in deze versie
 

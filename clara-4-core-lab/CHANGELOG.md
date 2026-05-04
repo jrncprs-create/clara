@@ -1,5 +1,11 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.29 — 2026-05-04
+
+- Agenda suggesties plannen nu direct naar de agenda als potloodblok zonder chatvervuiling.
+- Open eindjes hebben een inline antwoordinput en lokaal verwijderkruisje in plaats van chips.
+- Agenda-items kunnen als geheel worden verplaatst; lokaal plannen zoekt een vrije plek en voorkomt overlap.
+
 ## 0.14.28 — 2026-05-04
 
 - Rechterkolom vereenvoudigd naar **Agenda suggesties / Open eindjes**.
