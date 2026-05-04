@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-extra_args=("$@")
 dry_run=0
 for arg in "$@"; do
   if [[ "$arg" == "--dry-run" ]]; then
@@ -28,9 +27,9 @@ if [[ "$dry_run" == "0" && -z "${ACE_ACTION_SECRET:-}" ]]; then
 fi
 
 if [[ "$dry_run" == "1" ]]; then
-  response="$(node "$(dirname "$0")/biu-run.mjs" "${extra_args[@]}")"
+  response="$(node "$(dirname "$0")/biu-run.mjs" "$@")"
 else
-  response="$(ACE_ACTION_SECRET="$ACE_ACTION_SECRET" node "$(dirname "$0")/biu-run.mjs" "${extra_args[@]}")"
+  response="$(ACE_ACTION_SECRET="$ACE_ACTION_SECRET" node "$(dirname "$0")/biu-run.mjs" "$@")"
 fi
 
 if [[ "$asked_secret" == "1" ]]; then unset ACE_ACTION_SECRET; fi
