@@ -80,6 +80,21 @@
 .end-prompt-btn:hover{background:#363636}
 .end-prompt-btn.primary{border-color:rgba(116,212,130,.45);background:rgba(116,212,130,.12);color:#dff5e2}
 .end-prompt-btn.muted{opacity:.78;border-color:rgba(255,255,255,.1)}
+.guidance-column>.body,.regie-column>.body{display:flex;flex-direction:column;gap:10px;min-height:0}
+.guide-card{background:rgba(255,255,255,.025)}
+.guide-card h3{font-size:13.5px;margin-bottom:9px}
+.guide-question-text{margin:0;color:var(--text);font-size:13.5px;line-height:1.45;font-weight:650}
+.guide-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.guide-chip{font:inherit;font-size:11.5px;line-height:1.18;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:#262626;color:#e6e6e6;padding:5px 8px;cursor:pointer;max-width:100%;text-align:left}
+.guide-chip:hover{background:#303030;border-color:rgba(255,255,255,.26)}
+.guide-route-list{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.guide-route-list li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:7px;align-items:start;font-size:12.8px;line-height:1.38;color:#e1e1e1}
+.guide-route-list li>span{width:18px;height:18px;border-radius:999px;background:rgba(255,255,255,.09);color:#cfcfcf;display:grid;place-items:center;font-size:10px;font-weight:800}
+.guide-row-chips{margin-top:6px;gap:5px}
+.guide-row-chips .guide-chip{font-size:10.8px;padding:4px 7px;color:#cfcfcf;background:transparent}
+.guide-open-item{display:block;padding:8px 0}
+.guide-open-text{font-size:12.8px;line-height:1.42;color:#e0e0e0;overflow-wrap:anywhere}
+.guide-open .empty,.guide-question .empty{margin:0}
 
 @media(max-width:1600px) and (min-width:1101px){
   .app{

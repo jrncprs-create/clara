@@ -1,5 +1,11 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.25 — 2026-05-04
+
+- Rechterkolom herwerkt naar **Clara vraagt / Route vooruit / Open eindjes** als actief regiepaneel.
+- Lichte actiechips toegevoegd voor vragen, route-stappen en open eindjes zonder nieuwe command-engine.
+- Demo-polish voor Marlon: de rechterkolom toont maximaal één vraag, een korte adviesroute en scanbare open punten.
+
 ## 0.14.24 — 2026-05-04
 
 - Kleine BIU-wrapperfix: `biu-check.sh` en `biu-write.sh` initialiseren argumenten defensief onder `set -u`, zodat `--dry-run` en gewone check/write geen `unbound variable` geven.

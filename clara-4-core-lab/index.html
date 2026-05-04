@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clara 4 Core Lab v0.14.24</title>
+<title>Clara 4 Core Lab v0.14.25</title>
 <link rel="stylesheet" href="./style.css">
 <script src="./app.js" defer></script>
 </head>
@@ -48,13 +48,13 @@
     <div class="nav"><button id="agendaPrevBtn">←</button><button id="agendaNextBtn">→</button></div>
   </section>
 
-  <section class="col">
-    <div class="head"><div><div class="small-title">Aandacht</div><div class="sub">afvinken · aanpassen · verwijderen</div></div></div>
-    <div class="body"><div class="stack" id="attentionCol"><p class="empty">Geen losse aandachtspunten.</p></div></div>
+  <section class="col guidance-column">
+    <div class="head"><div><div class="small-title">Clara vraagt</div><div class="sub">één keuze tegelijk · route eronder</div></div></div>
+    <div class="body"><div class="stack" id="attentionCol"><p class="empty">Geen vraag nu.</p></div></div>
   </section>
 
   <section class="col regie-column">
-    <div class="head"><div><div class="small-title">Dagregie</div><div class="sub">check · doorschuiven · context</div></div></div>
+    <div class="head"><div><div class="small-title">Open eindjes</div><div class="sub">laten staan · sluiten · plannen</div></div></div>
     <div class="body"><div id="endPromptHost" class="end-prompt-host" aria-live="polite"></div><div class="stack" id="regieCol"></div></div>
   </section>
 </main>

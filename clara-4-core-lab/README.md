@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.24`
+Versie: `0.14.25`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 
@@ -120,6 +120,12 @@ scripts/biu-check.sh --dry-run
 Clara is de assistent. Het dashboard is niet de bron, maar haar spoor.
 
 Bronnen zoals chat, mail en agenda worden uiteindelijk gelezen door Clara. Clara bepaalt wat betekenisvol is en vult daarmee het dashboard.
+
+De rechterkolom is nu Clara's lichte regiepaneel:
+
+- **Clara vraagt** — maximaal één noodzakelijke keuze of invulling tegelijk.
+- **Route vooruit** — Clara's geadviseerde volgorde, niet alleen een takenlijst.
+- **Open eindjes** — concrete losse punten die mogen blijven hangen, gesloten worden of naar planning gaan.
 
 ## Niet in deze versie
 
