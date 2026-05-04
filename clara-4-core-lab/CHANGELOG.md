@@ -1,5 +1,10 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.33 — 2026-05-04
+
+- Desktop-cockpitlayout gericht op de referentiescreenshot (alleen linker- en middelkolom): **grote klok boven chat**, en **datumheader in de agenda-kolom** met **Overdag/Avond-tabs rechts**.
+- Rechterkolom (Agenda suggesties / Open items) bewust niet aangepast.
+
 ## 0.14.32 — 2026-05-04
 
 - Verwijdert **Doe nu** en **Parkeer** uit agenda-suggesties; alleen **Plan** en **Weg**; geen aparte “nu”-handlers meer.
