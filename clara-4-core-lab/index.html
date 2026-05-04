@@ -9,33 +9,7 @@
 </head>
 <body>
 <main class="app">
-  <section class="col chat">
-    <div class="head">
-      <div class="brand"><span class="mark">✦</span><span class="title">Clara</span></div>
-      <span class="tag">Lab state</span>
-    </div>
-    <div class="body">
-      <div class="log" id="chatLog">
-        <div class="msg assistant"><div class="msg-body">Clara Core Lab — hier verschijnt zo een korte melding na de eerste Projectbrain-start.</div></div>
-      </div>
-      <div class="composer">
-        <div class="composer-shell">
-          <textarea id="input" placeholder="Stel een vraag"></textarea>
-          <div class="controls"><button class="send" id="analyzeBtn">↑</button></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="col agenda">
-    <div class="head agenda-head">
-      <div class="small-title">Agenda</div>
-      <div class="agenda-tab-group" id="agendaHeadTabs" aria-label="Agenda-weergave"></div>
-    </div>
-    <div class="body agenda-body" id="agendaCol"><p class="empty">Analyseer input om de dagagenda te vullen.</p></div>
-  </section>
-
-  <aside class="side-rail" aria-label="Datum en overzicht">
+  <div class="left-stack">
     <section class="clock">
       <div class="clock-widget">
         <div class="clock-digits"><span id="clockHour">--</span><span id="clockMinute">--</span></div>
@@ -48,9 +22,36 @@
       </div>
       <div class="nav"><button id="agendaPrevBtn">←</button><button id="agendaNextBtn">→</button></div>
     </section>
+    <section class="col chat">
+      <div class="head">
+        <div class="brand"><span class="mark">✦</span><span class="title">Clara</span></div>
+        <span class="tag">Lab state</span>
+      </div>
+      <div class="body">
+        <div class="log" id="chatLog">
+          <div class="msg assistant"><div class="msg-body">Clara Core Lab — hier verschijnt zo een korte melding na de eerste Projectbrain-start.</div></div>
+        </div>
+        <div class="composer">
+          <div class="composer-shell">
+            <textarea id="input" placeholder="Stel een vraag"></textarea>
+            <div class="controls"><button class="send" id="analyzeBtn">↑</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 
+  <section class="col agenda">
+    <div class="head agenda-head">
+      <div class="small-title">Agenda</div>
+      <div class="agenda-tab-group" id="agendaHeadTabs" aria-label="Agenda-weergave"></div>
+    </div>
+    <div class="body agenda-body" id="agendaCol"><p class="empty">Analyseer input om de dagagenda te vullen.</p></div>
+  </section>
+
+  <aside class="side-rail" aria-label="Suggesties en open eindjes">
     <section class="col guidance-column">
-      <div class="head"><div><div class="small-title">Agenda suggesties</div><div class="sub">plan · weg</div></div></div>
+      <div class="head"><div><div class="small-title">Agenda suggesties</div><div class="sub">doe nu · plan · parkeer</div></div></div>
       <div class="body"><div class="stack attention-stack" id="attentionCol"><p class="empty">Geen agenda-suggesties.</p></div></div>
     </section>
 

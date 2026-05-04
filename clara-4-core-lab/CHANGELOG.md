@@ -2,10 +2,12 @@
 
 ## 0.14.31 — 2026-05-04
 
-- Desktoplayout: chat links, agenda centraal groot, rechts één kolom met datum/tijd boven **Agenda suggesties** en **Open eindjes** (wrapper `side-rail`).
-- Agenda suggesties: scrollbare hoogte bij veel items; Open eindjes gebruikt resterende ruimte in de rechterkolom.
-- Compacte dagplanning: 3–5 potloodblokken (geen overlap), aanvullende taken voor Agenda suggesties tot minimum drie zichtbare punten; vaste Marlon-demo-blokken; chattekst *Ik heb een compacte dagplanning klaargezet…*.
-- BIU-shells: opnieuw `"$@"` / `--write "$@"` i.p.v. lege `"${extra_args[@]}"` (macOS Bash 3.2 + `set -u`).
+- Layout volgens referentie: **klok + Clara/chat links**, agenda **centraal** (meer ruimte), rechts compacte kolom alleen **Agenda suggesties** en **Open eindjes** (`left-stack` + `side-rail`).
+- **Ververs suggesties** (↻): wist dismiss/hide-filters, herberekent panelen, toont *Net ververst.* of *Geen nieuwe suggesties. Net ververst.* in de rechterkolom + status; geen chatbubble; geen agenda-reset.
+- **Agenda suggesties** bij gevulde agenda: tot drie aanvullende regels (o.a. planning kloppen / niet passend / eindcheck) zonder dubbele agendatitels; chips **Doe nu · Plan · Parkeer**; fallback-regex `core\s*lab` gefixt.
+- **Open eindjes** uit agenda/labState: afgeleide vragen o.a. na compacte fallback en bij meerdere projecten; urgente items rood bovenaan.
+- Compacte dagplanning (v0.14.30) intact; bij nieuwe compacte run worden dismiss-filters gewist zodat suggesties terugzichtbaar zijn.
+- BIU-shells: `"$@"` / `--write "$@"` onder `set -u` (macOS Bash 3.2).
 
 ## 0.14.30 — 2026-05-04
 
