@@ -1,12 +1,18 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.31 — 2026-05-04
+
+- Desktoplayout: chat links, agenda centraal groot, rechts één kolom met datum/tijd boven **Agenda suggesties** en **Open eindjes** (wrapper `side-rail`).
+- Agenda suggesties: scrollbare hoogte bij veel items; Open eindjes gebruikt resterende ruimte in de rechterkolom.
+- Compacte dagplanning: 3–5 potloodblokken (geen overlap), aanvullende taken voor Agenda suggesties tot minimum drie zichtbare punten; vaste Marlon-demo-blokken; chattekst *Ik heb een compacte dagplanning klaargezet…*.
+- BIU-shells: opnieuw `"$@"` / `--write "$@"` i.p.v. lege `"${extra_args[@]}"` (macOS Bash 3.2 + `set -u`).
+
 ## 0.14.30 — 2026-05-04
 
 - Snelle 1-dag-planningroute toegevoegd voor demo-inputs zoals “Maak een dagplanning”.
 - Compacte fallback vult bij zware planning alsnog potloodblokken of zichtbare open eindjes.
 - Layout-polish doorgevoerd: Agenda suggesties schaalt mee met inhoud en scrollt compact wanneer nodig.
 - Subtiele knop **Ververs suggesties** toegevoegd zonder chatvervuiling of reset.
-- `biu-check.sh` / `biu-write.sh`: geen lege `"${extra_args[@]}"`-expansie meer; macOS Bash 3.2 + `set -u` werkt ook zonder args.
 
 ## 0.14.29 — 2026-05-04
 

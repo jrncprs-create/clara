@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clara 4 Core Lab v0.14.30</title>
+<title>Clara 4 Core Lab v0.14.31</title>
 <link rel="stylesheet" href="./style.css">
 <script src="./app.js" defer></script>
 </head>
@@ -35,28 +35,30 @@
     <div class="body agenda-body" id="agendaCol"><p class="empty">Analyseer input om de dagagenda te vullen.</p></div>
   </section>
 
-  <section class="clock">
-    <div class="clock-widget">
-      <div class="clock-digits"><span id="clockHour">--</span><span id="clockMinute">--</span></div>
-      <div class="clock-meta">
-        <strong id="clockWeekday">--</strong>
-        <span id="clockDate">--</span>
-        <span id="clockYear">----</span>
-        <div class="weather"><span>Amsterdam</span><span class="weather-icon">☁</span></div>
+  <aside class="side-rail" aria-label="Datum en overzicht">
+    <section class="clock">
+      <div class="clock-widget">
+        <div class="clock-digits"><span id="clockHour">--</span><span id="clockMinute">--</span></div>
+        <div class="clock-meta">
+          <strong id="clockWeekday">--</strong>
+          <span id="clockDate">--</span>
+          <span id="clockYear">----</span>
+          <div class="weather"><span>Amsterdam</span><span class="weather-icon">☁</span></div>
+        </div>
       </div>
-    </div>
-    <div class="nav"><button id="agendaPrevBtn">←</button><button id="agendaNextBtn">→</button></div>
-  </section>
+      <div class="nav"><button id="agendaPrevBtn">←</button><button id="agendaNextBtn">→</button></div>
+    </section>
 
-  <section class="col guidance-column">
-    <div class="head"><div><div class="small-title">Agenda suggesties</div><div class="sub">plan · weg</div></div></div>
-    <div class="body"><div class="stack" id="attentionCol"><p class="empty">Geen agenda-suggesties.</p></div></div>
-  </section>
+    <section class="col guidance-column">
+      <div class="head"><div><div class="small-title">Agenda suggesties</div><div class="sub">plan · weg</div></div></div>
+      <div class="body"><div class="stack attention-stack" id="attentionCol"><p class="empty">Geen agenda-suggesties.</p></div></div>
+    </section>
 
-  <section class="col regie-column">
-    <div class="head"><div><div class="small-title">Open eindjes</div><div class="sub">beantwoord of verwijder</div></div></div>
-    <div class="body"><div id="endPromptHost" class="end-prompt-host" aria-live="polite"></div><div class="stack" id="regieCol"></div></div>
-  </section>
+    <section class="col regie-column">
+      <div class="head"><div><div class="small-title">Open eindjes</div><div class="sub">beantwoord of verwijder</div></div></div>
+      <div class="body"><div id="endPromptHost" class="end-prompt-host" aria-live="polite"></div><div class="stack" id="regieCol"></div></div>
+    </section>
+  </aside>
   <button class="refresh-guidance" id="refreshGuidanceBtn" type="button" title="Ververs suggesties" aria-label="Ververs suggesties">↻</button>
 </main>
 </body>
