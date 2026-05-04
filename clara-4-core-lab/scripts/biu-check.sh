@@ -1,21 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+extra_args=("$@")
+dry_run=0
+for arg in "$@"; do
+  if [[ "$arg" == "--dry-run" ]]; then
+    dry_run=1
+  fi
+done
+
 asked_secret=0
-if [[ -z "${ACE_ACTION_SECRET:-}" ]]; then
+if [[ "$dry_run" == "0" && -z "${ACE_ACTION_SECRET:-}" ]]; then
   printf "ACE_ACTION_SECRET: " >&2
-  IFS= read -r -s ACE_ACTION_SECRET
+  if [[ -r /dev/tty ]]; then
+    IFS= read -r -s ACE_ACTION_SECRET </dev/tty
+  else
+    IFS= read -r -s ACE_ACTION_SECRET
+  fi
   printf "\n" >&2
   asked_secret=1
 fi
 
-if [[ -z "${ACE_ACTION_SECRET:-}" ]]; then
+if [[ "$dry_run" == "0" && -z "${ACE_ACTION_SECRET:-}" ]]; then
   unset ACE_ACTION_SECRET
   echo "Fout: secret leeg. Request niet verstuurd." >&2
   exit 1
 fi
 
-response="$(ACE_ACTION_SECRET="$ACE_ACTION_SECRET" node "$(dirname "$0")/biu-run.mjs")"
+if [[ "$dry_run" == "1" ]]; then
+  response="$(node "$(dirname "$0")/biu-run.mjs" "${extra_args[@]}")"
+else
+  response="$(ACE_ACTION_SECRET="$ACE_ACTION_SECRET" node "$(dirname "$0")/biu-run.mjs" "${extra_args[@]}")"
+fi
+
 if [[ "$asked_secret" == "1" ]]; then unset ACE_ACTION_SECRET; fi
 
 if printf "%s" "$response" | grep -q '"error"[[:space:]]*:[[:space:]]*"Unauthorized"'; then

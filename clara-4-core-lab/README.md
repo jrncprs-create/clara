@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.22`
+Versie: `0.14.24`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 
@@ -108,6 +108,12 @@ scripts/biu-write.sh
 ```
 
 `biu-check.sh` splitst BIU-input met sectiekoppen in losse ACE-check-calls; `biu-write.sh` doet hetzelfde met `mode: "write"`. ACE blijft single-target, maar BIU v2 mag meerdere secties/targets in één extract verwerken. Check eerst, write bewust. Zie `docs/biu.md`.
+
+Parser-only test zonder API-call of secret:
+
+```bash
+scripts/biu-check.sh --dry-run
+```
 
 ## Clara-principe
 

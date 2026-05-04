@@ -23,6 +23,14 @@ scripts/biu-write.sh
 - Beide scripts accepteren input via stdin of `BIU_INPUT`; zonder input gebruiken ze een standaard multi-target testpayload.
 - Check schrijft nooit. Run write alleen bewust.
 
+Parser-only test zonder API-call of secret:
+
+```bash
+scripts/biu-check.sh --dry-run
+```
+
+De dry-run toont alleen de herkende secties en project hints. Gebruik dit om te controleren of een extract goed splitst voordat je een echte check of write doet.
+
 Ondersteunde sectiekoppen:
 
 ```text

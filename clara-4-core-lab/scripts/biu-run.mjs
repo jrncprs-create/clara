@@ -3,6 +3,7 @@ import { stdin, stdout, stderr, env, argv, exit } from 'node:process';
 
 const ENDPOINT = 'https://clara-4-core-lab.vercel.app/api/ace';
 const MODE = argv.includes('--write') ? 'write' : 'check';
+const DRY_RUN = argv.includes('--dry-run') || env.BIU_DRY_RUN === '1';
 const DEFAULT_INPUT = `BIU extract uit ChatGPT-gesprek:
 
 Project Clara Core Lab / ACE:
@@ -122,13 +123,30 @@ async function postSection(section, secret) {
 
 async function main() {
   const input = env.BIU_INPUT && env.BIU_INPUT.trim() ? env.BIU_INPUT : (await readStdin()).trim() || DEFAULT_INPUT;
+  const sections = splitSections(input);
+
+  if (DRY_RUN) {
+    const drySections = sections.map((section) => ({
+      section_title: section.section_title,
+      project_hint: projectHintForSection(section.section_title),
+      line_count: section.text.split(/\r?\n/).length
+    }));
+    stdout.write(`${JSON.stringify({
+      ok: true,
+      mode: MODE,
+      dry_run: true,
+      total_sections: sections.length,
+      sections: drySections
+    }, null, 2)}\n`);
+    return;
+  }
+
   const secret = env.ACE_ACTION_SECRET || '';
   if (!secret.trim()) {
     stderr.write('Fout: ACE_ACTION_SECRET ontbreekt. Shell-wrapper hoort die stil te vragen.\n');
     exit(1);
   }
 
-  const sections = splitSections(input);
   stderr.write(`BIU ${MODE} start: ${sections.length} sectie(s).\n`);
   const results = [];
   for (const section of sections) {

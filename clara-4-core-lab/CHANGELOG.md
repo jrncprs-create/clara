@@ -1,5 +1,14 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.24 — 2026-05-04
+
+- Kleine BIU-wrapperfix: `biu-check.sh` en `biu-write.sh` initialiseren argumenten defensief onder `set -u`, zodat `--dry-run` en gewone check/write geen `unbound variable` geven.
+
+## 0.14.23 — 2026-05-04
+
+- BIU v2 lokale scripts robuuster gemaakt: `--dry-run` toont secties en project hints zonder API-call of secret.
+- `biu-check.sh` en `biu-write.sh` lezen `ACE_ACTION_SECRET` via `/dev/tty` wanneer mogelijk, zodat multi-line input via stdin niet per ongeluk als secret wordt gelezen.
+
 ## 0.14.22 — 2026-05-04
 
 - BIU v2 toegevoegd: `scripts/biu-run.mjs` splitst multi-project BIU-input in secties en roept ACE per sectie aan.
