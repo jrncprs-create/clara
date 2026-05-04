@@ -29,3 +29,20 @@
 > - Beslissing: systeem heet ACE, methode heet BIU.
 > - BIU v1 is gebouwd als check/write laag bovenop ACE.
 > - Beperking: ACE is nu nog single-target.
+
+
+## ACE update — 2026-05-04T11:31:56.376Z
+- Source: biu
+- Route: project
+- Project: clara-core-lab
+- Confidence: 0.78
+- Summary: BIU extract uit ChatGPT-gesprek: Project Clara Core Lab / ACE: - BIU v1 werkt end-to-end via ACE. - Beslissing: ACE blijft het systeem, BIU is de methode. - Volgende stap: BIU v2 moet multi-target worden.
+- Signals:
+  - Mogelijke vervolgactie genoemd.
+- Raw input:
+> BIU extract uit ChatGPT-gesprek:
+> 
+> Project Clara Core Lab / ACE:
+> - BIU v1 werkt end-to-end via ACE.
+> - Beslissing: ACE blijft het systeem, BIU is de methode.
+> - Volgende stap: BIU v2 moet multi-target worden.
