@@ -35,6 +35,8 @@
 .col.agenda .events .event.project-none .agenda-item-time{color:#3a4048;opacity:1}
 .col.agenda .events .event.project-none .agenda-item-meta{opacity:.92}
 .col.agenda .events .event.project-none .plain{color:#333}
+.col.agenda .events .event.project-none .agenda-item-project{font-weight:550;opacity:1;color:#2f3640}
+.col.agenda .events .event.project-none.agenda-item--suggest .agenda-item-project{color:#252b33}
 .col.agenda .events .event.agenda-item--conflict.project-clara{box-shadow:inset 0 0 0 1px rgba(255,95,95,.48),0 0 0 1px rgba(220,75,75,.32);border-color:rgba(255,130,130,.42)}
 .col.agenda .events .event.agenda-item--conflict.project-lalampe{box-shadow:inset 0 0 0 1px rgba(255,95,95,.48),0 0 0 1px rgba(220,75,75,.32);border-color:rgba(255,130,130,.42)}
 .col.agenda .events .event.agenda-item--conflict.project-begeister{box-shadow:inset 0 0 0 1px rgba(255,95,95,.48),0 0 0 1px rgba(220,75,75,.32);border-color:rgba(255,130,130,.42)}
@@ -107,6 +109,7 @@
 .side-rail .guide-route{max-height:none;overflow:visible}
 .side-rail .guide-card{max-height:none}
 .open-answer-row{display:flex;align-items:center;gap:6px;margin-top:8px;min-width:0}
+.open-answer-label{flex-shrink:0;font-size:10.5px;font-weight:650;color:rgba(200,200,200,.88);text-transform:uppercase;letter-spacing:.04em}
 .open-answer-input{min-width:0;flex:1;border:1px solid rgba(255,255,255,.14);background:#242424;color:var(--text);border-radius:999px;padding:6px 9px;font:inherit;font-size:11.8px;outline:0}
 .open-answer-input:focus{border-color:rgba(255,255,255,.32);background:#292929}
 .open-answer-save,.open-answer-close{border:1px solid rgba(255,255,255,.16);background:transparent;color:#dcdcdc;border-radius:999px;font:inherit;font-size:11.5px;line-height:1;padding:6px 8px;cursor:pointer}

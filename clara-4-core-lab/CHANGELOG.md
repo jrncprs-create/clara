@@ -1,5 +1,15 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.32 — 2026-05-04
+
+- Verwijdert **Doe nu** en **Parkeer** uit agenda-suggesties; alleen **Plan** en **Weg**; geen aparte “nu”-handlers meer.
+- **Agenda suggesties** en **open items** worden gefilterd op interne/debugtermen; centrale `sanitizeUserFacingText` / `filterUserFacingLine` voor panel- en chattekst waar zichtbaar.
+- Terminologie: **Open eindjes** → **Open items**; compacte rechterkolom max. drie items; korte chatregels kunnen als antwoord op het bovenste open item.
+- **Compacte dagplanning**: meerdere concrete projectblokken, werkdagvenster (ma ~11:00, di–vr 10:00–18:00), weekend alleen bij expliciete aanleiding; geen slots in het verleden voor vandaag; datum genormaliseerd.
+- Neutrale agendablokken tonen **Algemeen** duidelijker; subtiele leesbaarheid in CSS.
+- **Ververs suggesties**: wist alleen dismiss-filters, herbouwt lijsten, duidelijke status- en kolomhint zonder chatbubble.
+- Status- en startteksten zonder “Lab State” / **Projectbrain** in de zichtbare UI.
+
 ## 0.14.31 — 2026-05-04
 
 - Layout volgens referentie: **klok + Clara/chat links**, agenda **centraal** (meer ruimte), rechts compacte kolom alleen **Agenda suggesties** en **Open eindjes** (`left-stack` + `side-rail`).

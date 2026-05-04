@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.31`
+Versie: `0.14.32`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 
@@ -123,10 +123,10 @@ Bronnen zoals chat, mail en agenda worden uiteindelijk gelezen door Clara. Clara
 
 De rechterkolom is Clara's lichte regiepaneel:
 
-- **Agenda suggesties** — concrete dashboardvoorstellen die je direct als potloodblok kunt plannen of lokaal kunt wegklikken.
-- **Open eindjes** — prangende vragen bovenaan in rood, daarna gewone losse punten met een kleine antwoordregel en lokaal verwijderkruisje.
+- **Agenda suggesties** — concrete voorstellen die je als **Plan** (potloodblok) kunt zetten of met **Weg** verbergt.
+- **Open items** — prangende vragen bovenaan in rood, daarna maximaal een paar compacte punten met antwoord, opslaan en weg.
 
-Voor demo-inputs zoals “Maak een dagplanning” gebruikt Clara een snelle compacte 1-dagroute: maximaal enkele potloodblokken, geen overlap en wat niet past terug naar open eindjes. Rechtsonder staat een subtiele knop om Agenda suggesties en Open eindjes opnieuw te verversen zonder chatbericht of reset.
+Voor demo-inputs zoals “Maak een dagplanning” gebruikt Clara een snelle compacte 1-dagroute: meerdere potloodblokken over relevante projecten, geen overlap en wat niet past bij open items. Rechtsonder staat een knop om suggesties opnieuw op te bouwen (zonder chatbericht of reset van verborgen open items).
 
 ## Niet in deze versie
 
