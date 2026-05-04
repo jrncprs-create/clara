@@ -1,5 +1,11 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.28 — 2026-05-04
+
+- Rechterkolom vereenvoudigd naar **Agenda suggesties / Open eindjes**.
+- Prangende vragen en blockers staan rood bovenaan open eindjes; gewone open punten blijven neutraal.
+- Rechterkolomchips handelen lokaal af en vervuilen de chat niet meer met dashboardacties.
+
 ## 0.14.27 — 2026-05-04
 
 - Chat-analyse fallback gefixt: na mislukte, afgebroken of vastgelopen analyse plaatst Clara altijd een vriendelijk zichtbaar antwoord en blijft de input bruikbaar.
