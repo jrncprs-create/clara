@@ -1,5 +1,11 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.21 — 2026-05-04
+
+- Eerste BIU-laag toegevoegd bovenop ACE: `scripts/biu-check.sh` en `scripts/biu-write.sh` sturen `source:"biu"` naar de production ACE endpoint.
+- `docs/biu.md` toegevoegd met onderscheid: ACE is het systeem, BIU / Back it up is de methode/trigger; `B I U` met spaties is alleen praten over de methode.
+- BIU v1 documenteert dat ACE voorlopig single-target routeert: één extract schrijft naar één `target_file` per call.
+
 ## 0.14.20 — 2026-05-04
 
 - ACE projectrouting prioriteit aangescherpt: expliciete projectnamen zoals LaLampe, Begeister en AFK/Landjuweel/Amarte wegen zwaarder dan systeemwoorden zoals `ACE` of `test`.

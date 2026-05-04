@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.20`
+Versie: `0.14.21`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 
@@ -95,6 +95,19 @@ node scripts/ace-routing-test.mjs
 ```
 
 Deze test bewaakt onder andere dat `ACE test: LaLampe ...` naar `projectbrain/raw/lalampe.md` routeert en niet naar Clara Core Lab.
+
+## BIU / Back it up
+
+ACE is het systeem. BIU / Back it up is de methode of trigger waarmee Jeroen een gespreksextract bewust voorbereidt en daarna via ACE laat checken of schrijven. Schrijf `B I U` met spaties wanneer je alleen over de methode praat en de trigger niet wilt activeren.
+
+BIU v1 is een dunne laag bovenop ACE:
+
+```bash
+scripts/biu-check.sh
+scripts/biu-write.sh
+```
+
+`biu-check.sh` gebruikt `source: "biu"` en `mode: "check"`; `biu-write.sh` gebruikt `source: "biu"` en `mode: "write"`. ACE is nu nog single-target, dus een BIU-extract routeert voorlopig naar één `target_file` per call. Zie `docs/biu.md`.
 
 ## Clara-principe
 
