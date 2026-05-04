@@ -1,5 +1,12 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.34 — 2026-05-04
+
+- Verfijnt cockpit-kolomverhoudingen; maakt rechterkolom weer bruikbaar breed.
+- Verbetert klok/agenda-layout richting gewenste screenshot (desktop focus).
+- Voegt automatische startup-planning toe bij lege agenda.
+- Startup vraagt ook relevante open vragen en lang genegeerde onderwerpen uit.
+
 ## 0.14.33 — 2026-05-04
 
 - Desktop-cockpitlayout gericht op de referentiescreenshot (alleen linker- en middelkolom): **grote klok boven chat**, en **datumheader in de agenda-kolom** met **Overdag/Avond-tabs rechts**.
