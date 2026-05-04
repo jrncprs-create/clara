@@ -92,8 +92,10 @@ function summarize(input) {
 }
 
 function detectProject(input, hint = '') {
+  const cleanHint = String(hint || '').trim().toLowerCase();
+  if (PROJECTS.has(cleanHint)) return cleanHint;
   for (const [project, pattern] of PROJECT_ALIASES) {
-    if (pattern.test(String(hint || ''))) return project;
+    if (pattern.test(cleanHint)) return project;
   }
   const text = String(input || '');
   let best = null;
