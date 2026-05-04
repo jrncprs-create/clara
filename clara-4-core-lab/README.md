@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.17`
+Versie: `0.14.20`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 
@@ -76,6 +76,25 @@ ChatGPT Actions kunnen niet naar `localhost`; deploy Clara Core Lab eerst naar V
 2. Zet hetzelfde secret in de GPT Action authentication als API key met custom header `X-ACE-SECRET`.
 3. Plak `docs/ace-action-openapi.yaml` in het GPT Action schema en vervang `https://YOUR-VERCEL-DOMAIN.vercel.app`.
 4. Begin met `mode: "check"`; gebruik `mode: "write"` pas wanneer routing betrouwbaar genoeg is.
+
+Productie helpers:
+
+```bash
+scripts/ace-prod-check.sh
+scripts/ace-prod-write-test.sh
+```
+
+Beide scripts vragen stil om `ACE_ACTION_SECRET`, tonen de secret niet en gebruiken `https://clara-4-core-lab.vercel.app/api/ace`. Gebruik de write-test alleen bewust: die doet een echte `mode: "write"` naar Projectbrain.
+
+In production schrijft ACE via de GitHub Contents API naar de allowlisted Projectbrain-bestanden. Daarvoor is `PROJECTBRAIN_GITHUB_TOKEN` of `GITHUB_TOKEN` nodig; lokaal zonder GitHub-token blijft filesystem-append alleen voor dev/test mogelijk.
+
+Routingtest:
+
+```bash
+node scripts/ace-routing-test.mjs
+```
+
+Deze test bewaakt onder andere dat `ACE test: LaLampe ...` naar `projectbrain/raw/lalampe.md` routeert en niet naar Clara Core Lab.
 
 ## Clara-principe
 

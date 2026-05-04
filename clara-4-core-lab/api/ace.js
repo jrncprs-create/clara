@@ -15,11 +15,13 @@ const TARGETS = new Map([
 ]);
 
 const PROJECT_ALIASES = [
-  ['clara-core-lab', /\b(core lab|clara core lab|projectbrain|ace|automatic chatgpt export)\b/i],
-  ['lalampe', /\b(lalampe|lampenworkshop|lamp workshop|workshopflow|lampenkappen)\b/i],
-  ['begeister', /\b(begeister|marlon|samenwerking|rollen|verdeling)\b/i],
-  ['afk-landjuweel-amarte', /\b(afk|landjuweel|amarte|nachtdiertjes|ruigoord|lichtbeeldenroute)\b/i],
-  ['clara', /\b(clara|clara 3|clara assistant)\b/i]
+  ['lalampe', /\b(lalampe|lampenworkshop|lamp workshop|workshopflow|lampenkappen)\b/i, 120],
+  ['begeister', /\b(begeister|marlon|samenwerking|rollen|verdeling)\b/i, 120],
+  ['afk-landjuweel-amarte', /\b(afk|landjuweel|amarte|nachtdiertjes|ruigoord|lichtbeeldenroute)\b/i, 120],
+  ['clara-core-lab', /\b(clara core lab|core lab|projectbrain|automatic chatgpt export)\b/i, 90],
+  ['clara-core-lab', /\b(ace)\b/i, 35],
+  ['clara', /\b(clara 3|clara assistant)\b/i, 80],
+  ['clara', /\b(clara)\b/i, 45]
 ];
 
 function sendJson(res, status, body) {
@@ -91,10 +93,12 @@ function summarize(input) {
 
 function detectProject(input, hint = '') {
   const text = `${hint}\n${input}`;
-  for (const [project, pattern] of PROJECT_ALIASES) {
-    if (pattern.test(text)) return project;
+  let best = null;
+  for (const [project, pattern, score] of PROJECT_ALIASES) {
+    if (!pattern.test(text)) continue;
+    if (!best || score > best.score) best = { project, score };
   }
-  return null;
+  return best?.project || null;
 }
 
 function looksLikeCategorySuggestion(input) {
@@ -258,6 +262,96 @@ async function safeAppendMarkdown(targetFile, markdown) {
   return true;
 }
 
+async function githubRequest({ token, method = 'GET', url, body }) {
+  const response = await fetch(url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(body ? { 'Content-Type': 'application/json' } : {})
+    },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const error = new Error(`GitHub request failed: ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+  return data;
+}
+
+async function getGithubFile({ token, owner, repo, targetFile, ref }) {
+  try {
+    const file = await githubRequest({
+      token,
+      url: `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(targetFile).replace(/%2F/g, '/')}?ref=${encodeURIComponent(ref)}`
+    });
+    return {
+      exists: true,
+      sha: file.sha,
+      content: Buffer.from(file.content || '', 'base64').toString('utf8')
+    };
+  } catch (error) {
+    if (error.status === 404) return { exists: false, sha: null, content: '' };
+    throw error;
+  }
+}
+
+async function putGithubFile({ token, owner, repo, targetFile, branch, content, sha }) {
+  return githubRequest({
+    token,
+    method: 'PUT',
+    url: `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(targetFile).replace(/%2F/g, '/')}`,
+    body: {
+      message: `ACE update ${targetFile}`,
+      content: Buffer.from(content, 'utf8').toString('base64'),
+      branch,
+      ...(sha ? { sha } : {})
+    }
+  });
+}
+
+function githubConfig() {
+  const token = process.env.PROJECTBRAIN_GITHUB_TOKEN || process.env.GITHUB_TOKEN;
+  const targetRepo = process.env.PROJECTBRAIN_REPO || 'jrncprs-create/clara';
+  const branch = process.env.PROJECTBRAIN_BASE_BRANCH || 'main';
+  const [owner, repo] = targetRepo.split('/');
+  return { token, owner, repo, branch };
+}
+
+function shouldUseGithubWrite() {
+  return process.env.VERCEL === '1' || process.env.VERCEL_ENV === 'production' || Boolean(process.env.PROJECTBRAIN_GITHUB_TOKEN || process.env.GITHUB_TOKEN);
+}
+
+async function appendMarkdown(targetFile, markdown) {
+  if (!targetFile) return false;
+  const allowed = new Set(TARGETS.values());
+  if (!allowed.has(targetFile)) throw new Error('Unsafe target file');
+
+  if (shouldUseGithubWrite()) {
+    const { token, owner, repo, branch } = githubConfig();
+    if (!token) throw new Error('Missing PROJECTBRAIN_GITHUB_TOKEN or GITHUB_TOKEN for ACE write');
+    if (!owner || !repo) throw new Error('Invalid PROJECTBRAIN_REPO. Use owner/repo.');
+    const current = await getGithubFile({ token, owner, repo, targetFile, ref: branch });
+    await putGithubFile({
+      token,
+      owner,
+      repo,
+      targetFile,
+      branch,
+      content: `${current.content || ''}${markdown}`,
+      sha: current.exists ? current.sha : null
+    });
+    return true;
+  }
+
+  return safeAppendMarkdown(targetFile, markdown);
+}
+
 function normalizeClassification(raw, fallback) {
   const route = ['project', 'misc', 'inbox', 'category_suggestion', 'ignore'].includes(raw?.route) ? raw.route : fallback.route;
   const project = route === 'project' && PROJECTS.has(raw?.project) ? raw.project : route === 'project' ? fallback.project : null;
@@ -296,7 +390,7 @@ export default async function handler(req, res) {
     let written = false;
     if (payload.mode === 'write' && classification.route !== 'ignore' && targetFile) {
       const markdown = buildMarkdownEntry(payload, classification, targetFile);
-      written = await safeAppendMarkdown(targetFile, markdown);
+      written = await appendMarkdown(targetFile, markdown);
     }
 
     return sendJson(res, 200, {
@@ -326,3 +420,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export const __testables = { classifyHeuristically, detectProject, resolveTargetFile };

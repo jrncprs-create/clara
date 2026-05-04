@@ -1,5 +1,18 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.20 — 2026-05-04
+
+- ACE projectrouting prioriteit aangescherpt: expliciete projectnamen zoals LaLampe, Begeister en AFK/Landjuweel/Amarte wegen zwaarder dan systeemwoorden zoals `ACE` of `test`.
+- Lokale routingtest toegevoegd voor ACE-aliasprioriteit.
+
+## 0.14.19 — 2026-05-04
+
+- ACE production write gefixt: `mode:"write"` appendt in Vercel via GitHub Contents API naar allowlisted Projectbrain-bestanden in plaats van naar lokaal filesystem (`/var/projectbrain`).
+
+## 0.14.18 — 2026-05-04
+
+- Productiehelpers toegevoegd voor ACE: `scripts/ace-prod-check.sh` en `scripts/ace-prod-write-test.sh` vragen stil om `ACE_ACTION_SECRET`, testen de Vercel endpoint en tonen geen secret.
+
 ## 0.14.17 — 2026-05-04
 
 - `/api/ace` geschikt gemaakt voor ChatGPT Actions via `X-ACE-SECRET` auth; lokaal zonder secret blijft testen mogelijk met waarschuwing.
