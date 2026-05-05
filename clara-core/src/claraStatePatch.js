@@ -1,5 +1,5 @@
 /**
- * Clara State patchlaag (v0.15.1). Runtime: in-memory; bron blijft JSON-seed tot persistence.
+ * Clara State patchlaag (v0.15.x). Gebruikt door Clara Core en door de Node API (`scripts/clara-state-repo-api.mjs`).
  */
 
 function nowUpdatedAt() {

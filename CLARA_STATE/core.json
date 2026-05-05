@@ -1,8 +1,8 @@
 {
-  "version": "0.15.1",
+  "version": "0.15.2",
   "updated_at": "2026-05-06T00:00:00+02:00",
   "conversation_context": {
-    "summary": "v0.15.1: Clara State in-memory + patches; Schedule-X drag/resize → agenda_item.update."
+    "summary": "v0.15.2: GET/POST /api/clara-state (dev) + optimistic patches; Schedule-X blijft view."
   },
   "agenda_items": [
     {

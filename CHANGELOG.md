@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.15.2 — 2026-05-06
+
+- Clara State API: `GET /api/clara-state` (volledige state) en `POST /api/clara-state/patch` (`patch` of `patches`, optioneel `source`). Server gebruikt `applyClaraStatePatch` en schrijft `CLARA_STATE/core.json`.
+- Vite dev: middleware in `clara-core/vite.config.js` serveert dezelfde routes lokaal.
+- Clara Core: laadt via API als beschikbaar, anders `/core.json`; na wijziging optimistic patch + POST, bij succes `response.state`, bij fout rollback + compacte API-waarschuwing in metrics.
+- Script: `npm run test:api` — tijdelijke map + disk-write smoke.
+
+Beperking: op Vercel kan schrijven naar de repo-root mislukken (read-only build); gebruik `CLARA_REPO_ROOT` of een schrijfbare deploy-strategie. Geen Supabase in deze stap.
+
 ## 0.15.1 — 2026-05-06
 
 - Clara Core: `applyClaraStatePatch` + `updateAgendaItemById` / `buildShiftAgendaItemMinutesPatch` voor runtime Clara State (in-memory; seed blijft `CLARA_STATE/core.json`).
@@ -8,7 +17,7 @@
 - UI: versie `v0.15.1`, compacte metrics (aantal agenda-items, `updated_at`, laatste patch).
 - Script: `npm run test:patch` — lichte sanity-check op de patchfuncties.
 
-Nog niet: persistente opslag, Supabase, ChatGPT/analyze-koppeling.
+Nog niet: Supabase, ChatGPT/analyze-koppeling (API-contract is wél voorbereid).
 
 ## 0.15.0 — eerder
 

@@ -1,42 +1,32 @@
 ## Clara (repo)
 
-### Clara Core v0.15.1 (Clara State patches + Schedule-X roundtrip)
+### Clara Core v0.15.2 — Clara State API (eerste persistente patch-route)
 
-- **Clara State** is de bron van waarheid; wijzigingen lopen via `applyClaraStatePatch` in `clara-core/src/claraStatePatch.js` (runtime in-memory; seed: `CLARA_STATE/core.json`).
-- **Schedule-X** blijft een **view** op `agenda_items` (`clara-core/src/mapClaraAgendaToScheduleX.js`). Drag/resize gebruikt `@schedule-x/drag-and-drop` en `@schedule-x/resize`; `callbacks.onEventUpdate` zet events om met `clara-core/src/scheduleXToClaraPatch.js` en past daarna dezelfde patchlaag toe. Daarna wordt de kalender opnieuw vanuit Clara State gesynchroniseerd (geen Schedule-X als waarheid).
-- **Testactie:** knop “+30 min (eerste item)” —zelfde patchfundament, handig als DnD even niet nodig is.
-- **Checks:** `npm run build` · `npm run test:patch` · `node --check` op de gewijzigde JS-bestanden.
-- **Dev:** `npm run dev` (Vite met `--configLoader native` i.v.m. een lege `package.json` hoger in de mapstructuur).
-- **Build / preview:** `npm run build` → `clara-core/dist/` · `npm run preview`
+- **Clara State** blijft de bron van waarheid. **Schedule-X** is view/interactie (DnD/resize → patch).
+- **API (contract):**
+  - `GET /api/clara-state` — response body = volledige Clara State (JSON zoals `CLARA_STATE/core.json`).
+  - `POST /api/clara-state/patch` — body `{ "patch": { ... }, "source": "clara-core" }` of `{ "patches": [ ... ], "source": "..." }`. Bij succes: `{ "ok": true, "state": { ... }, "applied": [ ... ] }`.
+- **Implementatie:** gedeelde logica in `scripts/clara-state-repo-api.mjs`; Vercel-handlers `api/clara-state.js` en `api/clara-state/patch.js`; in **dev** idem routes via Vite-plugin in `clara-core/vite.config.js` (schrijft naar `CLARA_STATE/core.json` onder repo-root).
+- **Frontend:** `clara-core/src/main.js` — probeert GET `/api/clara-state`, faalt dat → `/core.json`; na wijziging optimistic `applyClaraStatePatch`, daarna POST; bij fout **rollback** + waarschuwing in metrics (geen crash).
+- **Checks:** `npm run test:patch` · `npm run test:api` · `npm run build` · `node --check` op gewijzigde JS (zie CI/handmatig).
+
+**Runtime-beperkingen**
+
+- `vite preview` serveert **geen** API-middleware — alleen statische build; patches vallen dan terug op rollback + waarschuwing. Gebruik `npm run dev` of `vercel dev` / productie met serverless.
+- **Vercel:** serverless heeft vaak **geen schrijfbare** projectmap; `POST` kan falen (`EROFS` / `EACCES`). Zet desnoods `CLARA_REPO_ROOT` naar een schrijfbaar pad of kies later object-storage/Supabase. Geen secrets in deze stap.
 
 ### Ontwerpdocumenten
 
 `CLARA_STATUS/core-truth.md`, `CLARA_STATUS/clara-core-v015-breakthrough.md`, `CLARA_STATUS/clara-core-v015-history-and-principles.md`
 
+### Dev / build
+
+- `npm run dev` — Vite + lokale `/api/clara-state` (middleware).
+- `npm run build` → `clara-core/dist/` · `npm run preview` (zonder API).
+
 ### Later
 
-- Persistente Clara State + gedeelde opslag
-- ChatGPT / analyze → gestructureerde patches (zelfde `applyClaraStatePatch`-contract)
-
-**Gewenste ChatGPT → Clara Core sync-flow:**
-
-Een gesprek met ChatGPT verandert Clara Core niet automatisch zolang er nog geen gedeelde patch/write-route is. v0.15 moet hier wel expliciet op voorbereid worden:
-
-```text
-ChatGPT-gesprek
-→ Clara State patch
-→ gedeelde opslag/API
-→ Clara Core ontvangt update via refresh, polling, realtime of een handmatige sync-knop
-→ Schedule-X rendert opnieuw vanuit Clara State
-```
-
-Afspraken:
-
-- ChatGPT blijft de denklaag en gesprekspartner.
-- Clara Core blijft de werkplek/UI.
-- Clara State is de gedeelde operationele bron van waarheid.
-- Schedule-X is alleen de calendar-view; state blijft leidend.
-- Mogelijke latere routes: handmatige sync-knop, polling, websocket/realtime of API-trigger vanuit ChatGPT/Action.
+- Betrouwbare centrale persistence (o.a. Supabase) + ChatGPT/analyze → dezelfde patch-types.
 
 ---
 

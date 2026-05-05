@@ -1,12 +1,12 @@
 /**
- * Clara Core v0.15.1 — Clara State patch roundtrip + Schedule-X als view.
+ * Clara Core v0.15.2 — Clara State API (GET/POST) + Schedule-X view.
  *
- * Roundtrip: Schedule-X drag/resize (@schedule-x/drag-and-drop, @schedule-x/resize) vuurt
- * `callbacks.onEventUpdate` af → `scheduleXEventToAgendaItemUpdatePatch` → `applyClaraStatePatch`.
- * Daarna opnieuw `calendar.events.set(...)` vanuit Clara State (guard `applyingFromState` voorkomt loops).
- * Testknop \"+30 min (eerste item)\" gebruikt dezelfde patchlaag zonder op DnD te vertrouwen.
+ * Initial load: probeert GET /api/clara-state; faalt dat → seed `/core.json`.
+ * Wijzigingen (DnD/resize/testknop): lokaal `applyClaraStatePatch` → POST /api/clara-state/patch;
+ * bij succes `response.state`; bij fout rollback + compacte API-waarschuwing in metrics.
  *
- * Later: persistence + ChatGPT/analyze → patches (geen AI in deze stap).
+ * Dev: Vite middleware serveert `/api/*` en schrijft naar CLARA_STATE/core.json.
+ * Productie (Vercel): zelfde routes; schrijven kan falen op read-only FS — zie README.
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -27,7 +27,15 @@ function patchIdForDisplay(patch) {
   return undefined
 }
 
-async function loadClaraState() {
+async function loadInitialState() {
+  try {
+    const res = await fetch('/api/clara-state', { cache: 'no-store' })
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch {
+    /* netwerk / geen dev-middleware */
+  }
   const res = await fetch('/core.json', { cache: 'no-cache' })
   if (!res.ok) {
     throw new Error(`Kon Clara State niet laden (${res.status})`)
@@ -52,9 +60,11 @@ async function main() {
   const metricsEl = document.getElementById('state-metrics')
   const shiftBtn = document.getElementById('shift-first-item')
 
-  let runtimeState = structuredClone(await loadClaraState())
+  let runtimeState = structuredClone(await loadInitialState())
   /** @type {{ type: string, id?: string, at: string } | null} */
   let lastPatch = null
+  /** @type {string | null} */
+  let apiWarning = null
   let applyingFromState = false
   /** @type {ReturnType<typeof createCalendar> | null} */
   let calendar = null
@@ -71,7 +81,8 @@ async function main() {
     const patchLine = lastPatch
       ? `${lastPatch.type}${lastPatch.id != null ? ` · ${lastPatch.id}` : ''} · ${lastPatch.at}`
       : '—'
-    metricsEl.textContent = `agenda_items: ${n} · updated_at: ${runtimeState.updated_at ?? '—'} · laatste patch: ${patchLine}`
+    const apiLine = apiWarning ? `API-waarschuwing: ${apiWarning}` : 'API: gesynchroniseerd'
+    metricsEl.textContent = `agenda_items: ${n} · updated_at: ${runtimeState.updated_at ?? '—'} · laatste patch: ${patchLine}\n${apiLine}`
   }
 
   function syncCalendarFromState() {
@@ -87,12 +98,54 @@ async function main() {
     }
   }
 
-  function applyPatch(patch) {
-    runtimeState = applyClaraStatePatch(runtimeState, patch)
-    lastPatch = {
-      type: patch.type,
-      at: Temporal.Now.zonedDateTimeISO(DEFAULT_TIMEZONE).toString(),
-      id: patchIdForDisplay(patch),
+  /**
+   * Optimistische patch + persist; rollback bij API-fout.
+   * @param {object} patch
+   */
+  async function applyPatchWithApi(patch) {
+    const snapshot = structuredClone(runtimeState)
+    apiWarning = null
+    try {
+      runtimeState = applyClaraStatePatch(runtimeState, patch)
+      lastPatch = {
+        type: patch.type,
+        at: Temporal.Now.zonedDateTimeISO(DEFAULT_TIMEZONE).toString(),
+        id: patchIdForDisplay(patch),
+      }
+      renderDebug()
+      renderMetrics()
+      syncCalendarFromState()
+      if (statusEl) {
+        statusEl.textContent = `Clara State leidend · Schedule-X = view · ${nAgenda()} items · Europe/Amsterdam`
+      }
+
+      const res = await fetch('/api/clara-state/patch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patch, source: 'clara-core' }),
+      })
+      const raw = await res.text()
+      let data
+      try {
+        data = JSON.parse(raw || '{}')
+      } catch {
+        data = null
+      }
+      if (!res.ok || !data?.ok) {
+        const msg = (data && data.error) || raw || `HTTP ${res.status}`
+        throw new Error(msg)
+      }
+      runtimeState = data.state
+      lastPatch = {
+        type: patch.type,
+        at: data.state?.updated_at ?? lastPatch.at,
+        id: patchIdForDisplay(patch),
+      }
+      apiWarning = null
+    } catch (err) {
+      runtimeState = snapshot
+      lastPatch = null
+      apiWarning = err instanceof Error ? err.message : String(err)
     }
     renderDebug()
     renderMetrics()
@@ -116,15 +169,16 @@ async function main() {
     callbacks: {
       onEventUpdate: (ev) => {
         if (applyingFromState) return
-        try {
-          const patch = scheduleXEventToAgendaItemUpdatePatch(ev)
-          applyPatch(patch)
-        } catch (err) {
-          console.error(err)
-          if (statusEl) {
-            statusEl.textContent = err instanceof Error ? err.message : String(err)
+        void (async () => {
+          try {
+            const patch = scheduleXEventToAgendaItemUpdatePatch(ev)
+            await applyPatchWithApi(patch)
+          } catch (err) {
+            console.error(err)
+            apiWarning = err instanceof Error ? err.message : String(err)
+            renderMetrics()
           }
-        }
+        })()
       },
     },
   })
@@ -133,10 +187,12 @@ async function main() {
 
   if (shiftBtn) {
     shiftBtn.addEventListener('click', () => {
-      const first = runtimeState.agenda_items?.[0]
-      if (!first) return
-      const patch = buildShiftAgendaItemMinutesPatch(runtimeState, first.id, 30)
-      applyPatch(patch)
+      void (async () => {
+        const first = runtimeState.agenda_items?.[0]
+        if (!first) return
+        const patch = buildShiftAgendaItemMinutesPatch(runtimeState, first.id, 30)
+        await applyPatchWithApi(patch)
+      })()
     })
   }
 

@@ -12,7 +12,7 @@
         <div class="header-main">
           <h1 class="title">Clara Core</h1>
           <p class="meta">
-            <span class="pill">v0.15.1</span>
+            <span class="pill">v0.15.2</span>
             <span class="status" id="header-status">Clara State is leidend · Schedule-X = weergave</span>
           </p>
         </div>
@@ -21,8 +21,8 @@
       <aside class="chat-panel">
         <h2 class="panel-title">Chat / ingang</h2>
         <p class="hint">
-          Later: ChatGPT-analyse → patches op Clara State. Nu: runtime in-memory; seed uit
-          <code>CLARA_STATE/core.json</code>.
+          Later: ChatGPT-analyse → patches. Nu: GET/POST <code>/api/clara-state</code> (dev) met fallback naar
+          <code>/core.json</code>; optimistic UI + rollback bij API-fout.
         </p>
         <textarea
           id="chat-input"
