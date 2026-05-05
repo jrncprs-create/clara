@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clara 4 Core Lab</title>
-  <meta http-equiv="refresh" content="0; url=/clara-4-core-lab/index.html" />
+  <title>Clara</title>
   <script>
-    window.location.replace('/clara-4-core-lab/index.html');
+    const target = new URL('clara-core/dist/index.html', window.location.href);
+    window.location.replace(target);
   </script>
 </head>
 <body>
-  <p>Je wordt doorgestuurd naar <a href="/clara-4-core-lab/index.html">Clara 4 Core Lab</a>…</p>
+  <p>
+    Clara Core v0.15: start <code>npm install && npm run dev</code> voor ontwikkeling,
+    of <code>npm run build</code> en open daarna <code>clara-core/dist/index.html</code>.
+  </p>
 </body>
 </html>

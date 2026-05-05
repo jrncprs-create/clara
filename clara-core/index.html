@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clara Core</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="header-main">
+          <h1 class="title">Clara Core</h1>
+          <p class="meta">
+            <span class="pill">v0.15.0-clean-start</span>
+            <span class="status" id="header-status">Clara State is leidend · Schedule-X = weergave</span>
+          </p>
+        </div>
+      </header>
+
+      <aside class="chat-panel">
+        <h2 class="panel-title">Chat / ingang</h2>
+        <p class="hint">
+          Later: ChatGPT-analyse → patch op Clara State. Nu: read-only uit
+          <code>CLARA_STATE/core.json</code>.
+        </p>
+        <textarea
+          id="chat-input"
+          class="chat-input"
+          rows="6"
+          placeholder="Typ hier een notitie voor jezelf (wordt nog niet opgeslagen)…"
+        ></textarea>
+        <button type="button" class="btn" id="chat-send" disabled>Verstuur (binnenkort)</button>
+      </aside>
+
+      <main class="main">
+        <h2 class="panel-title">Agenda</h2>
+        <p class="hint subtle">
+          Data komt uit <strong>Clara State</strong> (<code>agenda_items</code>), gemapt naar Schedule-X-events.
+        </p>
+        <div id="calendar" class="calendar-host"></div>
+      </main>
+
+      <aside class="debug-panel">
+        <h2 class="panel-title">State / debug</h2>
+        <p class="hint compact">
+          Compact overzicht. Bron: <code>/core.json</code> (Vite publicDir → CLARA_STATE).
+        </p>
+        <pre id="state-debug" class="state-pre" aria-live="polite"></pre>
+      </aside>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

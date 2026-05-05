@@ -1,0 +1,56 @@
+{
+  "version": "0.15.0-clean-start",
+  "updated_at": "2026-05-06T00:00:00+02:00",
+  "conversation_context": {
+    "summary": "Voorbeeld: v0.15 clean start — Clara State als bron, Schedule-X als weergave."
+  },
+  "agenda_items": [
+    {
+      "id": "agenda-deep-work",
+      "title": "Diep werk: Clara State + mapping",
+      "start": "2026-05-06T09:00:00",
+      "end": "2026-05-06T11:30:00",
+      "project": "clara",
+      "status": "planned",
+      "kind": "focus"
+    },
+    {
+      "id": "agenda-review",
+      "title": "Review met team",
+      "start": "2026-05-07T14:00:00",
+      "end": "2026-05-07T15:00:00",
+      "project": "werk",
+      "status": "confirmed",
+      "kind": "meeting"
+    },
+    {
+      "id": "agenda-block",
+      "title": "Blok: administratie",
+      "start": "2026-05-08T10:00:00",
+      "end": "2026-05-08T11:00:00",
+      "project": "admin",
+      "status": "pencil",
+      "kind": "block"
+    }
+  ],
+  "tasks": [],
+  "projects": [
+    { "id": "clara", "name": "Clara / Core", "color": "#7c5cff" },
+    { "id": "werk", "name": "Werk", "color": "#38bdf8" },
+    { "id": "admin", "name": "Admin", "color": "#94a3b8" }
+  ],
+  "notes": [
+    {
+      "id": "note-1",
+      "text": "Schedule-X toont alleen agenda_items; wijzigingen in de UI schrijven nog niet terug."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "dec-1",
+      "text": "Europe/Amsterdam is de standaard tijdzone voor agenda en kalender."
+    }
+  ],
+  "attention": [],
+  "source_events": []
+}
