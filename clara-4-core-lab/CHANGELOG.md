@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.41.3 — 2026-05-05
+
+- Fix: “Plan deze week” eindigt niet meer stil met alleen `[Past niet]` als er niets past. In dat geval toont Clara een duidelijke keuze: **eerstvolgende werkdag**, **komende werkweek**, **één dag proberen**, of **open laten**. Ook: dubbele “Projectplan opgeslagen … wil je dit plannen?” prompt wordt gededuped. Test: `scripts/check-plan-deze-week-choice.mjs`.
+
 ## 0.14.41.2 — 2026-05-05
 
 - Fix: LaLampe projectplan + weekplanning krijgen een centrale anti-leak guard (verbiedt AFK/Nachtdiertjes/lampwezen-termen). AI-voorstellen worden bij leakage verworpen en vervangen door een schone LaLampe workshopflow-skeleton; bestaande vervuilde LaLampe-plannen worden gecorrigeerd bij openen/plannen; agenda-items uit LaLampe-plannen worden gesanitized. Extra test: `scripts/check-lalampe-anti-leak.mjs`.

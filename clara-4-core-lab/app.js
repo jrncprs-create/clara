@@ -1,4 +1,4 @@
-const LAB_VERSION='0.14.41.2';
+const LAB_VERSION='0.14.41.3';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
@@ -730,9 +730,26 @@ function addAssistantMessage(text,suggestions){const body=sanitizeUserFacingText
 function addProjectPlanSavedPrompt(planId){
   const plan=getProjectPlanById(planId);
   if(!plan)return;
+  // Prevent duplicate prompt blocks for same plan in chat.
+  try{
+    const pid=String(plan.id);
+    if(chatLog?.querySelectorAll('[data-pp-saved-action]').length){
+      for(const b of chatLog.querySelectorAll('[data-pp-saved-action]')){
+        if(String(b.getAttribute('data-plan-id')||'')===pid)return;
+      }
+    }
+  }catch(_){}
   const proj=projectLabelFor(plan.project||inferProjectFromTitle(plan.title||plan.goal||''));
   const text=`Projectplan opgeslagen (${proj}). Wil je dit deze week in potlood inplannen?`;
   chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant"><div class="msg-body">${esc(text)}</div><div class="options"><div class="option-actions"><button data-pp-saved-action="later" data-plan-id="${esc(plan.id)}">Later</button><button data-pp-saved-action="plan" data-plan-id="${esc(plan.id)}">Plan deze week</button></div></div></div>`);
+  scrollBottom();
+}
+
+function addProjectPlanNoFitChoicePrompt(planId,project){
+  const pid=String(planId||'');
+  const proj=projectLabelFor(project);
+  const text=`Voor deze week is er binnen normale werktijd te weinig ruimte om ${proj} eerlijk in te plannen. Wat wil je dat ik doe?`;
+  chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant"><div class="msg-body">${esc(text)}</div><div class="options"><div class="option-actions"><button data-pp-plan-choice="next_workday" data-plan-id="${esc(pid)}">Eerstvolgende werkdag</button><button data-pp-plan-choice="week_spread" data-plan-id="${esc(pid)}">Komende werkweek</button><button data-pp-plan-choice="one_day" data-plan-id="${esc(pid)}">Probeer op één dag</button><button data-pp-plan-choice="leave_open" data-plan-id="${esc(pid)}">Laat open</button></div></div></div>`);
   scrollBottom();
 }
 function contextPayload(message){return 'Actuele lokale Clara status (lokale waarheid, inclusief handmatige wijzigingen):\n'+JSON.stringify(labState,null,2)+'\n\nNieuw bericht:\n'+message}
@@ -951,7 +968,7 @@ async function analyzeText(message,showUser=true){if(isAnalyzing&&currentControl
   currentController=new AbortController();setAnalyzing(true);setStatus('Clara denkt even mee…');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);startThinkingStatusFlow(thinking);try{let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Kon dit niet ophalen');stopThinkingStatusFlow();render(data);removeThinking(thinking);setStatus('Bijgewerkt · v'+LAB_VERSION)}catch(e){stopThinkingStatusFlow();removeThinking(thinking);try{renderFromState();const safe=safeFallbackForMessage(value,words);if(safe){addAssistantMessage(sanitizeUserFacingText(safe,'chat')||safe,deriveSuggestions())}else{addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}}catch(_){const safe=safeFallbackForMessage(value,words);addAssistantMessage(sanitizeUserFacingText(safe||analysisFallbackMessage(),'chat')||safe||analysisFallbackMessage(),safe?deriveSuggestions():[])}setStatus('Klaar · v'+LAB_VERSION)}finally{stopThinkingStatusFlow();clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
 endPromptHost?.addEventListener('click',e=>{let b=e.target.closest('[data-agenda-end-action]');if(!b)return;handleAgendaEndPromptAction(b.dataset.itemId,b.dataset.agendaEndAction)});
 chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-proposal-action]');if(!b)return;if(b.dataset.proposalAction==='ok'&&b.dataset.kind==='confirm_all'){labState.agenda.forEach(i=>{if(i.status==='pencil')i.status='confirmed';i.confirmation_required=false});touchState();renderFromState()}b.closest('.options')?.remove()});
-chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-pp-saved-action]');if(!b)return;const id=b.dataset.planId;const act=b.dataset.ppSavedAction;if(act==='plan'){planProjectPlanThisWeek(id);b.closest('.options')?.remove()}else if(act==='later'){b.closest('.options')?.remove();setStatus('Oké, later.')}}); 
+chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-pp-saved-action]');if(b){const id=b.dataset.planId;const act=b.dataset.ppSavedAction;if(act==='plan'){planProjectPlanThisWeek(id);b.closest('.options')?.remove()}else if(act==='later'){b.closest('.options')?.remove();setStatus('Oké, later.')}return}let c=e.target.closest('[data-pp-plan-choice]');if(!c)return;const id=c.dataset.planId;const mode=c.dataset.ppPlanChoice;if(mode==='leave_open'){c.closest('.options')?.remove();addProjectPlanAttention('keuze',inferProjectKeyFromMessage(String(id||''))||null,'[Keuze] Projectplan open laten staan; plan later wanneer er ruimte is.',id);touchState();renderFromState();setStatus('Oké, open.');return}planProjectPlanThisWeek(id,{mode});c.closest('.options')?.remove()}); 
 agendaSection?.addEventListener('click',e=>{let tab=e.target.closest('[data-agenda-tab]');if(tab){activeAgendaTab=tab.dataset.agendaTab;renderFromState();return}let a=e.target.closest('[data-agenda-action]');if(!a)return;let id=a.dataset.id,item=labState.agenda.find(i=>i.id===id);if(a.dataset.agendaAction==='confirm'&&item){item.status='confirmed';item.confirmation_required=false;touchState();renderFromState()}if(a.dataset.agendaAction==='delete'){labState.agenda=labState.agenda.filter(i=>i.id!==id);touchState();renderFromState()}});
 agendaCol.addEventListener('pointerdown',e=>{let h=e.target.closest('[data-resize]'),eventEl=e.target.closest('.event');if(e.target.closest('button,[contenteditable="true"],input,textarea'))return;if(!h&&!eventEl)return;e.preventDefault();let section=(h||eventEl).closest('.timeline-card'),tl=(h||eventEl).closest('.timeline'),id=h?h.dataset.id:eventEl.dataset.id,item=labState.agenda.find(i=>i.id===id);if(!section||!tl||!item)return;let rect=tl.getBoundingClientRect(),s=timeToMin(item.start_time)||Number(section.dataset.start),en=timeToMin(item.end_time)||s+(item.estimated_duration_minutes||30);dragState={id:item.id,mode:h?'resize':'move',edge:h?.dataset.resize||null,start:Number(section.dataset.start),end:Number(section.dataset.end),rect,offset:eventEl?Math.max(0,e.clientY-eventEl.getBoundingClientRect().top):0,duration:Math.max(15,en-s)};(h||eventEl).setPointerCapture?.(e.pointerId)});
 window.addEventListener('pointermove',e=>{if(!dragState)return;let item=labState.agenda.find(i=>i.id===dragState.id);if(!item)return;let y=Math.max(0,Math.min(dragState.rect.height,e.clientY-dragState.rect.top)),min=round15(dragState.start+(y/dragState.rect.height)*(dragState.end-dragState.start)),s=timeToMin(item.start_time)||dragState.start,en=timeToMin(item.end_time)||s+30;if(dragState.mode==='move'){let offMin=(dragState.offset/dragState.rect.height)*(dragState.end-dragState.start);s=round15(dragState.start+((e.clientY-dragState.rect.top)/dragState.rect.height)*(dragState.end-dragState.start)-offMin);s=Math.max(dragState.start,Math.min(s,dragState.end-dragState.duration));en=s+dragState.duration;if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.start_time=minToTime(s);item.end_time=minToTime(en);item.estimated_duration_minutes=dragState.duration}else if(dragState.edge==='start'){s=Math.min(min,en-15);if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.start_time=minToTime(s);item.estimated_duration_minutes=Math.max(15,en-s)}else{en=Math.max(min,s+15);if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.end_time=minToTime(en);item.estimated_duration_minutes=Math.max(15,en-s)}touchState();renderFromState()});
@@ -1027,7 +1044,7 @@ function topoSortSteps(steps,project){
   return out;
 }
 
-function planProjectPlanThisWeek(planId){
+function planProjectPlanThisWeek(planId,opts=null){
   let plan=getProjectPlanById(planId);
   if(!plan){setStatus('Geen projectplan om te plannen.');return}
   // Hardening: prevent LaLampe plans from ever scheduling AFK/Nachtdiertjes terms.
@@ -1037,8 +1054,10 @@ function planProjectPlanThisWeek(planId){
   labState.agenda=(labState.agenda||[]).filter(i=>!(i&&String(i.source||'')==='project_plan'&&String(i.project_plan_id||'')===String(plan.id)));
   labState.attention=(labState.attention||[]).filter(i=>!(i&&String(i.project_plan_id||'')===String(plan.id)&&(i.kind==='past_niet'||i.kind==='wacht'||i.kind==='risico')));
 
+  const mode=String(opts?.mode||'this_week');
   const startIso=startIsoForWeekPlanning();
-  const days=nextWorkdaysFrom(startIso,5);
+  const nextWorkday=nextWorkdayFromIso(addDaysIso(todayIso(),1));
+  const days=mode==='next_workday'?[nextWorkday]:(mode==='one_day'?[nextWorkday]:(mode==='week_spread'?nextWorkdaysFrom(nextWorkday,5):nextWorkdaysFrom(startIso,5)));
   const proj=plan.project||inferProjectFromTitle(plan.title||plan.goal||'');
   if(!proj||getProjectVisual(proj).key==='none'){setStatus('Kies eerst een project voor dit plan.');return}
 
@@ -1051,6 +1070,7 @@ function planProjectPlanThisWeek(planId){
 
   const planDeadline=parseIsoDateOrNull(plan.deadline);
   let planned=0,notFit=0,waiting=0;
+  const pendingPastNiet=[];
 
   function dueFor(step,task){
     return parseIsoDateOrNull(task?.deadline)||parseIsoDateOrNull(step?.deadline)||planDeadline;
@@ -1134,7 +1154,7 @@ function planProjectPlanThisWeek(planId){
     });
     if(placedStep&&placedStep.dayIx!=null)scheduledStepDayIx.set(String(step.id),placedStep.dayIx);
     if(!placedStep){
-      addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,90)}” past deze week niet meer.`,plan.id);
+      pendingPastNiet.push(`[Past niet] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,90)}” past deze week niet meer.`);
       notFit++;
       continue;
     }
@@ -1155,7 +1175,7 @@ function planProjectPlanThisWeek(planId){
         preferIx:tprefer
       });
       if(!placedTask){
-        addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: taak “${guidanceText(task.title,90)}” past deze week niet meer.`,plan.id);
+        pendingPastNiet.push(`[Past niet] ${projectLabelFor(proj)}: taak “${guidanceText(task.title,90)}” past deze week niet meer.`);
         notFit++;
       }
     }
@@ -1172,6 +1192,15 @@ function planProjectPlanThisWeek(planId){
   labState.agenda=markOverlaps(labState.agenda);
   touchState();
   renderFromState();
+  if(!planned && (notFit||waiting)){
+    addProjectPlanNoFitChoicePrompt(plan.id,proj);
+    addProjectPlanAttention('keuze',proj,'[Keuze] Voor deze week is er te weinig ruimte. Kies: eerstvolgende werkdag / komende werkweek / één dag / open laten.',plan.id);
+    setStatus('Te weinig ruimte · keuze nodig.');
+    return;
+  }
+  if(planned){
+    for(const t of pendingPastNiet) addProjectPlanAttention('past_niet',proj,t,plan.id);
+  }
   setStatus(planned?`Projectplan gepland: ${planned} blok(ken).`:(notFit||waiting?`Niet alles past deze week.`:'Geen concrete stappen om te plannen.'));
 }
 function handleSuggestionAction(id,action,title){const item=findGuidanceSourceItem(id),clean=guidanceText(title||item?.title||id,120);if(action==='plan'){addLocalAgendaSuggestion(clean,item?.project||null);if(item&&!labState.agenda.includes(item))item.done=true;dismissedGuidanceIds.add(id)}else if(action==='dismiss'){dismissedGuidanceIds.add(id);if(item&&!labState.agenda.includes(item))item.done=true}persistDismissedGuidanceIds();touchState();renderFromState()}
