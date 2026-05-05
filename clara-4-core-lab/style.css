@@ -151,6 +151,41 @@
 
 .startup-overlay__foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:flex-end;gap:10px}
 
+.projectplan-overlay.hidden{display:none}
+.projectplan-overlay{position:fixed;inset:0;z-index:65;display:grid;place-items:center;padding:18px}
+.projectplan-overlay__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px)}
+.projectplan-overlay__panel{position:relative;width:min(900px,94vw);max-height:min(82vh,720px);overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(28,28,28,.98);display:flex;flex-direction:column}
+.projectplan-overlay__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
+.projectplan-overlay__body{padding:14px 16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.projectplan-overlay__foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.projectplan-overlay__btn{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e6e6e6;padding:7px 10px;cursor:pointer}
+.projectplan-overlay__btn.primary{border-color:rgba(116,212,130,.45);background:rgba(116,212,130,.12);color:#dff5e2}
+.projectplan-overlay__btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26)}
+
+.pp-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}
+.pp-card{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+.pp-card h4{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(175,175,175,.92)}
+.pp-field{display:flex;flex-direction:column;gap:6px}
+.pp-field label{font-size:10.5px;font-weight:650;color:rgba(200,200,200,.88);text-transform:uppercase;letter-spacing:.04em}
+.pp-input,.pp-textarea,.pp-select{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:rgba(245,245,245,.95);border-radius:12px;padding:9px 10px;font:inherit;font-size:13px;outline:0}
+.pp-input:focus,.pp-textarea:focus,.pp-select:focus{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.06)}
+.pp-textarea{min-height:76px;resize:vertical}
+.pp-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pp-muted{font-size:12px;color:rgba(175,175,175,.9)}
+.pp-actions{display:flex;gap:8px;flex-wrap:wrap}
+.pp-btn{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e6e6e6;padding:7px 10px;cursor:pointer}
+.pp-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26)}
+.pp-btn.primary{border-color:rgba(116,212,130,.45);background:rgba(116,212,130,.12);color:#dff5e2}
+.pp-btn.danger{border-color:rgba(255,120,120,.35);background:rgba(255,120,120,.08);color:rgba(255,225,225,.95)}
+.pp-step{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 10px;background:rgba(0,0,0,.12);display:flex;flex-direction:column;gap:10px}
+.pp-step-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pp-step-title{font-size:13.5px;line-height:1.35;color:rgba(245,245,245,.97);margin:0}
+.pp-task{display:flex;gap:8px;align-items:flex-start;border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
+.pp-task:first-child{border-top:0;padding-top:0}
+.pp-task-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.pp-projectplans-entry{display:flex;justify-content:flex-end}
+.pp-projectplans-entry .pp-btn{padding:7px 12px}
+
 .cockpit-header{padding:12px 14px 8px;display:flex;flex-direction:column;gap:8px}
 .cockpit-top{display:flex;align-items:center;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;overflow:hidden}
 .cockpit-logo{width:56px;height:56px;display:grid;place-items:center;color:rgba(245,245,245,.92);flex:0 0 auto}

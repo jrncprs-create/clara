@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clara 4 Core Lab v0.14.34</title>
+<title>Clara 4 Core Lab v0.14.35</title>
 <link rel="stylesheet" href="./style.css">
 <link rel="stylesheet" href="./layout-target.css">
 <script src="./app.js" defer></script>
@@ -24,6 +24,22 @@
     <div class="startup-overlay__foot">
       <button type="button" class="startup-overlay__btn" data-startup-overlay-action="accept-all" id="startupOverlayAcceptAll">Alles accepteren</button>
       <button type="button" class="startup-overlay__btn primary" data-startup-overlay-action="start-empty">Start zonder voorstellen</button>
+    </div>
+  </div>
+</div>
+
+<div class="projectplan-overlay hidden" id="projectPlanOverlay" role="dialog" aria-modal="true" aria-labelledby="projectPlanOverlayTitle">
+  <div class="projectplan-overlay__backdrop" data-projectplan-close></div>
+  <div class="projectplan-overlay__panel">
+    <div class="projectplan-overlay__head">
+      <div class="brand"><span class="mark">✦</span><span class="title" id="projectPlanOverlayTitle">Projectplan</span></div>
+      <button type="button" class="plain" data-projectplan-close aria-label="Sluit">×</button>
+    </div>
+    <div class="projectplan-overlay__body" id="projectPlanOverlayBody"></div>
+    <div class="projectplan-overlay__foot">
+      <button type="button" class="projectplan-overlay__btn" data-projectplan-action="plan-week">Plan deze week</button>
+      <button type="button" class="projectplan-overlay__btn" data-projectplan-action="save">Opslaan</button>
+      <button type="button" class="projectplan-overlay__btn primary" data-projectplan-action="close">Sluiten</button>
     </div>
   </div>
 </div>

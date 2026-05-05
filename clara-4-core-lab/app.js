@@ -1,12 +1,12 @@
-const LAB_VERSION='0.14.34';
+const LAB_VERSION='0.14.35';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
 const LEGACY_NOISE_KEY='clara_core_lab_legacy_noise_v1';
-const startupOverlay=document.getElementById('startupOverlay'),startupOverlayIntro=document.getElementById('startupOverlayIntro'),startupOverlayList=document.getElementById('startupOverlayList'),startupOverlayAcceptAllBtn=document.getElementById('startupOverlayAcceptAll'),weatherStrip=document.getElementById('weatherStrip');
+const startupOverlay=document.getElementById('startupOverlay'),startupOverlayIntro=document.getElementById('startupOverlayIntro'),startupOverlayList=document.getElementById('startupOverlayList'),startupOverlayAcceptAllBtn=document.getElementById('startupOverlayAcceptAll'),projectPlanOverlay=document.getElementById('projectPlanOverlay'),projectPlanOverlayBody=document.getElementById('projectPlanOverlayBody'),weatherStrip=document.getElementById('weatherStrip');
 const STARTUP_INTERNAL_PROMPT='Maak een rustige conceptplanning voor vandaag op basis van de beschikbare projectcontext. Kies maximaal één eerstvolgende logische actie per actief project. Zet uitvoerbare acties als potloodblokken in de agenda. Geef hooguit één noodzakelijke vraag, een korte route vooruit en concrete open items. Maak geen ruwe contextdump, verzin geen harde afspraken, plan geen overlap, en zet wat niet eerlijk past apart als needs_time.';
 const STARTUP_DONE_MSG='Ik heb alvast een rustige conceptstart klaargezet. Alles staat als potloodvoorstel.';
-let labState={agenda:[],attention:[],tasks:[],open_threads:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null,now_first_move:''},updated_at:null},activeAgendaTab='day',activeAgendaDate=null,currentController=null,isAnalyzing=false,dragState=null,thinkingId=0,startupAnalysisScheduled=false,activeAgendaEndPromptItemId=null,dismissedGuidanceIds=new Set(),hiddenOpenEndIds=new Set(),guidanceRefreshHint='',refreshGuidanceHintTimer=null,lastOpenItemRef=null,lastUserInputForSanitize='',lastPlanningMessage='',legacyNoiseSig=new Set(),overlayEditId=null,overlayEditDraft='';
+let labState={agenda:[],attention:[],tasks:[],open_threads:[],project_plans:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null,now_first_move:''},updated_at:null},activeAgendaTab='day',activeAgendaDate=null,currentController=null,isAnalyzing=false,dragState=null,thinkingId=0,startupAnalysisScheduled=false,activeAgendaEndPromptItemId=null,dismissedGuidanceIds=new Set(),hiddenOpenEndIds=new Set(),guidanceRefreshHint='',refreshGuidanceHintTimer=null,lastOpenItemRef=null,lastUserInputForSanitize='',lastPlanningMessage='',legacyNoiseSig=new Set(),overlayEditId=null,overlayEditDraft='',projectPlanOverlayOpenId=null;
 
 function loadLegacyNoise(){try{const raw=localStorage.getItem(LEGACY_NOISE_KEY);if(!raw)return;const a=JSON.parse(raw);if(!Array.isArray(a))return;legacyNoiseSig=new Set(a.map(String))}catch(_){}}
 function persistLegacyNoise(){try{localStorage.setItem(LEGACY_NOISE_KEY,JSON.stringify([...legacyNoiseSig].slice(0,1800)))}catch(_){}}
@@ -19,8 +19,48 @@ function looksLikeLegacyNoiseAgendaItem(i){if(!i||typeof i!=='object')return tru
 function overlayCanAcceptSuggestion(s){const text=filterUserFacingLine(s?.text);if(!text)return false;const proj=s.project||inferProjectFromTitle(text);return isConcreteAgendaItem({title:text,project:proj,estimated_duration_minutes:45})}
 function overlaySuggestionTitle(s){return guidanceText(filterUserFacingLine(s?.text)||s?.text||'',160)}
 function renderOverlaySuggestionCard(s){const id=String(s?.id||'');const proj=projectLabelFor(s.project);const src=sourceLabelFor(s.source);const reason=s.reason?guidanceText(s.reason,90):'';const meta=[proj,src,reason].filter(Boolean).join(' · ');const isEdit=overlayEditId===id;const title=isEdit?guidanceText(overlayEditDraft||overlaySuggestionTitle(s),160):overlaySuggestionTitle(s);const titleEl=isEdit?`<input class="startup-overlay__edit" value="${esc(title)}" data-overlay-edit-input data-id="${esc(id)}" />`:`<p class="startup-overlay__item-title">${esc(title)}</p>`;const btns=`<button type="button" class="plain" data-overlay-proposal-action="accept" data-id="${esc(id)}" aria-label="Accepteren">✓</button><button type="button" class="plain" data-overlay-proposal-action="edit" data-id="${esc(id)}" aria-label="Aanpassen">✎</button><button type="button" class="plain" data-overlay-proposal-action="dismiss" data-id="${esc(id)}" aria-label="Weg">×</button>`;return`<div class="startup-overlay__item" data-overlay-kind="suggestion" data-id="${esc(id)}">${titleEl}<p class="startup-overlay__item-sub">${esc(meta)}</p><div class="startup-overlay__item-actions startup-overlay__item-actions--icons">${btns}</div></div>`}
-function loadLabStateFromStorage(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const o=JSON.parse(raw);if(!o||typeof o!=='object')return;labState.agenda=Array.isArray(o.agenda)?o.agenda:[];labState.attention=Array.isArray(o.attention)?o.attention:[];labState.tasks=Array.isArray(o.tasks)?o.tasks:[];labState.open_threads=Array.isArray(o.open_threads)?o.open_threads:[];const dr=o.day_regie||{};labState.day_regie={items_to_check:dr.items_to_check||[],rollover_candidates:dr.rollover_candidates||[],review_prompt:dr.review_prompt||'',suggested_time:dr.suggested_time??null,now_first_move:dr.now_first_move||''};labState.updated_at=o.updated_at||null}catch(_){}}
-function saveLabStateToStorage(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({agenda:labState.agenda,attention:labState.attention,tasks:labState.tasks,open_threads:labState.open_threads,day_regie:labState.day_regie,updated_at:labState.updated_at}))}catch(_){}}
+function normalizeProjectPlan(raw,idx=0){
+  if(!raw||typeof raw!=='object')return null;
+  const id=String(raw.id||'pp-'+Date.now()+'-'+idx+'-'+((Math.random()*1e6)|0));
+  const project=String(raw.project||raw.project_key||'').trim()||inferProjectFromTitle(raw.title||raw.goal||'')||null;
+  const title=guidanceText(raw.title||raw.plan_title||projectLabelFor(project)||'Projectplan',120);
+  const goal=guidanceText(raw.goal||raw.doel||'',260);
+  const deadline=raw.deadline?String(raw.deadline).slice(0,10):'';
+  const status=String(raw.status||'active');
+  const context=guidanceText(raw.context||raw.reason||'',420);
+  const stepsRaw=Array.isArray(raw.steps)?raw.steps:[];
+  const steps=stepsRaw.map((s,i)=>{
+    if(!s||typeof s!=='object')return null;
+    const sid=String(s.id||id+'-st-'+i+'-'+((Math.random()*1e6)|0));
+    const stTitle=guidanceText(s.title||'',140);
+    const stStatus=String(s.status||'todo');
+    const est=Number(s.estimated_duration_minutes||s.duration_minutes||0);
+    const estimated_duration_minutes=Number.isFinite(est)&&est>0?Math.max(10,Math.round(est/5)*5):60;
+    const dependency_type=String(s.dependency_type||'none');
+    const depends_on_step_id=s.depends_on_step_id?String(s.depends_on_step_id):'';
+    const stDeadline=s.deadline?String(s.deadline).slice(0,10):'';
+    const tasksRaw=Array.isArray(s.tasks)?s.tasks:[];
+    const tasks=tasksRaw.map((t,j)=>{
+      if(!t||typeof t!=='object')return null;
+      const tid=String(t.id||sid+'-ta-'+j+'-'+((Math.random()*1e6)|0));
+      const tt=guidanceText(t.title||'',160);
+      const ts=String(t.status||'todo');
+      const te=Number(t.estimated_duration_minutes||t.duration_minutes||0);
+      const ted=Number.isFinite(te)&&te>0?Math.max(10,Math.round(te/5)*5):25;
+      const tdl=t.deadline?String(t.deadline).slice(0,10):'';
+      const source_reason=guidanceText(t.source_reason||t.reason||'',140);
+      return {id:tid,title:tt,status:ts,estimated_duration_minutes:ted,deadline:tdl,source_reason};
+    }).filter(Boolean);
+    return {id:sid,title:stTitle,status:stStatus,estimated_duration_minutes,dependency_type,depends_on_step_id,deadline:stDeadline,tasks};
+  }).filter(Boolean);
+  const created_at=raw.created_at||new Date().toISOString();
+  const updated_at=raw.updated_at||raw.updatedAt||created_at;
+  const source=String(raw.source||'local');
+  return {id,project,title,goal,deadline,status,context,steps,created_at,updated_at,source};
+}
+
+function loadLabStateFromStorage(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const o=JSON.parse(raw);if(!o||typeof o!=='object')return;labState.agenda=Array.isArray(o.agenda)?o.agenda:[];labState.attention=Array.isArray(o.attention)?o.attention:[];labState.tasks=Array.isArray(o.tasks)?o.tasks:[];labState.open_threads=Array.isArray(o.open_threads)?o.open_threads:[];labState.project_plans=Array.isArray(o.project_plans)?o.project_plans.map((p,i)=>normalizeProjectPlan(p,i)).filter(Boolean):[];const dr=o.day_regie||{};labState.day_regie={items_to_check:dr.items_to_check||[],rollover_candidates:dr.rollover_candidates||[],review_prompt:dr.review_prompt||'',suggested_time:dr.suggested_time??null,now_first_move:dr.now_first_move||''};labState.updated_at=o.updated_at||null}catch(_){}}
+function saveLabStateToStorage(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({agenda:labState.agenda,attention:labState.attention,tasks:labState.tasks,open_threads:labState.open_threads,project_plans:labState.project_plans,day_regie:labState.day_regie,updated_at:labState.updated_at}))}catch(_){}}
 function clearStartupDoneIfEmpty(){if(dayRegieIsEmpty(labState)){try{sessionStorage.removeItem(SESSION_STARTUP_KEY)}catch(_){}}}
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function todayIso(){let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -40,6 +80,9 @@ function sanitizeUserFacingText(raw,kind){const s0=String(raw||'').replace(/\s+/
 function filterUserFacingLine(raw){const s=sanitizeUserFacingText(raw,'panel');return s}
 function normalizePlanningDateIso(dateIso,message){const d=dayOfWeekFromIso(dateIso);const allow=/(weekend|zaterdag|zondag|urgent|deadline)/i.test(String(message||''));if((d===0||d===6)&&!allow){let iso=dateIso;for(let k=0;k<14&&(dayOfWeekFromIso(iso)===0||dayOfWeekFromIso(iso)===6);k++)iso=addDaysIso(iso,1);return iso}return dateIso}
 function compactDayWorkWindow(dateIso){const d=dayOfWeekFromIso(dateIso);if(d===1)return{start:11*60,end:18*60};if(d>=2&&d<=5)return{start:10*60,end:18*60};return{start:10*60,end:18*60}}
+function isWeekendIso(iso){const d=dayOfWeekFromIso(iso);return d===0||d===6}
+function nextWorkdaysFrom(dateIso,count=5){const out=[];let cur=dateIso;for(let k=0;k<28&&out.length<count;k++){if(!isWeekendIso(cur))out.push(cur);cur=addDaysIso(cur,1)}return out}
+function findFreeSlotWorkday(dateIso,duration){const win=compactDayWorkWindow(dateIso);let s0=win.start;const tIso=todayIso();if(dateIso===tIso){const nowM=round15(getNowMinutes());s0=Math.max(win.start,nowM)}for(let s=s0;s+duration<=win.end;s+=15){if(!hasAgendaOverlap(dateIso,s,s+duration,null))return{start:s,end:s+duration}}return null}
 function isAgendaItemDone(i){if(!i)return false;return!!i.completed_at||i.status==='done'||i.status==='completed'}
 function itemAgendaDate(i){return i.date||todayIso()}
 function normalizeAgendaItem(raw){if(!raw||typeof raw!=='object')return null;const title=guidanceText(raw.title||raw.text||'').trim();if(!title)return null;const date=String(raw.date||todayIso());const start=raw.start_time||null,end=raw.end_time||null;const s=timeToMin(start),e=timeToMin(end);const duration=raw.estimated_duration_minutes||((s!=null&&e!=null)?Math.max(15,e-s):null)||null;const status=raw.status||'pencil';const project=raw.project||null;const confirmation_required=raw.confirmation_required===true||status==='pencil';return{...raw,id:String(raw.id||''),title,date,start_time:start,end_time:end,estimated_duration_minutes:duration,status,confirmation_required,project}}
@@ -55,7 +98,7 @@ function isoAtLocalDateMinutes(dateIso,totalMin){let[y,mo,d]=dateIso.split('-').
 function shouldPromptAgendaEnd(item,now,activeAgendaDate){let tIso=todayIso(),id=itemAgendaDate(item);if(id!==tIso)return false;let endM=getItemBlockEndMinutes(item);if(endM==null)return false;if(classifyAllDay(item))return false;let st=String(item.status||'');if(isAgendaItemDone(item))return false;if(st==='needs_time'||st==='external_busy')return false;if(item.kind==='external_busy')return false;let sm=timeToMin(item.start_time);if(sm==null)return false;if(item._end_prompt_snoozed_until){let sn=Date.parse(item._end_prompt_snoozed_until);if(!isNaN(sn)&&now.getTime()<sn)return false}let nowFrac=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;if(nowFrac<endM||nowFrac>endM+30)return false;return true}
 function findAgendaEndPromptCandidate(now){let c=labState.agenda.filter(i=>shouldPromptAgendaEnd(i,now,activeAgendaDate));if(!c.length)return null;c.sort((a,b)=>(getItemBlockEndMinutes(a)||0)-(getItemBlockEndMinutes(b)||0));return c[0]}
 function clearAgendaEndPromptUI(){activeAgendaEndPromptItemId=null;if(endPromptHost)endPromptHost.innerHTML=''}
-function clearLocalTestState(){LAB_TEST_STORAGE_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(_){}});try{sessionStorage.removeItem(SESSION_STARTUP_KEY)}catch(_){}try{localStorage.removeItem('clara_core_lab_current_context')}catch(_){}stopThinkingStatusFlow();if(isAnalyzing&&currentController){try{currentController.abort()}catch(_){}}setAnalyzing(false);dragState=null;startupAnalysisScheduled=false;dismissedGuidanceIds.clear();hiddenOpenEndIds.clear();labState={agenda:[],attention:[],tasks:[],open_threads:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null,now_first_move:''},updated_at:new Date().toISOString()};activeAgendaTab='day';activeAgendaDate=null;clearAgendaEndPromptUI();try{document.querySelectorAll('#chatLog .msg .options').forEach(n=>n.remove())}catch(_){}saveLabStateToStorage();clearStartupDoneIfEmpty();renderFromState();setStatus('Lokale teststaat gewist.');applyStartupGreeting()}
+function clearLocalTestState(){LAB_TEST_STORAGE_KEYS.forEach(k=>{try{localStorage.removeItem(k)}catch(_){}});try{sessionStorage.removeItem(SESSION_STARTUP_KEY)}catch(_){}try{localStorage.removeItem('clara_core_lab_current_context')}catch(_){}stopThinkingStatusFlow();if(isAnalyzing&&currentController){try{currentController.abort()}catch(_){}}setAnalyzing(false);dragState=null;startupAnalysisScheduled=false;dismissedGuidanceIds.clear();hiddenOpenEndIds.clear();labState={agenda:[],attention:[],tasks:[],open_threads:[],project_plans:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null,now_first_move:''},updated_at:new Date().toISOString()};activeAgendaTab='day';activeAgendaDate=null;clearAgendaEndPromptUI();try{document.querySelectorAll('#chatLog .msg .options').forEach(n=>n.remove())}catch(_){}saveLabStateToStorage();clearStartupDoneIfEmpty();renderFromState();setStatus('Lokale teststaat gewist.');applyStartupGreeting()}
 function labClearTestControls(){return'<p class="lab-test-row"><button type="button" class="lab-clear-test" data-action="clear-test-state">Wis lokale teststaat</button></p>'}
 function showAgendaEndPrompt(item){if(!endPromptHost||!item)return;activeAgendaEndPromptItemId=item.id;let t=esc(String(item.title||'').trim()||'Blok');endPromptHost.innerHTML=`<div class="end-prompt-card" role="dialog" aria-labelledby="end-prompt-h"><div id="end-prompt-h" class="end-prompt-head">Blok afgelopen</div><div class="end-prompt-body">Dit blok liep net af: ${t}. Is dit afgerond?</div><div class="end-prompt-actions"><button type="button" class="end-prompt-btn primary" data-agenda-end-action="done" data-item-id="${esc(item.id)}">Voltooid</button><button type="button" class="end-prompt-btn" data-agenda-end-action="extend15" data-item-id="${esc(item.id)}">15 min erbij</button><button type="button" class="end-prompt-btn" data-agenda-end-action="rollover" data-item-id="${esc(item.id)}">Doorschuiven</button><button type="button" class="end-prompt-btn muted" data-agenda-end-action="later" data-item-id="${esc(item.id)}">Later</button></div></div>`}
 function checkAgendaEndPrompts(){let now=new Date();if(activeAgendaEndPromptItemId){let cur=labState.agenda.find(i=>i.id===activeAgendaEndPromptItemId);if(cur&&shouldPromptAgendaEnd(cur,now,activeAgendaDate))return;clearAgendaEndPromptUI()}let next=findAgendaEndPromptCandidate(now);if(next)showAgendaEndPrompt(next)}
@@ -113,7 +156,6 @@ function buildReason(source){if(source==='agenda')return'Uit je bestaande planni
 function pickTopPerProject(items,maxTotal,maxPerProject){const by=new Map();for(const it of items){const k=getProjectVisual(it.project).key||'none';if(!by.has(k))by.set(k,[]);by.get(k).push(it)}const keys=[...by.keys()];const out=[];let round=0;while(out.length<maxTotal&&round<maxPerProject){for(const k of keys){const arr=by.get(k);if(!arr||arr.length<=round)continue;out.push(arr[round]);if(out.length>=maxTotal)break}round++}return out}
 function deriveAgendaSuggestions(ls){const titleSet=agendaTitleNormSetForSuggestions(ls);const lines=[];for(const i of ls.agenda||[]){if(isAgendaItemDone(i)||i.status==='needs_time'||timeToMin(i.start_time)!=null)continue;const t=String(i.title||'').trim();const tf=filterUserFacingLine(t);if(tf&&!/dagbrede|geen/i.test(tf)&&!suggestionDuplicatesAgendaTitle(tf,titleSet))lines.push({id:i.id||'ag-'+simpleHash(t),source:'agenda',text:tf,project:i.project||null,reason:buildReason('agenda')})}for(const i of ls.tasks||[]){if(!i.done&&i.title){const tf=filterUserFacingLine(i.title);if(tf&&!suggestionDuplicatesAgendaTitle(tf,titleSet))lines.push({id:i.id||'ta-'+simpleHash(i.title),source:'task',text:tf,project:i.project||null,reason:buildReason('task')})}}const now=String(ls.day_regie?.now_first_move||'').trim();const nowF=filterUserFacingLine(now);if(nowF&&!suggestionDuplicatesAgendaTitle(nowF,titleSet))lines.unshift({id:'now-'+simpleHash(nowF),source:'day_regie',text:nowF,project:'clara-core-lab',reason:buildReason('day_regie')});if(!lines.length){const blob=[...(ls.attention||[]),...(ls.open_threads||[])].map(i=>`${i.title||''} ${i.question||''} ${i.project||''}`).join(' ').toLowerCase();if(/marlon|demo|core\s*lab|clara/i.test(blob))lines.push({id:'demo-check',source:'suggestion',text:'Clara Core Lab: inhoudelijk nalopen voor demo',project:'clara-core-lab',reason:buildReason('suggestion')});else lines.push({id:'first-step',source:'suggestion',text:'Algemeen: één concrete eerstvolgende stap kiezen',project:null,reason:buildReason('suggestion')})}const uniq=uniqueGuidanceLines(lines.map(x=>x.text),10).map((text,idx)=>{const g=guidanceText(text,150);const src=lines.find(x=>guidanceText(x.text,150)===g)||{};return{id:src.id||'sg-'+idx,source:src.source||'suggestion',project:src.project||null,reason:src.reason||'',text:g}}).filter(i=>!dismissedGuidanceIds.has(i.id));return pickTopPerProject(uniq,5,2)}
 function deriveOpenEnds(ls){const lines=[];for(const i of ls.open_threads||[]){if(i&&i.status!=='closed'){const tx=filterUserFacingLine(i.question||i.title||i.context);if(tx)lines.push({id:i.id,source:'thread',text:tx,project:i.project||null,reason:buildReason('thread')})}}for(const q of ls.questions||[]){const tx=filterUserFacingLine(q);if(tx)lines.push({id:'q-'+simpleHash(tx),source:'question',text:tx,project:'clara-core-lab',reason:'Er is nog iets onduidelijk.'})}for(const i of normalizeAttentionItems(ls.attention||[])){if(!i.done){const tx=filterUserFacingLine(i.title);if(tx)lines.push({id:i.id,source:'attention',text:tx,project:i.project||null,reason:'Dit blijft relevant om scherp te krijgen.'})}}for(const i of ls.agenda||[]){if(i.status==='needs_time'){const tx=filterUserFacingLine(`${i.title||'Werk'} heeft nog geen vaste plek.`);if(tx)lines.push({id:i.id,source:'agenda',text:tx,project:i.project||null,reason:'Dit heeft nog een plek nodig.'})}if(i._frontend_conflict){const tx=filterUserFacingLine(`Overlap rond ${i.title||'een blok'}.`);if(tx)lines.push({id:i.id+'-c',source:'agenda',text:tx,project:i.project||null,reason:'Er is overlap die eerst opgelost moet worden.'})}}const uniq=uniqueGuidanceLines(lines.map(x=>x.text),12).map((text,idx)=>{const g=guidanceText(text,150);const src=lines.find(x=>guidanceText(x.text,150)===g)||{};return{id:src.id||'oe-'+idx,source:src.source||'note',project:src.project||null,reason:src.reason||'',text:g,urgent:isUrgentOpenEnd(g,src.source)}}).filter(i=>!hiddenOpenEndIds.has(`${i.source}:${i.id}`));const ordered=pickTopPerProject([...uniq.filter(i=>i.urgent),...uniq.filter(i=>!i.urgent)],3,1);lastOpenItemRef=ordered.length?{id:ordered[0].id,source:ordered[0].source}:null;return ordered}
-function renderAgendaSuggestionsPanel(ls){const suggestions=deriveAgendaSuggestions(ls);const hint=guidanceRefreshHint?`<p class="guidance-refresh-hint" role="status">${esc(guidanceRefreshHint)}</p>`:'';if(!suggestions.length)return`<div class="card guide-card guide-route">${hint}<p class="empty">Geen agenda-suggesties.</p></div>`;const rows=suggestions.map(i=>`<div class="item guide-suggestion-item" data-id="${esc(i.id)}"><div class="guide-suggestion-text">${esc(i.text)}<div class="sub">${esc(projectLabelFor(i.project))} · ${esc(sourceLabelFor(i.source))}${i.reason?` · ${esc(guidanceText(i.reason,80))}`:''}</div><div class="guide-chips guide-row-chips">${suggestionChip('Plan','plan',i.id,i.text)}${suggestionChip('Weg','dismiss',i.id,i.text)}</div></div></div>`).join('');return`<div class="card guide-card guide-route">${hint}${rows}</div>`}
 function renderOpenEndsPanel(ls){const open=deriveOpenEnds(ls);if(!open.length)return'<div class="card guide-card guide-open"><p class="empty">Geen open items.</p>'+labClearTestControls()+'</div>';const rows=open.map(i=>`<div class="item guide-open-item ${i.urgent?'urgent':''}" data-open-source="${esc(i.source)}" data-id="${esc(i.id)}"><div class="guide-open-text">${esc(i.text)}<div class="sub">${esc(projectLabelFor(i.project))} · ${esc(sourceLabelFor(i.source))}${i.reason?` · ${esc(guidanceText(i.reason,80))}`:''}</div><div class="open-answer-row"><span class="open-answer-label">Antwoord</span><input class="open-answer-input" data-open-answer-input data-id="${esc(i.id)}" data-open-source="${esc(i.source)}" placeholder="Typ hier…"><button type="button" class="open-answer-save" data-open-answer-save data-id="${esc(i.id)}" data-open-source="${esc(i.source)}">Opslaan</button><button type="button" class="open-answer-close" data-open-action="close" data-id="${esc(i.id)}" data-open-source="${esc(i.source)}" aria-label="Verwijder open item">×</button></div></div></div>`).join('');return`<div class="card guide-card guide-open">${rows}`+labClearTestControls()+'</div>'}
 function classifyAllDay(i){let s=timeToMin(i.start_time),e=timeToMin(i.end_time),d=i.estimated_duration_minutes||(s!=null&&e!=null?e-s:null);return s==null||i.status==='needs_time'||d>=300}
 function isAgendaPencilLike(i){if(!i||i._frontend_conflict)return false;if(i.status==='confirmed')return false;if(i.status==='pencil')return true;if(i.confirmation_required===true)return true;if(String(i.source||'')==='projectbrain_startup')return true;if(String(i.kind||'')==='planned_task'&&!isAgendaItemDone(i))return true;return false}
@@ -127,6 +169,138 @@ function renderRegie(){regieCol.innerHTML=renderOpenEndsPanel(labState)}
 function renderGuidance(){attentionCol.innerHTML=renderAgendaSuggestionsPanel(labState)}
 function renderFromState(){labState.agenda=markOverlaps(labState.agenda);labState.attention=normalizeAttentionItems(labState.attention);labState.open_threads=Array.isArray(labState.open_threads)?labState.open_threads:[];renderAgenda();renderGuidance();renderRegie();checkAgendaEndPrompts()}
 function overlayItemCard(){return''}
+
+function renderProjectPlansEntry(){
+  const count=(labState.project_plans||[]).length;
+  const label=count?`Projectplannen (${count})`:'Projectplannen';
+  return `<div class="pp-projectplans-entry"><button type="button" class="pp-btn" data-projectplans-action="open">${esc(label)}</button></div>`;
+}
+
+function projectPlanDependencyLabel(v){if(v==='after_prev')return'na vorige stap';if(v==='parallel')return'parallel';if(v==='external_wait')return'wacht op extern';return'geen'}
+function projectPlanStatusLabel(v){if(v==='done')return'klaar';if(v==='paused')return'gepauzeerd';if(v==='archived')return'gearchiveerd';return'actief'}
+function stepStatusLabel(v){if(v==='done')return'klaar';if(v==='doing')return'bezig';return'todo'}
+
+function ensureProjectPlanExists(){if(!Array.isArray(labState.project_plans))labState.project_plans=[]}
+function getProjectPlanById(id){ensureProjectPlanExists();return labState.project_plans.find(p=>String(p.id)===String(id))||null}
+function upsertProjectPlan(plan){ensureProjectPlanExists();const ix=labState.project_plans.findIndex(p=>String(p.id)===String(plan.id));if(ix>=0)labState.project_plans[ix]=plan;else labState.project_plans.unshift(plan)}
+
+function newProjectPlanFromSeed({project,title,goal,context,source}){
+  const id='pp-'+Date.now()+'-'+((Math.random()*1e6)|0);
+  const proj=project||inferProjectFromTitle(title||goal||'')||null;
+  const now=new Date().toISOString();
+  const plan=normalizeProjectPlan({id,project:proj,title:title||projectLabelFor(proj),goal:goal||'',deadline:'',status:'active',context:context||'',steps:[],created_at:now,updated_at:now,source:source||'local'});
+  if(!plan.steps.length){
+    plan.steps=[
+      {id:id+'-s1',title:'Doel en randvoorwaarden scherpzetten',status:'todo',estimated_duration_minutes:60,dependency_type:'none',depends_on_step_id:'',deadline:'',tasks:[{id:id+'-s1-t1',title:'Kort doel en “af genoeg” vastleggen',status:'todo',estimated_duration_minutes:25,deadline:'',source_reason:'Start helder'}]},
+      {id:id+'-s2',title:'Eerste werkende kernstap bouwen/testen',status:'todo',estimated_duration_minutes:90,dependency_type:'after_prev',depends_on_step_id:id+'-s1',deadline:'',tasks:[{id:id+'-s2-t1',title:'Kernflow of POC stap 1 doen',status:'todo',estimated_duration_minutes:45,deadline:'',source_reason:'Eerste tastbaar resultaat'}]},
+      {id:id+'-s3',title:'Afronden en controleren',status:'todo',estimated_duration_minutes:60,dependency_type:'after_prev',depends_on_step_id:id+'-s2',deadline:'',tasks:[{id:id+'-s3-t1',title:'Laatste checklijstje afwerken',status:'todo',estimated_duration_minutes:25,deadline:'',source_reason:'Klaar maken'}]}
+    ];
+  }
+  return normalizeProjectPlan(plan,0);
+}
+
+function openProjectPlanOverlay(id){
+  if(!projectPlanOverlay||!projectPlanOverlayBody)return;
+  ensureProjectPlanExists();
+  if(!id){
+    const plan=newProjectPlanFromSeed({project:null,title:'Projectplan',goal:'',context:'',source:'ui'});
+    upsertProjectPlan(plan);
+    id=plan.id;
+    touchState();
+  }
+  projectPlanOverlayOpenId=String(id);
+  renderProjectPlanOverlay();
+  projectPlanOverlay.classList.remove('hidden');
+}
+
+function closeProjectPlanOverlay(save){
+  if(save)touchState();
+  projectPlanOverlayOpenId=null;
+  projectPlanOverlay?.classList.add('hidden');
+}
+
+function renderProjectPlanOverlay(){
+  if(!projectPlanOverlayBody)return;
+  const plan=getProjectPlanById(projectPlanOverlayOpenId);
+  if(!plan){projectPlanOverlayBody.innerHTML='<div class="pp-muted">Geen projectplan.</div>';return;}
+  const pv=projectLabelFor(plan.project);
+  const header=`<div class="pp-card"><div class="pp-row"><div class="pp-muted"><strong>${esc(pv)}</strong> · ${esc(projectPlanStatusLabel(plan.status))}${plan.deadline?` · deadline ${esc(plan.deadline)}`:''}</div><div class="pp-actions"><button type="button" class="pp-btn" data-pp-action="new-step">Stap toevoegen</button><button type="button" class="pp-btn" data-pp-action="new-task">Taak toevoegen</button><button type="button" class="pp-btn" data-pp-action="new-plan">Nieuw plan</button></div></div></div>`;
+  const meta=`<div class="pp-card"><h4>Plan</h4><div class="pp-grid">
+    <div class="pp-field" style="grid-column:span 6"><label>Project</label><select class="pp-select" data-pp-field="project">
+      <option value="">Algemeen</option>
+      <option value="clara-core-lab" ${plan.project==='clara-core-lab'||plan.project==='clara'?'selected':''}>Clara</option>
+      <option value="lalampe" ${plan.project==='lalampe'?'selected':''}>LaLampe</option>
+      <option value="begeister" ${plan.project==='begeister'?'selected':''}>Begeister</option>
+      <option value="afk-landjuweel-amarte" ${plan.project==='afk-landjuweel-amarte'||plan.project==='afk'?'selected':''}>AFK</option>
+    </select></div>
+    <div class="pp-field" style="grid-column:span 6"><label>Status</label><select class="pp-select" data-pp-field="status">
+      <option value="active" ${plan.status==='active'?'selected':''}>actief</option>
+      <option value="paused" ${plan.status==='paused'?'selected':''}>gepauzeerd</option>
+      <option value="archived" ${plan.status==='archived'?'selected':''}>gearchiveerd</option>
+    </select></div>
+    <div class="pp-field" style="grid-column:span 8"><label>Titel</label><input class="pp-input" value="${esc(plan.title||'')}" data-pp-field="title"></div>
+    <div class="pp-field" style="grid-column:span 4"><label>Deadline</label><input class="pp-input" type="date" value="${esc(plan.deadline||'')}" data-pp-field="deadline"></div>
+    <div class="pp-field" style="grid-column:span 12"><label>Doel</label><textarea class="pp-textarea" data-pp-field="goal">${esc(plan.goal||'')}</textarea></div>
+    <div class="pp-field" style="grid-column:span 12"><label>Context / reden</label><textarea class="pp-textarea" data-pp-field="context">${esc(plan.context||'')}</textarea></div>
+  </div></div>`;
+  const steps=(plan.steps||[]).map((s,ix)=>{
+    const tasks=(s.tasks||[]).map(t=>`<div class="pp-task" data-pp-task-id="${esc(t.id)}">
+      <div class="pp-task-col">
+        <div class="pp-field"><label>Taak</label><input class="pp-input" value="${esc(t.title||'')}" data-pp-task-field="title" data-pp-task-id="${esc(t.id)}"></div>
+        <div class="pp-grid">
+          <div class="pp-field" style="grid-column:span 4"><label>Duur (min)</label><input class="pp-input" inputmode="numeric" value="${esc(String(t.estimated_duration_minutes||25))}" data-pp-task-field="estimated_duration_minutes" data-pp-task-id="${esc(t.id)}"></div>
+          <div class="pp-field" style="grid-column:span 4"><label>Status</label><select class="pp-select" data-pp-task-field="status" data-pp-task-id="${esc(t.id)}">
+            <option value="todo" ${t.status==='todo'?'selected':''}>todo</option>
+            <option value="doing" ${t.status==='doing'?'selected':''}>bezig</option>
+            <option value="done" ${t.status==='done'?'selected':''}>klaar</option>
+          </select></div>
+          <div class="pp-field" style="grid-column:span 4"><label>Deadline</label><input class="pp-input" type="date" value="${esc(t.deadline||'')}" data-pp-task-field="deadline" data-pp-task-id="${esc(t.id)}"></div>
+        </div>
+      </div>
+      <div class="pp-actions">
+        <button type="button" class="pp-btn danger" data-pp-action="del-task" data-pp-step-id="${esc(s.id)}" data-pp-task-id="${esc(t.id)}">×</button>
+      </div>
+    </div>`).join('')||`<div class="pp-muted">Nog geen taken.</div>`;
+    return `<div class="pp-step" data-pp-step-id="${esc(s.id)}">
+      <div class="pp-step-head">
+        <div class="pp-step-title">Stap ${ix+1}</div>
+        <div class="pp-actions">
+          <button type="button" class="pp-btn" data-pp-action="add-task" data-pp-step-id="${esc(s.id)}">Taak</button>
+          <button type="button" class="pp-btn danger" data-pp-action="del-step" data-pp-step-id="${esc(s.id)}">Verwijder</button>
+        </div>
+      </div>
+      <div class="pp-grid">
+        <div class="pp-field" style="grid-column:span 7"><label>Titel</label><input class="pp-input" value="${esc(s.title||'')}" data-pp-step-field="title" data-pp-step-id="${esc(s.id)}"></div>
+        <div class="pp-field" style="grid-column:span 2"><label>Duur (min)</label><input class="pp-input" inputmode="numeric" value="${esc(String(s.estimated_duration_minutes||60))}" data-pp-step-field="estimated_duration_minutes" data-pp-step-id="${esc(s.id)}"></div>
+        <div class="pp-field" style="grid-column:span 3"><label>Status</label><select class="pp-select" data-pp-step-field="status" data-pp-step-id="${esc(s.id)}">
+          <option value="todo" ${s.status==='todo'?'selected':''}>todo</option>
+          <option value="doing" ${s.status==='doing'?'selected':''}>bezig</option>
+          <option value="done" ${s.status==='done'?'selected':''}>klaar</option>
+        </select></div>
+        <div class="pp-field" style="grid-column:span 4"><label>Afhankelijkheid</label><select class="pp-select" data-pp-step-field="dependency_type" data-pp-step-id="${esc(s.id)}">
+          <option value="none" ${s.dependency_type==='none'?'selected':''}>geen</option>
+          <option value="after_prev" ${s.dependency_type==='after_prev'?'selected':''}>na vorige</option>
+          <option value="parallel" ${s.dependency_type==='parallel'?'selected':''}>parallel</option>
+          <option value="external_wait" ${s.dependency_type==='external_wait'?'selected':''}>extern</option>
+        </select></div>
+        <div class="pp-field" style="grid-column:span 4"><label>Wacht op stap-id</label><input class="pp-input" value="${esc(s.depends_on_step_id||'')}" data-pp-step-field="depends_on_step_id" data-pp-step-id="${esc(s.id)}"></div>
+        <div class="pp-field" style="grid-column:span 4"><label>Deadline</label><input class="pp-input" type="date" value="${esc(s.deadline||'')}" data-pp-step-field="deadline" data-pp-step-id="${esc(s.id)}"></div>
+      </div>
+      <div class="pp-card" style="padding:10px"><h4>Checklist</h4>${tasks}</div>
+    </div>`;
+  }).join('');
+  const stepsWrap=`<div class="pp-card"><h4>Stappen</h4>${steps||`<div class="pp-muted">Nog geen stappen. Gebruik “Stap toevoegen”.</div>`}</div>`;
+  projectPlanOverlayBody.innerHTML=header+meta+stepsWrap;
+}
+
+function renderAgendaSuggestionsPanel(ls){
+  const suggestions=deriveAgendaSuggestions(ls);
+  const hint=guidanceRefreshHint?`<p class="guidance-refresh-hint" role="status">${esc(guidanceRefreshHint)}</p>`:'';
+  const entry=renderProjectPlansEntry();
+  if(!suggestions.length)return`<div class="card guide-card guide-route">${hint}${entry}<p class="empty">Geen agenda-suggesties.</p></div>`;
+  const rows=suggestions.map(i=>`<div class="item guide-suggestion-item" data-id="${esc(i.id)}"><div class="guide-suggestion-text">${esc(i.text)}<div class="sub">${esc(projectLabelFor(i.project))} · ${esc(sourceLabelFor(i.source))}${i.reason?` · ${esc(guidanceText(i.reason,80))}`:''}</div><div class="guide-chips guide-row-chips">${suggestionChip('Plan','plan',i.id,i.text)}${suggestionChip('Weg','dismiss',i.id,i.text)}</div></div></div>`).join('');
+  return`<div class="card guide-card guide-route">${hint}${entry}${rows}</div>`;
+}
 function formatAgendaLine(i){const title=sanitizeAgendaPreviewLine(i);if(!title)return null;const s=i.start_time&&i.end_time?`${i.start_time}–${i.end_time}`:(i.estimated_duration_minutes?`${i.estimated_duration_minutes} min`:null);const st=i.status==='confirmed'?'bevestigd':(i.status==='pencil'?'potlood':null);const bits=[s,st].filter(Boolean).join(' · ');return`${bits?bits+' — ':''}${title}`}
 function pickTodayAgendaPreview(){const day=activeAgendaDate||todayIso();const items=(labState.agenda||[]).filter(i=>itemAgendaDate(i)===day&&!isAgendaItemDone(i));const picked=[];for(const it of items){if(looksLikeLegacyNoiseAgendaItem(it)){legacyNoiseSig.add(legacyAgendaSig({title:sanitizeAgendaPreviewLine(it)||String(it.title||''),project:it.project||inferProjectFromTitle(String(it.title||'')),date:day}));continue}const line=formatAgendaLine(it);if(line)picked.push(line);if(picked.length>=4)break}if(legacyNoiseSig.size)persistLegacyNoise();return picked}
 function overlaySuggestionsForOverlay(){const raw=deriveAgendaSuggestions(labState);const out=[];for(const s of raw){if(!overlayCanAcceptSuggestion(s))continue;out.push(s)}return out.slice(0,6)}
@@ -155,7 +329,7 @@ function compactDayPlanMessage(agendaAdded,taskBoost){const n=(agendaAdded||0)+(
 function render(data){syncFromAnalysis(data);renderFromState();const raw=String(data.summary||startupResultMessage(labState)).slice(0,520);addAssistantMessage(sanitizeUserFacingText(raw,'chat')||'Ik heb de planning bijgewerkt; controleer de agenda en de suggesties rechts.',deriveSuggestions())}
 function renderStartupResult(data){syncFromAnalysis(data);renderFromState();const wrap=document.querySelector('#chatLog .msg.assistant:not(.thinking) .msg-body');if(wrap)wrap.textContent=startupResultMessage(labState);try{sessionStorage.setItem(SESSION_STARTUP_KEY,'1')}catch(_){}setStatus('Concept klaar · v'+LAB_VERSION)}
 async function runAutoStartupPlanning(){if(isAnalyzing)return;if(startupAnalysisScheduled)return;startupAnalysisScheduled=true;currentController=new AbortController();setAnalyzing(true);setStatus('Clara maakt startvoorstellen…');const to=setTimeout(()=>currentController.abort(),60000);try{const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:STARTUP_INTERNAL_PROMPT,source:'projectbrain_startup',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Startvoorstellen mislukt');syncFromAnalysis(data);renderFromState();showStartupOverlay()}catch(e){renderFromState();showStartupOverlay();setStatus('Startvoorstellen klaar · v'+LAB_VERSION)}finally{clearTimeout(to);currentController=null;setAnalyzing(false);startupAnalysisScheduled=false;scrollBottom()}}
-async function analyzeText(message,showUser=true){if(isAnalyzing&&currentController){currentController.abort();return}let value=String(message||'').trim();if(!value){setStatus('Voer eerst tekst in.');return}if(showUser){rememberUserInputForSanitize(value);addUserMessage(value)}input.value='';resizeInput();const words=value.split(/\s+/).filter(Boolean).length;if(lastOpenItemRef&&words&&words<=6&&value.length<=52&&!isDayPlanningIntent(value)&&!/^\s*(wat|hoe|waarom|leg\s+uit|vertel|kun\s+je|kan\s+je|waar|wie|wanneer)\b/i.test(value)){answerOpenEnd(lastOpenItemRef.id,lastOpenItemRef.source,value);setStatus('Antwoord opgenomen.');scrollBottom();return}if(isDayPlanningIntent(value)){const r=ensureCompactDayPlan(value);addAssistantMessage(compactDayPlanMessage(r.agendaAdded,r.taskBoost),deriveSuggestions());setStatus('Dagplanning klaar · v'+LAB_VERSION);scrollBottom();return}currentController=new AbortController();setAnalyzing(true);setStatus('Clara denkt even mee…');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);startThinkingStatusFlow(thinking);try{let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Kon dit niet ophalen');stopThinkingStatusFlow();render(data);removeThinking(thinking);setStatus('Bijgewerkt · v'+LAB_VERSION)}catch(e){stopThinkingStatusFlow();removeThinking(thinking);try{renderFromState();addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}catch(_){addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}setStatus('Klaar · v'+LAB_VERSION)}finally{stopThinkingStatusFlow();clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
+async function analyzeText(message,showUser=true){if(isAnalyzing&&currentController){currentController.abort();return}let value=String(message||'').trim();if(!value){setStatus('Voer eerst tekst in.');return}if(showUser){rememberUserInputForSanitize(value);addUserMessage(value)}input.value='';resizeInput();const words=value.split(/\s+/).filter(Boolean).length;if(lastOpenItemRef&&words&&words<=6&&value.length<=52&&!isDayPlanningIntent(value)&&!isProjectPlanIntent(value)&&!/^\s*(wat|hoe|waarom|leg\s+uit|vertel|kun\s+je|kan\s+je|waar|wie|wanneer)\b/i.test(value)){answerOpenEnd(lastOpenItemRef.id,lastOpenItemRef.source,value);setStatus('Antwoord opgenomen.');scrollBottom();return}if(isProjectPlanIntent(value)){const plan=createProjectPlanFromMessage(value);upsertProjectPlan(plan);touchState();renderFromState();openProjectPlanOverlay(plan.id);setStatus('Projectplan klaar om te bewerken.');scrollBottom();return}if(isDayPlanningIntent(value)){const r=ensureCompactDayPlan(value);addAssistantMessage(compactDayPlanMessage(r.agendaAdded,r.taskBoost),deriveSuggestions());setStatus('Dagplanning klaar · v'+LAB_VERSION);scrollBottom();return}currentController=new AbortController();setAnalyzing(true);setStatus('Clara denkt even mee…');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);startThinkingStatusFlow(thinking);try{let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Kon dit niet ophalen');stopThinkingStatusFlow();render(data);removeThinking(thinking);setStatus('Bijgewerkt · v'+LAB_VERSION)}catch(e){stopThinkingStatusFlow();removeThinking(thinking);try{renderFromState();addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}catch(_){addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}setStatus('Klaar · v'+LAB_VERSION)}finally{stopThinkingStatusFlow();clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
 endPromptHost?.addEventListener('click',e=>{let b=e.target.closest('[data-agenda-end-action]');if(!b)return;handleAgendaEndPromptAction(b.dataset.itemId,b.dataset.agendaEndAction)});
 chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-proposal-action]');if(!b)return;if(b.dataset.proposalAction==='ok'&&b.dataset.kind==='confirm_all'){labState.agenda.forEach(i=>{if(i.status==='pencil')i.status='confirmed';i.confirmation_required=false});touchState();renderFromState()}b.closest('.options')?.remove()});
 agendaSection?.addEventListener('click',e=>{let tab=e.target.closest('[data-agenda-tab]');if(tab){activeAgendaTab=tab.dataset.agendaTab;renderFromState();return}let a=e.target.closest('[data-agenda-action]');if(!a)return;let id=a.dataset.id,item=labState.agenda.find(i=>i.id===id);if(a.dataset.agendaAction==='confirm'&&item){item.status='confirmed';item.confirmation_required=false;touchState();renderFromState()}if(a.dataset.agendaAction==='delete'){labState.agenda=labState.agenda.filter(i=>i.id!==id);touchState();renderFromState()}});
@@ -169,15 +343,175 @@ function hasAgendaOverlap(date,s,en,ignoreId){return(labState.agenda||[]).some(i
 function findFreeAgendaSlot(date,duration,ignoreId,customWin){const win=customWin||activeAgendaWindow();let s0=win.start;const tIso=todayIso();if(date===tIso){const nowM=round15(getNowMinutes());s0=Math.max(win.start,nowM)}for(let s=s0;s+duration<=win.end;s+=15)if(!hasAgendaOverlap(date,s,s+duration,ignoreId))return{start:s,end:s+duration};return null}
 function inferProjectFromTitle(title){const pv=getProjectVisual(title);return pv.hasProject?pv.key:null}
 function addLocalAgendaSuggestion(title,project){const clean=guidanceText(title,120)||'Agenda-suggestie';const date=activeAgendaDate||todayIso();const duration=45;const proj=project||inferProjectFromTitle(clean);if(!isConcreteAgendaItem({title:clean,project:proj,estimated_duration_minutes:duration}))return false;const slot=findFreeAgendaSlot(date,duration);if(!slot){const note=`Dit past op ${dateLabel(date).toLowerCase()} niet netjes meer: ${clean}`;if(!labState.attention.some(i=>String(i.title||'')===note))labState.attention.push({id:'at-fit-'+Date.now(),title:note,kind:'past_niet',done:false,project:proj});return false}labState.agenda.push({id:'ag-local-'+Date.now(),title:clean,kind:'planned_task',date,start_time:minToTime(slot.start),end_time:minToTime(slot.end),estimated_duration_minutes:duration,status:'pencil',confirmation_required:true,source:'guidance_rail',project:proj});labState.agenda=markOverlaps(labState.agenda);return true}
+
+function isProjectPlanIntent(v){return/\bprojectplan\b|\bplan\s+voor\b.*\b(project|afk|lalampe|begeister|clara)\b|\bmaak\s+.*\bprojectplan\b|\bproject\s+plan\b/i.test(String(v||''))}
+function inferProjectKeyFromMessage(v){const pv=getProjectVisual(String(v||''));if(pv&&pv.key&&pv.key!=='none'){if(pv.key==='afk')return'afk-landjuweel-amarte';if(pv.key==='clara')return'clara-core-lab';return pv.key}return null}
+function createProjectPlanFromMessage(message){
+  const msg=String(message||'').trim();
+  const project=inferProjectKeyFromMessage(msg);
+  const goal=guidanceText(msg,260);
+  const title=project?`${projectLabelFor(project)} projectplan`:'Projectplan';
+  const context=/deadline|voor\s+\w+\s+afhebben|afhebben|proof|poc|demo/i.test(msg)?'Let op: deadline of scope is genoemd; houd de stappen eerlijk.':'';
+  return newProjectPlanFromSeed({project,title,goal,context,source:'chat'});
+}
+
+function planProjectPlanThisWeek(planId){
+  const plan=getProjectPlanById(planId);
+  if(!plan){setStatus('Geen projectplan om te plannen.');return}
+  const today=todayIso();
+  const days=nextWorkdaysFrom(today,5);
+  const proj=plan.project||inferProjectFromTitle(plan.title||plan.goal||'');
+  if(!proj||getProjectVisual(proj).key==='none'){setStatus('Kies eerst een project voor dit plan.');return}
+  const candidates=[];
+  for(const step of plan.steps||[]){
+    if(!step||step.status==='done')continue;
+    const stepTitle=guidanceText(step.title,140);
+    if(stepTitle){
+      candidates.push({kind:'step',step,task:null,title:stepTitle,dur:step.estimated_duration_minutes||60});
+    }
+    for(const task of step.tasks||[]){
+      if(!task||task.status==='done')continue;
+      const tt=guidanceText(task.title,160);
+      if(tt)candidates.push({kind:'task',step,task,title:tt,dur:task.estimated_duration_minutes||25});
+    }
+  }
+  let planned=0,notFit=0;
+  for(const c of candidates){
+    const dur=Math.max(15,Math.round((Number(c.dur)||45)/5)*5);
+    const titleBase=`${projectLabelFor(proj)}: ${plan.title} — ${c.kind==='task'?'Taak: ':''}${c.title}`;
+    const title=guidanceText(titleBase,160);
+    if(!isConcreteAgendaItem({title,project:proj,estimated_duration_minutes:dur}))continue;
+    let placed=false;
+    for(const d of days){
+      const slot=findFreeSlotWorkday(d,dur);
+      if(!slot)continue;
+      const id='ag-pp-'+Date.now()+'-'+simpleHash(plan.id+'|'+c.step.id+'|'+(c.task?.id||''));
+      labState.agenda.push({id,title,kind:'planned_task',date:d,start_time:minToTime(slot.start),end_time:minToTime(slot.end),estimated_duration_minutes:dur,status:'pencil',confirmation_required:true,source:'project_plan',project:proj,project_plan_id:plan.id,step_id:c.step.id,task_id:c.task?c.task.id:null,reason:'Uit projectplan: plan deze week'});
+      placed=true;planned++;break;
+    }
+    if(!placed){
+      const note=guidanceText(`Projectplan past deze week niet: ${title}`,220);
+      if(!labState.attention.some(i=>String(i.title||'')===note))labState.attention.push({id:'at-pp-'+Date.now()+'-'+simpleHash(note),title:note,kind:'past_niet',done:false,project:proj});
+      notFit++;
+    }
+  }
+  labState.agenda=markOverlaps(labState.agenda);
+  touchState();
+  renderFromState();
+  setStatus(planned?`Projectplan gepland: ${planned} blok(ken).`:(notFit?`Geen eerlijke plek deze week (${notFit} items).`:'Geen concrete stappen om te plannen.'));
+}
 function handleSuggestionAction(id,action,title){const item=findGuidanceSourceItem(id),clean=guidanceText(title||item?.title||id,120);if(action==='plan'){addLocalAgendaSuggestion(clean,item?.project||null);if(item&&!labState.agenda.includes(item))item.done=true;dismissedGuidanceIds.add(id)}else if(action==='dismiss'){dismissedGuidanceIds.add(id);if(item&&!labState.agenda.includes(item))item.done=true}persistDismissedGuidanceIds();touchState();renderFromState()}
 function closeGuidanceItem(id,source){hiddenOpenEndIds.add(`${source}:${id}`);if(source==='thread'){let item=(labState.open_threads||[]).find(i=>i.id===id);if(item)item.status='closed'}else if(source==='attention'){let item=(labState.attention||[]).find(i=>i.id===id);if(item)item.done=true}else if(source==='task'){let item=(labState.tasks||[]).find(i=>i.id===id);if(item)item.done=true}else if(source==='agenda'){let item=(labState.agenda||[]).find(i=>i.id===id);if(item)item.status='needs_time'}touchState();renderFromState()}
 function answerOpenEnd(id,source,value){const v=guidanceText(value,180);if(!v)return;let item=null;if(source==='thread')item=(labState.open_threads||[]).find(i=>i.id===id);else if(source==='attention')item=(labState.attention||[]).find(i=>i.id===id);if(item){item.answer=v;item.status='closed';item.done=true}else hiddenOpenEndIds.add(`${source}:${id}`);closeGuidanceItem(id,source)}
 function agendaSuggestionsTextKey(){return deriveAgendaSuggestions(labState).map(i=>i.text).join('\u0001')}
 function refreshGuidancePanels(){const before=agendaSuggestionsTextKey();renderGuidance();renderRegie();const after=agendaSuggestionsTextKey();guidanceRefreshHint=before===after?'Suggesties opnieuw bekeken (lijst gelijk).':'Suggesties opnieuw opgebouwd.';renderGuidance();if(refreshGuidanceHintTimer)clearTimeout(refreshGuidanceHintTimer);refreshGuidanceHintTimer=setTimeout(()=>{guidanceRefreshHint='';refreshGuidanceHintTimer=null;renderGuidance()},4200);setStatus('Suggesties ververst.')}
 attentionCol.addEventListener('click',e=>{let b=e.target.closest('[data-suggestion-action]');if(!b)return;handleSuggestionAction(b.dataset.id,b.dataset.suggestionAction,b.dataset.title)});
+attentionCol.addEventListener('click',e=>{let p=e.target.closest('[data-projectplans-action]');if(!p)return;if(p.dataset.projectplansAction==='open'){openProjectPlanOverlay(labState.project_plans?.[0]?.id||null)}});
 regieCol.addEventListener('click',e=>{let save=e.target.closest('[data-open-answer-save]');if(save){let row=save.closest('.open-answer-row'),inp=row?.querySelector('[data-open-answer-input]');answerOpenEnd(save.dataset.id,save.dataset.openSource,inp?.value||'');return}let b=e.target.closest('[data-open-action]');if(b){if(b.dataset.openAction==='close')closeGuidanceItem(b.dataset.id,b.dataset.openSource);return}let clear=e.target.closest('[data-action="clear-test-state"]');if(clear){e.preventDefault();clearLocalTestState()}});
 startupOverlay?.addEventListener('click',e=>{let close=e.target.closest('[data-startup-overlay-close]');if(close){hideStartupOverlay(true);return}let act=e.target.closest('[data-startup-overlay-action]');if(act){if(act.dataset.startupOverlayAction==='start-empty'){hideStartupOverlay(true);return}if(act.dataset.startupOverlayAction==='accept-all'){const sug=overlaySuggestionsForOverlay();for(const s of sug){handleSuggestionAction(String(s.id),'plan',overlaySuggestionTitle(s))}hideStartupOverlay(true);return}}let editInp=e.target.closest('[data-overlay-edit-input]');if(editInp)return;let b=e.target.closest('[data-overlay-proposal-action]');if(!b)return;const id=b.dataset.id;const action=b.dataset.overlayProposalAction;const sug=(overlaySuggestionsForOverlay().find(x=>String(x.id)===String(id)))||null;const baseTitle=sug?overlaySuggestionTitle(sug):'';if(action==='dismiss'){dismissedGuidanceIds.add(id);persistDismissedGuidanceIds();overlayEditId=null;overlayEditDraft='';renderStartupOverlayBody();return}if(action==='edit'){if(overlayEditId===id){overlayEditId=null;overlayEditDraft=''}else{overlayEditId=id;overlayEditDraft=baseTitle||''}renderStartupOverlayBody();return}if(action==='accept'){const title=overlayEditId===id?(guidanceText(overlayEditDraft||baseTitle,160)):(baseTitle);handleSuggestionAction(id,'plan',title);overlayEditId=null;overlayEditDraft='';renderStartupOverlayBody();return}});
 startupOverlay?.addEventListener('input',e=>{const inp=e.target.closest('[data-overlay-edit-input]');if(!inp)return;const id=inp.getAttribute('data-id');if(!id)return;if(overlayEditId!==id)return;overlayEditDraft=String(inp.value||'')});
+
+projectPlanOverlay?.addEventListener('click',e=>{
+  const close=e.target.closest('[data-projectplan-close]');
+  if(close){closeProjectPlanOverlay(false);return}
+  const act=e.target.closest('[data-projectplan-action]');
+  if(act){
+    const a=act.dataset.projectplanAction;
+    if(a==='close'){closeProjectPlanOverlay(false);return}
+    if(a==='save'){closeProjectPlanOverlay(true);return}
+    if(a==='plan-week'){planProjectPlanThisWeek(projectPlanOverlayOpenId);return}
+  }
+  const b=e.target.closest('[data-pp-action]');
+  if(b){
+    const a=b.dataset.ppAction;
+    const plan=getProjectPlanById(projectPlanOverlayOpenId);
+    if(!plan)return;
+    if(a==='new-plan'){openProjectPlanOverlay(null);return}
+    if(a==='new-step'){
+      const sid=plan.id+'-st-'+Date.now()+'-'+((Math.random()*1e6)|0);
+      plan.steps=[...(plan.steps||[]),{id:sid,title:'Nieuwe stap',status:'todo',estimated_duration_minutes:60,dependency_type:'none',depends_on_step_id:'',deadline:'',tasks:[]}];
+      plan.updated_at=new Date().toISOString();
+      upsertProjectPlan(plan);touchState();renderProjectPlanOverlay();return
+    }
+    if(a==='new-task'){
+      if(!(plan.steps||[]).length){const sid=plan.id+'-st-'+Date.now();plan.steps=[{id:sid,title:'Nieuwe stap',status:'todo',estimated_duration_minutes:60,dependency_type:'none',depends_on_step_id:'',deadline:'',tasks:[]}]}
+      const s=plan.steps[0];
+      const tid=s.id+'-ta-'+Date.now()+'-'+((Math.random()*1e6)|0);
+      s.tasks=[...(s.tasks||[]),{id:tid,title:'Nieuwe taak',status:'todo',estimated_duration_minutes:25,deadline:'',source_reason:''}];
+      plan.updated_at=new Date().toISOString();
+      upsertProjectPlan(plan);touchState();renderProjectPlanOverlay();return
+    }
+    if(a==='add-task'){
+      const sid=b.dataset.ppStepId;
+      const s=(plan.steps||[]).find(x=>String(x.id)===String(sid));
+      if(!s)return;
+      const tid=s.id+'-ta-'+Date.now()+'-'+((Math.random()*1e6)|0);
+      s.tasks=[...(s.tasks||[]),{id:tid,title:'Nieuwe taak',status:'todo',estimated_duration_minutes:25,deadline:'',source_reason:''}];
+      plan.updated_at=new Date().toISOString();
+      upsertProjectPlan(plan);touchState();renderProjectPlanOverlay();return
+    }
+    if(a==='del-step'){
+      const sid=b.dataset.ppStepId;
+      plan.steps=(plan.steps||[]).filter(x=>String(x.id)!==String(sid));
+      plan.updated_at=new Date().toISOString();
+      upsertProjectPlan(plan);touchState();renderProjectPlanOverlay();return
+    }
+    if(a==='del-task'){
+      const sid=b.dataset.ppStepId,tid=b.dataset.ppTaskId;
+      const s=(plan.steps||[]).find(x=>String(x.id)===String(sid));
+      if(!s)return;
+      s.tasks=(s.tasks||[]).filter(t=>String(t.id)!==String(tid));
+      plan.updated_at=new Date().toISOString();
+      upsertProjectPlan(plan);touchState();renderProjectPlanOverlay();return
+    }
+  }
+});
+
+projectPlanOverlay?.addEventListener('input',e=>{
+  const plan=getProjectPlanById(projectPlanOverlayOpenId);
+  if(!plan)return;
+  const f=e.target.closest('[data-pp-field]');
+  if(f){
+    const key=f.dataset.ppField;
+    const val=(f.type==='date')?String(f.value||''):(f.value!=null?String(f.value):String(f.textContent||''));
+    if(key==='project')plan.project=val||null;
+    if(key==='status')plan.status=val||'active';
+    if(key==='title')plan.title=guidanceText(val,120);
+    if(key==='deadline')plan.deadline=val||'';
+    if(key==='goal')plan.goal=guidanceText(val,260);
+    if(key==='context')plan.context=guidanceText(val,420);
+    plan.updated_at=new Date().toISOString();
+    upsertProjectPlan(plan);saveLabStateToStorage();return
+  }
+  const sf=e.target.closest('[data-pp-step-field]');
+  if(sf){
+    const sid=sf.dataset.ppStepId,key=sf.dataset.ppStepField;
+    const s=(plan.steps||[]).find(x=>String(x.id)===String(sid));if(!s)return;
+    const v=String(sf.value||'');
+    if(key==='title')s.title=guidanceText(v,140);
+    if(key==='status')s.status=v||'todo';
+    if(key==='dependency_type')s.dependency_type=v||'none';
+    if(key==='depends_on_step_id')s.depends_on_step_id=v||'';
+    if(key==='deadline')s.deadline=v||'';
+    if(key==='estimated_duration_minutes'){const n=parseInt(v,10);s.estimated_duration_minutes=Number.isFinite(n)&&n>0?Math.max(10,Math.round(n/5)*5):60}
+    plan.updated_at=new Date().toISOString();
+    upsertProjectPlan(plan);saveLabStateToStorage();return
+  }
+  const tf=e.target.closest('[data-pp-task-field]');
+  if(tf){
+    const tid=tf.dataset.ppTaskId,key=tf.dataset.ppTaskField;
+    let task=null;
+    for(const s of plan.steps||[]){task=(s.tasks||[]).find(t=>String(t.id)===String(tid));if(task)break}
+    if(!task)return;
+    const v=String(tf.value||'');
+    if(key==='title')task.title=guidanceText(v,160);
+    if(key==='status')task.status=v||'todo';
+    if(key==='deadline')task.deadline=v||'';
+    if(key==='estimated_duration_minutes'){const n=parseInt(v,10);task.estimated_duration_minutes=Number.isFinite(n)&&n>0?Math.max(10,Math.round(n/5)*5):25}
+    plan.updated_at=new Date().toISOString();
+    upsertProjectPlan(plan);saveLabStateToStorage();return
+  }
+});
 window.__claraRunStartupOverlay=runAutoStartupPlanning;
 refreshGuidanceBtn?.addEventListener('click',refreshGuidancePanels);
 agendaPrevBtn?.addEventListener('click',()=>{activeAgendaDate=addDaysIso(activeAgendaDate||todayIso(),-1);renderFromState()});
