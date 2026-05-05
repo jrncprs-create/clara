@@ -1,4 +1,4 @@
-const LAB_VERSION='0.14.38';
+const LAB_VERSION='0.14.39';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
@@ -6,7 +6,7 @@ const LEGACY_NOISE_KEY='clara_core_lab_legacy_noise_v1';
 const startupOverlay=document.getElementById('startupOverlay'),startupOverlayIntro=document.getElementById('startupOverlayIntro'),startupOverlayList=document.getElementById('startupOverlayList'),startupOverlayAcceptAllBtn=document.getElementById('startupOverlayAcceptAll'),projectPlanOverlay=document.getElementById('projectPlanOverlay'),projectPlanOverlayBody=document.getElementById('projectPlanOverlayBody'),weatherStrip=document.getElementById('weatherStrip');
 const STARTUP_INTERNAL_PROMPT='Maak een rustige conceptplanning voor vandaag op basis van de beschikbare projectcontext. Kies maximaal één eerstvolgende logische actie per actief project. Zet uitvoerbare acties als potloodblokken in de agenda. Geef hooguit één noodzakelijke vraag, een korte route vooruit en concrete open items. Maak geen ruwe contextdump, verzin geen harde afspraken, plan geen overlap, en zet wat niet eerlijk past apart als needs_time.';
 const STARTUP_DONE_MSG='Ik heb alvast een rustige conceptstart klaargezet. Alles staat als potloodvoorstel.';
-let labState={agenda:[],attention:[],tasks:[],open_threads:[],project_plans:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null,now_first_move:''},updated_at:null},activeAgendaTab='day',activeAgendaDate=null,currentController=null,isAnalyzing=false,dragState=null,thinkingId=0,startupAnalysisScheduled=false,activeAgendaEndPromptItemId=null,dismissedGuidanceIds=new Set(),hiddenOpenEndIds=new Set(),guidanceRefreshHint='',refreshGuidanceHintTimer=null,lastOpenItemRef=null,lastUserInputForSanitize='',lastPlanningMessage='',legacyNoiseSig=new Set(),overlayEditId=null,overlayEditDraft='',projectPlanOverlayOpenId=null;
+let labState={agenda:[],attention:[],tasks:[],open_threads:[],project_plans:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null,now_first_move:''},updated_at:null},activeAgendaTab='day',activeAgendaDate=null,currentController=null,isAnalyzing=false,dragState=null,thinkingId=0,startupAnalysisScheduled=false,activeAgendaEndPromptItemId=null,dismissedGuidanceIds=new Set(),hiddenOpenEndIds=new Set(),guidanceRefreshHint='',refreshGuidanceHintTimer=null,lastOpenItemRef=null,lastUserInputForSanitize='',lastPlanningMessage='',legacyNoiseSig=new Set(),overlayEditId=null,overlayEditDraft='',projectPlanOverlayOpenId=null,lastOpenedProjectPlanId=null;
 
 function loadLegacyNoise(){try{const raw=localStorage.getItem(LEGACY_NOISE_KEY);if(!raw)return;const a=JSON.parse(raw);if(!Array.isArray(a))return;legacyNoiseSig=new Set(a.map(String))}catch(_){}}
 function persistLegacyNoise(){try{localStorage.setItem(LEGACY_NOISE_KEY,JSON.stringify([...legacyNoiseSig].slice(0,1800)))}catch(_){}}
@@ -113,6 +113,27 @@ function projectPlanFromAiSuggestion(suggestion){
   },0);
 }
 
+function isLikelyLaLampeWorkshopRequest(text){
+  const n=String(text||'').toLowerCase();
+  return /lalampe|la\s*lampe/.test(n) && /workshop|workshopflow|avondflow|verkoopbaar|doelgroep/.test(n);
+}
+function planHasAFKLampWords(plan){
+  const blob=`${plan.title||''} ${plan.goal||''} ${(plan.steps||[]).map(s=>s.title).join(' ')}`.toLowerCase();
+  return /lampwezen|voetconstructie|lichtbeeld|warmte|voeding/.test(blob);
+}
+function validateAiPlanAgainstMessage(message,plan){
+  const msg=String(message||'');
+  if(isLikelyLaLampeWorkshopRequest(msg)){
+    const proj=inferProjectKeyFromMessage(msg);
+    if(proj==='lalampe') plan.project='lalampe';
+    if(planHasAFKLampWords(plan)){
+      // Hard reject: use frontend fallback rather than showing the wrong plan.
+      return {ok:false,reason:'LaLampe request but AFK/lamp steps detected'};
+    }
+  }
+  return {ok:true};
+}
+
 function loadLabStateFromStorage(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const o=JSON.parse(raw);if(!o||typeof o!=='object')return;labState.agenda=Array.isArray(o.agenda)?o.agenda:[];labState.attention=Array.isArray(o.attention)?o.attention:[];labState.tasks=Array.isArray(o.tasks)?o.tasks:[];labState.open_threads=Array.isArray(o.open_threads)?o.open_threads:[];labState.project_plans=Array.isArray(o.project_plans)?o.project_plans.map((p,i)=>normalizeProjectPlan(p,i)).filter(Boolean):[];const dr=o.day_regie||{};labState.day_regie={items_to_check:dr.items_to_check||[],rollover_candidates:dr.rollover_candidates||[],review_prompt:dr.review_prompt||'',suggested_time:dr.suggested_time??null,now_first_move:dr.now_first_move||''};labState.updated_at=o.updated_at||null}catch(_){}}
 function saveLabStateToStorage(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({agenda:labState.agenda,attention:labState.attention,tasks:labState.tasks,open_threads:labState.open_threads,project_plans:labState.project_plans,day_regie:labState.day_regie,updated_at:labState.updated_at}))}catch(_){}}
 function clearStartupDoneIfEmpty(){if(dayRegieIsEmpty(labState)){try{sessionStorage.removeItem(SESSION_STARTUP_KEY)}catch(_){}}}
@@ -136,6 +157,16 @@ function normalizePlanningDateIso(dateIso,message){const d=dayOfWeekFromIso(date
 function compactDayWorkWindow(dateIso){const d=dayOfWeekFromIso(dateIso);if(d===1)return{start:11*60,end:18*60};if(d>=2&&d<=5)return{start:10*60,end:18*60};return{start:10*60,end:18*60}}
 function isWeekendIso(iso){const d=dayOfWeekFromIso(iso);return d===0||d===6}
 function nextWorkdaysFrom(dateIso,count=5){const out=[];let cur=dateIso;for(let k=0;k<28&&out.length<count;k++){if(!isWeekendIso(cur))out.push(cur);cur=addDaysIso(cur,1)}return out}
+function nextWorkdayFromIso(dateIso){let cur=dateIso;for(let k=0;k<28;k++){if(!isWeekendIso(cur))return cur;cur=addDaysIso(cur,1)}return dateIso}
+function startIsoForWeekPlanning(){
+  const today=todayIso();
+  const win=compactDayWorkWindow(today);
+  const nowM=round15(getNowMinutes());
+  // If today is effectively over, start next workday.
+  if(isWeekendIso(today) || nowM+20>=win.end) return nextWorkdayFromIso(addDaysIso(today,1));
+  // Otherwise start today (planner will skip past slots automatically).
+  return today;
+}
 function findFreeSlotWorkday(dateIso,duration){const win=compactDayWorkWindow(dateIso);let s0=win.start;const tIso=todayIso();if(dateIso===tIso){const nowM=round15(getNowMinutes());s0=Math.max(win.start,nowM)}for(let s=s0;s+duration<=win.end;s+=15){if(!hasAgendaOverlap(dateIso,s,s+duration,null))return{start:s,end:s+duration}}return null}
 function isAgendaItemDone(i){if(!i)return false;return!!i.completed_at||i.status==='done'||i.status==='completed'}
 function itemAgendaDate(i){return i.date||todayIso()}
@@ -143,6 +174,18 @@ function normalizeAgendaItem(raw){if(!raw||typeof raw!=='object')return null;con
 function agendaSignature(i){const n=guidanceText(i.title,120).toLowerCase();const date=itemAgendaDate(i);const s=timeToMin(i.start_time),e=timeToMin(i.end_time)??(s!=null?(s+(i.estimated_duration_minutes||30)):null);const proj=getProjectVisual(i.project).key;return`${date}|${proj}|${n}|${s==null?'na':s}|${e==null?'na':e}`}
 function overlapsOrSimilar(a,b){if(itemAgendaDate(a)!==itemAgendaDate(b))return false;const ap=getProjectVisual(a.project).key,bp=getProjectVisual(b.project).key;if(ap&&bp&&ap!==bp)return false;const at=guidanceText(a.title,120).toLowerCase(),bt=guidanceText(b.title,120).toLowerCase();const sA=timeToMin(a.start_time),eA=timeToMin(a.end_time)??(sA!=null?(sA+(a.estimated_duration_minutes||30)):null);const sB=timeToMin(b.start_time),eB=timeToMin(b.end_time)??(sB!=null?(sB+(b.estimated_duration_minutes||30)):null);if(sA!=null&&eA!=null&&sB!=null&&eB!=null){if(sA<eB&&sB<eA)return true}if(at&&bt&&(at===bt||at.includes(bt)||bt.includes(at)))return true;return false}
 function isGenericAgendaTitle(title){const t=String(title||'').trim().toLowerCase();if(!t)return true;const banned=['korte voorbereiding','iets kleins afronden','tweede prioriteit vastzetten','verder uitwerken','checken','oppakken','voorbereiden','afronden','algemeen blok','kleine taak'];return banned.some(b=>t===b||t.startsWith(b+' ')||t.includes(b))}
+function isBannedGenericSuggestionText(title){
+  const t=String(title||'').trim().toLowerCase();
+  if(!t)return true;
+  const bans=[
+    'algemeen: één concrete eerstvolgende stap kiezen',
+    'één concrete eerstvolgende stap kiezen',
+    'concrete eerstvolgende stap kiezen',
+    'vervolg bepalen',
+    'af genoeg bepalen'
+  ];
+  return bans.some(b=>t===b||t.includes(b));
+}
 function titleHasConcreteVerb(title){return/\b(nalopen|controleren|testen|bouwen|maken|monteren|bestellen|schrijven|ordenen|uitwerken|opstellen|mailen|bellen|afstemmen|voorbereiden)\b/i.test(String(title||''))}
 function isConcreteAgendaItem(i){if(!i)return false;const title=String(i.title||'').trim();if(!title||isGenericAgendaTitle(title))return false;const pv=getProjectVisual(i.project||inferProjectFromTitle(title));if(!pv||pv.key==='none')return false;const dur=Number(i.estimated_duration_minutes||0);if(!Number.isFinite(dur)||dur<10)return false;return titleHasConcreteVerb(title)&&/[:—-]/.test(title)||titleHasConcreteVerb(title)}
 function mergeAgendaTruth(existingAgenda,incomingAgenda){const ex=(existingAgenda||[]).map(normalizeAgendaItem).filter(Boolean);const inc=(incomingAgenda||[]).map(normalizeAgendaItem).filter(Boolean);const out=[...ex];const sig=new Set(ex.map(agendaSignature));for(const it of inc){if(!it)continue;const proj=it.project||inferProjectFromTitle(it.title);const candidate={...it,project:proj,estimated_duration_minutes:it.estimated_duration_minutes||45};if(!isConcreteAgendaItem(candidate))continue;const itSig=agendaSignature(candidate);if(sig.has(itSig))continue;let dup=false;for(const cur of out){if(overlapsOrSimilar(cur,candidate)){dup=true;break}}if(dup)continue;const id=candidate.id&&String(candidate.id).trim()?String(candidate.id):('ag-ai-'+Date.now()+'-'+simpleHash(candidate.title+candidate.date));out.push({id,title:guidanceText(candidate.title,120),kind:candidate.kind||'planned_task',date:itemAgendaDate(candidate),start_time:candidate.start_time||null,end_time:candidate.end_time||null,estimated_duration_minutes:candidate.estimated_duration_minutes||45,status:'pencil',confirmation_required:true,source:candidate.source||'ai',project:proj});sig.add(itSig)}return markOverlaps(out)}
@@ -208,7 +251,7 @@ function projectLabelFor(p){return getProjectVisual(p).label||'ALGEMEEN'}
 function sourceLabelFor(source){if(source==='agenda')return'agenda';if(source==='task')return'los punt';if(source==='day_regie')return'regie';if(source==='suggestion')return'voorstel';if(source==='thread')return'open item';return String(source||'')||'voorstel'}
 function buildReason(source){if(source==='agenda')return'Uit je bestaande planning.';if(source==='task')return'Uit losse punten (nog niet ingepland).';if(source==='day_regie')return'Past bij je eerstvolgende stap.';if(source==='suggestion')return'Logisch vervolg op wat er al speelt.';if(source==='thread')return'Er staat nog een open keuze.';return''}
 function pickTopPerProject(items,maxTotal,maxPerProject){const by=new Map();for(const it of items){const k=getProjectVisual(it.project).key||'none';if(!by.has(k))by.set(k,[]);by.get(k).push(it)}const keys=[...by.keys()];const out=[];let round=0;while(out.length<maxTotal&&round<maxPerProject){for(const k of keys){const arr=by.get(k);if(!arr||arr.length<=round)continue;out.push(arr[round]);if(out.length>=maxTotal)break}round++}return out}
-function deriveAgendaSuggestions(ls){const titleSet=agendaTitleNormSetForSuggestions(ls);const lines=[];for(const i of ls.agenda||[]){if(isAgendaItemDone(i)||i.status==='needs_time'||timeToMin(i.start_time)!=null)continue;const t=String(i.title||'').trim();const tf=filterUserFacingLine(t);if(tf&&!/dagbrede|geen/i.test(tf)&&!suggestionDuplicatesAgendaTitle(tf,titleSet))lines.push({id:i.id||'ag-'+simpleHash(t),source:'agenda',text:tf,project:i.project||null,reason:buildReason('agenda')})}for(const i of ls.tasks||[]){if(!i.done&&i.title){const tf=filterUserFacingLine(i.title);if(tf&&!suggestionDuplicatesAgendaTitle(tf,titleSet))lines.push({id:i.id||'ta-'+simpleHash(i.title),source:'task',text:tf,project:i.project||null,reason:buildReason('task')})}}const now=String(ls.day_regie?.now_first_move||'').trim();const nowF=filterUserFacingLine(now);if(nowF&&!suggestionDuplicatesAgendaTitle(nowF,titleSet))lines.unshift({id:'now-'+simpleHash(nowF),source:'day_regie',text:nowF,project:'clara-core-lab',reason:buildReason('day_regie')});if(!lines.length){const blob=[...(ls.attention||[]),...(ls.open_threads||[])].map(i=>`${i.title||''} ${i.question||''} ${i.project||''}`).join(' ').toLowerCase();if(/marlon|demo|core\s*lab|clara/i.test(blob))lines.push({id:'demo-check',source:'suggestion',text:'Clara Core Lab: inhoudelijk nalopen voor demo',project:'clara-core-lab',reason:buildReason('suggestion')});else lines.push({id:'first-step',source:'suggestion',text:'Algemeen: één concrete eerstvolgende stap kiezen',project:null,reason:buildReason('suggestion')})}const uniq=uniqueGuidanceLines(lines.map(x=>x.text),10).map((text,idx)=>{const g=guidanceText(text,150);const src=lines.find(x=>guidanceText(x.text,150)===g)||{};return{id:src.id||'sg-'+idx,source:src.source||'suggestion',project:src.project||null,reason:src.reason||'',text:g}}).filter(i=>!dismissedGuidanceIds.has(i.id));return pickTopPerProject(uniq,5,2)}
+function deriveAgendaSuggestions(ls){const titleSet=agendaTitleNormSetForSuggestions(ls);const lines=[];for(const i of ls.agenda||[]){if(isAgendaItemDone(i)||i.status==='needs_time'||timeToMin(i.start_time)!=null)continue;const t=String(i.title||'').trim();const tf=filterUserFacingLine(t);if(tf&&!/dagbrede|geen/i.test(tf)&&!isBannedGenericSuggestionText(tf)&&!suggestionDuplicatesAgendaTitle(tf,titleSet))lines.push({id:i.id||'ag-'+simpleHash(t),source:'agenda',text:tf,project:i.project||null,reason:buildReason('agenda')})}for(const i of ls.tasks||[]){if(!i.done&&i.title){const tf=filterUserFacingLine(i.title);if(tf&&!isBannedGenericSuggestionText(tf)&&!suggestionDuplicatesAgendaTitle(tf,titleSet))lines.push({id:i.id||'ta-'+simpleHash(i.title),source:'task',text:tf,project:i.project||null,reason:buildReason('task')})}}const now=String(ls.day_regie?.now_first_move||'').trim();const nowF=filterUserFacingLine(now);if(nowF&&!isBannedGenericSuggestionText(nowF)&&!suggestionDuplicatesAgendaTitle(nowF,titleSet))lines.unshift({id:'now-'+simpleHash(nowF),source:'day_regie',text:nowF,project:'clara-core-lab',reason:buildReason('day_regie')});const uniq=uniqueGuidanceLines(lines.map(x=>x.text),10).map((text,idx)=>{const g=guidanceText(text,150);const src=lines.find(x=>guidanceText(x.text,150)===g)||{};return{id:src.id||'sg-'+idx,source:src.source||'suggestion',project:src.project||null,reason:src.reason||'',text:g}}).filter(i=>!dismissedGuidanceIds.has(i.id)).filter(i=>!isBannedGenericSuggestionText(i.text));return pickTopPerProject(uniq,5,2)}
 function deriveOpenEnds(ls){const lines=[];for(const i of ls.open_threads||[]){if(i&&i.status!=='closed'){const tx=filterUserFacingLine(i.question||i.title||i.context);if(tx)lines.push({id:i.id,source:'thread',text:tx,project:i.project||null,reason:buildReason('thread')})}}for(const q of ls.questions||[]){const tx=filterUserFacingLine(q);if(tx)lines.push({id:'q-'+simpleHash(tx),source:'question',text:tx,project:'clara-core-lab',reason:'Er is nog iets onduidelijk.'})}for(const i of normalizeAttentionItems(ls.attention||[])){if(!i.done){const tx=filterUserFacingLine(i.title);if(tx)lines.push({id:i.id,source:'attention',text:tx,project:i.project||null,reason:'Dit blijft relevant om scherp te krijgen.'})}}for(const i of ls.agenda||[]){if(i.status==='needs_time'){const tx=filterUserFacingLine(`${i.title||'Werk'} heeft nog geen vaste plek.`);if(tx)lines.push({id:i.id,source:'agenda',text:tx,project:i.project||null,reason:'Dit heeft nog een plek nodig.'})}if(i._frontend_conflict){const tx=filterUserFacingLine(`Overlap rond ${i.title||'een blok'}.`);if(tx)lines.push({id:i.id+'-c',source:'agenda',text:tx,project:i.project||null,reason:'Er is overlap die eerst opgelost moet worden.'})}}const uniq=uniqueGuidanceLines(lines.map(x=>x.text),12).map((text,idx)=>{const g=guidanceText(text,150);const src=lines.find(x=>guidanceText(x.text,150)===g)||{};return{id:src.id||'oe-'+idx,source:src.source||'note',project:src.project||null,reason:src.reason||'',text:g,urgent:isUrgentOpenEnd(g,src.source)}}).filter(i=>!hiddenOpenEndIds.has(`${i.source}:${i.id}`));const ordered=pickTopPerProject([...uniq.filter(i=>i.urgent),...uniq.filter(i=>!i.urgent)],3,1);lastOpenItemRef=ordered.length?{id:ordered[0].id,source:ordered[0].source}:null;return ordered}
 function renderOpenEndsPanel(ls){const open=deriveOpenEnds(ls);if(!open.length)return'<div class="card guide-card guide-open"><p class="empty">Geen open items.</p>'+labClearTestControls()+'</div>';const rows=open.map(i=>`<div class="item guide-open-item ${i.urgent?'urgent':''}" data-open-source="${esc(i.source)}" data-id="${esc(i.id)}"><div class="guide-open-text">${esc(i.text)}<div class="sub">${esc(projectLabelFor(i.project))} · ${esc(sourceLabelFor(i.source))}${i.reason?` · ${esc(guidanceText(i.reason,80))}`:''}</div><div class="open-answer-row"><span class="open-answer-label">Antwoord</span><input class="open-answer-input" data-open-answer-input data-id="${esc(i.id)}" data-open-source="${esc(i.source)}" placeholder="Typ hier…"><button type="button" class="open-answer-save" data-open-answer-save data-id="${esc(i.id)}" data-open-source="${esc(i.source)}">Opslaan</button><button type="button" class="open-answer-close" data-open-action="close" data-id="${esc(i.id)}" data-open-source="${esc(i.source)}" aria-label="Verwijder open item">×</button></div></div></div>`).join('');return`<div class="card guide-card guide-open">${rows}`+labClearTestControls()+'</div>'}
 function classifyAllDay(i){let s=timeToMin(i.start_time),e=timeToMin(i.end_time),d=i.estimated_duration_minutes||(s!=null&&e!=null?e-s:null);return s==null||i.status==='needs_time'||d>=300}
@@ -387,6 +430,7 @@ function openProjectPlanOverlay(id){
     touchState();
   }
   projectPlanOverlayOpenId=String(id);
+  lastOpenedProjectPlanId=projectPlanOverlayOpenId;
   renderProjectPlanOverlay();
   projectPlanOverlay.classList.remove('hidden');
 }
@@ -563,6 +607,14 @@ function matchProjectPlansForMessage(msg){
   const m=String(msg||'');
   const project=inferProjectKeyFromMessage(m);
   const plans=(labState.project_plans||[]).filter(p=>p&&p.status!=='archived');
+  if(lastOpenedProjectPlanId){
+    const last=getProjectPlanById(lastOpenedProjectPlanId);
+    if(last){
+      if(!project) return [last];
+      const lastProj=inferProjectKeyFromMessage(last.project||last.title||last.goal||'')||String(last.project||'');
+      if(lastProj===project) return [last];
+    }
+  }
   if(project){
     const hits=plans.filter(p=>inferProjectKeyFromMessage(p.project||p.title||p.goal||'')===project||String(p.project||'')===project);
     if(hits.length)return hits;
@@ -599,6 +651,8 @@ async function analyzeText(message,showUser=true){if(isAnalyzing&&currentControl
       if(res.ok&&data&&data.project_plan_suggestion){
         const plan=projectPlanFromAiSuggestion(data.project_plan_suggestion);
         if(plan){
+          const v=validateAiPlanAgainstMessage(value,plan);
+          if(!v.ok) throw new Error(v.reason||'Invalid project plan suggestion');
           upsertProjectPlan(plan);
           touchState();
           renderFromState();
@@ -718,8 +772,8 @@ function topoSortSteps(steps,project){
 function planProjectPlanThisWeek(planId){
   const plan=getProjectPlanById(planId);
   if(!plan){setStatus('Geen projectplan om te plannen.');return}
-  const today=todayIso();
-  const days=nextWorkdaysFrom(today,5);
+  const startIso=startIsoForWeekPlanning();
+  const days=nextWorkdaysFrom(startIso,5);
   const proj=plan.project||inferProjectFromTitle(plan.title||plan.goal||'');
   if(!proj||getProjectVisual(proj).key==='none'){setStatus('Kies eerst een project voor dit plan.');return}
 
@@ -856,7 +910,7 @@ function answerOpenEnd(id,source,value){const v=guidanceText(value,180);if(!v)re
 function agendaSuggestionsTextKey(){return deriveAgendaSuggestions(labState).map(i=>i.text).join('\u0001')}
 function refreshGuidancePanels(){const before=agendaSuggestionsTextKey();renderGuidance();renderRegie();const after=agendaSuggestionsTextKey();guidanceRefreshHint=before===after?'Suggesties opnieuw bekeken (lijst gelijk).':'Suggesties opnieuw opgebouwd.';renderGuidance();if(refreshGuidanceHintTimer)clearTimeout(refreshGuidanceHintTimer);refreshGuidanceHintTimer=setTimeout(()=>{guidanceRefreshHint='';refreshGuidanceHintTimer=null;renderGuidance()},4200);setStatus('Suggesties ververst.')}
 attentionCol.addEventListener('click',e=>{let b=e.target.closest('[data-suggestion-action]');if(!b)return;handleSuggestionAction(b.dataset.id,b.dataset.suggestionAction,b.dataset.title)});
-attentionCol.addEventListener('click',e=>{let p=e.target.closest('[data-projectplans-action]');if(!p)return;if(p.dataset.projectplansAction==='open'){openProjectPlanOverlay(labState.project_plans?.[0]?.id||null)}});
+attentionCol.addEventListener('click',e=>{let p=e.target.closest('[data-projectplans-action]');if(!p)return;if(p.dataset.projectplansAction==='open'){openProjectPlanOverlay(lastOpenedProjectPlanId||labState.project_plans?.[0]?.id||null)}});
 regieCol.addEventListener('click',e=>{let save=e.target.closest('[data-open-answer-save]');if(save){let row=save.closest('.open-answer-row'),inp=row?.querySelector('[data-open-answer-input]');answerOpenEnd(save.dataset.id,save.dataset.openSource,inp?.value||'');return}let b=e.target.closest('[data-open-action]');if(b){if(b.dataset.openAction==='close')closeGuidanceItem(b.dataset.id,b.dataset.openSource);return}let clear=e.target.closest('[data-action="clear-test-state"]');if(clear){e.preventDefault();clearLocalTestState()}});
 startupOverlay?.addEventListener('click',e=>{let close=e.target.closest('[data-startup-overlay-close]');if(close){hideStartupOverlay(true);return}let act=e.target.closest('[data-startup-overlay-action]');if(act){if(act.dataset.startupOverlayAction==='start-empty'){hideStartupOverlay(true);return}if(act.dataset.startupOverlayAction==='accept-all'){const sug=overlaySuggestionsForOverlay();for(const s of sug){handleSuggestionAction(String(s.id),'plan',overlaySuggestionTitle(s))}hideStartupOverlay(true);return}}let editInp=e.target.closest('[data-overlay-edit-input]');if(editInp)return;let b=e.target.closest('[data-overlay-proposal-action]');if(!b)return;const id=b.dataset.id;const action=b.dataset.overlayProposalAction;const sug=(overlaySuggestionsForOverlay().find(x=>String(x.id)===String(id)))||null;const baseTitle=sug?overlaySuggestionTitle(sug):'';if(action==='dismiss'){dismissedGuidanceIds.add(id);persistDismissedGuidanceIds();overlayEditId=null;overlayEditDraft='';renderStartupOverlayBody();return}if(action==='edit'){if(overlayEditId===id){overlayEditId=null;overlayEditDraft=''}else{overlayEditId=id;overlayEditDraft=baseTitle||''}renderStartupOverlayBody();return}if(action==='accept'){const title=overlayEditId===id?(guidanceText(overlayEditDraft||baseTitle,160)):(baseTitle);handleSuggestionAction(id,'plan',title);overlayEditId=null;overlayEditDraft='';renderStartupOverlayBody();return}});
 startupOverlay?.addEventListener('input',e=>{const inp=e.target.closest('[data-overlay-edit-input]');if(!inp)return;const id=inp.getAttribute('data-id');if(!id)return;if(overlayEditId!==id)return;overlayEditDraft=String(inp.value||'')});

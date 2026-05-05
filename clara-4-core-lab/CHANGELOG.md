@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.39 — 2026-05-05
+
+- Fix regressies: projectplan-isolatie (last-opened plan prefereren; geen mix van stappen), LaLampe-workshopflow krijgt geen AFK/lamp-stappen (AI-voorstel wordt gevalideerd en anders fallback), “Plan deze week” start op eerstvolgende werkdag als vandaag te laat is, en agenda-suggesties blokkeren generieke placeholders.
+
 ## 0.14.38 — 2026-05-05
 
 - AI-projectplan-generator: `/api/analyze` kan optioneel `project_plan_suggestion` teruggeven bij expliciete projectplan-intentie (met Projectbrain + Lab State context). Frontend opent dit voorstel direct in de Projectplan Overlay; skeleton blijft veilige fallback. Geen automatische agenda-mutatie.
