@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.34 — 2026-05-05
+
+- Startup overlay opgeschoond: **geen legacy/generieke agenda-rommel** in Vandaag, verboden interne taal gefilterd, en per voorstel **✓ accepteren · ✎ aanpassen · × weg**. Onderste knoppen vereenvoudigd (alleen “Alles accepteren” bij meerdere, + “Start zonder voorstellen”).
+
 ## 0.14.33 — 2026-05-05
 
 - Blokkeert **generieke agenda-items**: alleen agenda-blokken met concrete actie + project/context + realistische duur.
