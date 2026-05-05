@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.41.1 — 2026-05-05
+
+- Hardening: weekplanning-intents krijgen een mini smoke-test (`scripts/check-weekplanning-intents.mjs`). Daarnaast kan de “Ik liep vast…” fallback niet meer verschijnen bij korte bekende planning-intents; er wordt dan een veilige lokale planning/clarify route gebruikt. Startup overlay verbergt duidelijke oude versie-testitems (bijv. “Core Lab: v0.x inhoudelijk testen”) zonder de agenda te muteren.
+
 ## 0.14.41 — 2026-05-05
 
 - Fix: herken “weekplanning voor <project>” (LaLampe/AFK/Begeister/Core Lab) als weekplanning-intentie. Als er een projectplan bestaat wordt dat ingepland met de bestaande “Plan deze week”-logica (zonder stapelen); anders worden 2–4 veilige potloodblokken over werkdagen gezet. Geen “Ik liep vast…” fallback bij korte weekplanningvragen.
