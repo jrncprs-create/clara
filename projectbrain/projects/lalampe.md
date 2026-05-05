@@ -1,76 +1,76 @@
 # LaLampe
 
+_Last updated: 2026-05-05_
+
+## Routing
+- project_id: `lalampe`
+- aliases: LaLampe, lampenworkshop, workshopflow, avondworkshop, workshop verkoopbaar maken
+- type: active commercial/creative project
+
 ## Kern
-LaLampe is Jeroens lampenworkshop-project. De focus ligt op toegankelijke, praktische workshops waarin deelnemers zelf een lamp maken van bestaande objecten zoals flessen, keramiek, LP’s of andere vondsten.
+LaLampe is Jeroens lampenworkshopproject. De kern is een compacte avondworkshop waarin deelnemers met begeleiding een eigen werkende lamp maken van een meegebracht of gekozen object. De communicatie moet praktisch, warm en niet te gelikt zijn.
 
-LaLampe draait om maken, ontdekken en transformatie: van gevonden object naar persoonlijk lichtobject. De toon moet uitnodigend en ervaringsgericht zijn, niet hard verkopend.
+## Wat LaLampe is
+- Kleine avondworkshops, bij voorkeur 19:00–22:00.
+- Maximaal ongeveer 4 deelnemers.
+- Technische basis is voorbereid: veilige lichtbron, fitting/voeding/aansluiting en eenvoudige begeleiding.
+- Deelnemer maakt in één avond een werkende lamp.
+- Locatie/context: atelier/Baggerbeest/maakomgeving.
+- Sterke materialen: glazen flessen, weckpotten, vazen, karaf/theepot, lichte metalen objecten, kleine houten objecten.
+- Verkoop draait om ervaring, proces en transformatie, niet om hard sales.
 
-## Huidige status
-LaLampe zit in de voorbereidings- en testfase. De workshopvorm, materiaalflow, veiligheid, communicatie en eerste testavonden moeten verder worden aangescherpt.
+## Wat LaLampe niet is
+- Geen AFK/Landjuweel/Nachtdiertjes-installatie.
+- Geen autonome lampwezens.
+- Geen voetconstructie-POC voor een kunstinstallatie.
+- Geen ecologisch/organismische beeldenroute.
+- Geen maatschappijkritisch kunsttraject.
 
-Voor Clara-planning is LaLampe nu vooral geschikt voor compacte werkblokken: workshopflow uitschrijven, materiaal/lampenkappen checken, testavond voorbereiden en korte marketingtekst maken.
+## Huidige focus
+LaLampe moet verkoopbaarder en concreter worden:
+- workshopflow scherp krijgen;
+- materiaal- en techniekbasis bepalen;
+- testworkshop/try-out voorbereiden;
+- duidelijke site/tekst/aanbod maken;
+- eenvoudige marketingroute kiezen;
+- praktische prijs en capaciteit bewaken.
 
-## Belangrijke feiten
-- LaLampe is een eigen project van Jeroen.
-- Eerste richting: avondworkshops met kleine groepen.
-- Mogelijke materialen: flessen, keramiek, LP’s en andere objecten die tot lamp kunnen worden omgebouwd.
-- De workshop moet laagdrempelig zijn, maar veilig en zorgvuldig.
-- Er is behoefte aan korte uitleg over eenvoudige elektra, armaturen en schakelaars.
-- De marketing moet de ervaring, het proces en de transformatie tonen.
-- LaLampe moet herkenbaar apart blijven van Begeister.
+## Goede projectplan-stappen voor LaLampe workshopflow
+Als Clara een projectplan maakt voor LaLampe/workshopflow/verkoopbaarheid, gebruik dan stappen zoals:
+1. Workshopdoel en doelgroep scherpzetten.
+2. Materiaal- en techniekbasis bepalen.
+3. Avondflow in blokken uitschrijven.
+4. Testmoment of try-out voorbereiden.
+5. Feedbackpunten verwerken.
+6. Verkooptekst/boekingspagina/CTA aanscherpen.
 
-## Beslissingen
-- LaLampe start praktisch met eenvoudige lampworkshops.
-- Kleine groepen hebben de voorkeur voor de eerste workshops.
-- De workshop wordt niet gepositioneerd als harde verkoop, maar als maakervaring.
-- Deelnemers moeten iets tastbaars en persoonlijks mee naar huis nemen.
-- LaLampe blijft een eigen project naast andere samenwerkingen.
-
-## Open acties
-- Workshopflow voor een avondworkshop stap voor stap uitschrijven.
-- Materiaallijst en lampenkappen/armaturen controleren.
-- Veiligheidsuitleg voor deelnemers kort en begrijpelijk formuleren.
-- Eerste testworkshop praktisch voorbereiden.
-- Websitecopy of korte marketingtekst nalopen op toon.
-- Checken welke materialen vooraf klaar moeten liggen.
-
-## Aandachtspunten
-- Check: veiligheid en elektra moeten helder zijn zonder de workshop zwaar te maken.
-- Risico: LaLampe niet te hard verkopen; het moet als ervaring blijven voelen.
-- Keuze: hoeveel vrijheid krijgen deelnemers versus hoeveel structuur is nodig?
-- Check: lampenkappen/materiaal kunnen praktische bottleneck zijn.
-- Grens: LaLampe niet automatisch vermengen met Begeister.
-
-## Eerstvolgende logische stappen
-1. Schrijf de workshopavond in 6 tot 8 simpele stappen uit.
-2. Maak een korte materiaalcheck: armaturen, snoeren, schakelaars, lampenkappen, gereedschap.
-3. Formuleer een korte veiligheidsuitleg voor deelnemers.
-4. Maak één korte marketingtekst die de ervaring centraal zet.
-5. Bepaal wat nodig is voor een eerste testavond.
-
-## Startsuggesties voor Clara Core Lab
-Deze suggesties mag Clara gebruiken als LaLampe in een planningvoorstel voorkomt:
-- “Plan een kort blok om de LaLampe-workshopflow uit te schrijven.”
-- “Check materiaal en lampenkappen voordat je een testavond plant.”
-- “Maak één korte tekst die LaLampe als ervaring verkoopt, niet als product.”
+## Checklistvoorbeelden
+- Bepaal wat iemand na één avond mee naar huis neemt.
+- Maak lijst met toegestane objecten/materialen.
+- Leg technische basis vast: lichtbron, fitting, kabel, dimmer/schakelaar, veiligheid.
+- Schrijf tijdsblokken voor ontvangst, ontwerpkeuze, bouwen, testen, afronden.
+- Bepaal prijs, groepsgrootte, materiaalfee en minimale bezetting.
+- Maak één korte verkooptekst en één simpele CTA.
 
 ## Planningseed
-Geschikte potloodblokken:
-- 30–45 min: materiaal/lampenkappen checken.
-- 45–75 min: workshopflow uitschrijven.
-- 25–40 min: korte marketingtekst maken.
-- 20–30 min: veiligheidsuitleg compact formuleren.
+- Eerstvolgende logische werksessie: workshopflow uitschrijven of materiaal/techniekbasis bepalen.
+- Richtduur per sessie: 45–90 minuten.
+- Bij “verkoopbaar maken voor juni”: maak een projectplan met flow, materiaalbasis, testmoment en verkooptekst. Deadline mag alleen hard worden als datum expliciet is; “voor juni” is richting/urgentie, geen exacte afspraak.
 
-Als de dag vol is, zet LaLampe liever als taak of needs_time dan als geforceerd agenda-item.
+## Aandachtspunten
+- Hou toon simpel, concreet en niet te commercieel glad.
+- Voorkom dat LaLampe wordt verward met AFK/Nachtdiertjes/lampwezens.
+- Techniek moet betrouwbaar genoeg zijn vóór verkoop.
+- Marketing pas aanscherpen als aanbod/flow duidelijk is.
 
-## Niet doen / grenzen
-- LaLampe-acties niet automatisch als taken voor vandaag plannen zonder vraag.
-- LaLampe niet verwarren met Begeister.
-- LaLampe niet presenteren als harde sales.
-- Technische Projectbrain-, API-, GitHub- of Clara-acties horen niet onder LaLampe.
-- Open lijnen zijn werkvoorraad, geen automatische agenda-items.
+## Niet doen
+- Geen stappen zoals “Eerste lampwezen bouwen”, “Voetconstructie kiezen”, “Stabiliteit lichtwezen testen” of “POC lampwezen” voor LaLampe.
+- Geen Projectbrain-context als takenlijst dumpen.
+- Geen harde deadline verzinnen als alleen “juni” genoemd is.
 
-## Onzekerheden
-- Exacte prijsstelling en planning kunnen nog wijzigen.
-- Definitieve workshopvorm moet nog getest worden.
-- De beste balans tussen vrije creativiteit en duidelijke workshopstructuur moet nog blijken.
+## Open acties
+- Workshopflow als avondprogramma uitschrijven.
+- Materiaal- en techniekbasis definitief kiezen.
+- Testworkshop voorbereiden.
+- Verkooptekst en boekingsroute simpel maken.
+- Later marketing/ads/reviews structureren.
