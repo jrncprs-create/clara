@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.42 — 2026-05-05
+
+- Fix: projectplan-weekplanning loopt vanuit de **Projectplan Overlay** (keuzes in overlay i.p.v. chat/open items). “Deze week” gebruikt **resterende werkdagen van dezelfde week** (dinsdagavond → wo/do/vr). Daarnaast: projectplan-stappen worden niet meer onterecht afgekeurd als “niet concreet” (verb-lijst uitgebreid), waardoor planning niet meer leeg eindigt.
+
 ## 0.14.41.3 — 2026-05-05
 
 - Fix: “Plan deze week” eindigt niet meer stil met alleen `[Past niet]` als er niets past. In dat geval toont Clara een duidelijke keuze: **eerstvolgende werkdag**, **komende werkweek**, **één dag proberen**, of **open laten**. Ook: dubbele “Projectplan opgeslagen … wil je dit plannen?” prompt wordt gededuped. Test: `scripts/check-plan-deze-week-choice.mjs`.

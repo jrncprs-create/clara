@@ -11,19 +11,22 @@ function fail(msg) {
 }
 
 const required = [
-  'function addProjectPlanNoFitChoicePrompt',
+  'projectPlanOverlayPlanningChoice',
   'data-pp-plan-choice',
   "mode==='next_workday'",
   "mode==='week_spread'",
   "mode==='one_day'",
-  'Te weinig ruimte · keuze nodig.',
+  "mode==='this_week_spread'",
+  'Te weinig ruimte · kies in projectplan.',
 ];
 for (const r of required) {
   if (!appJs.includes(r)) fail(`missing marker: ${r}`);
 }
 
-// Ensure we don’t emit only [Past niet] when nothing planned
+// Ensure we don’t emit only [Past niet] when nothing planned (choice should be in overlay, not chat)
 if (!appJs.includes('if(!planned && (notFit||waiting))')) fail('missing planned==0 choice branch');
+if (appJs.includes('addProjectPlanNoFitChoicePrompt')) fail('chat choice prompt should not exist');
+if (appJs.includes('data-pp-plan-choice="week_spread"')) fail('week_spread should not be offered for overlay "deze week" (use this_week_spread)');
 
 console.log('OK: plan-deze-week choice guard present');
 if (process.exitCode) process.exit(process.exitCode);

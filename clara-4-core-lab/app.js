@@ -1,4 +1,4 @@
-const LAB_VERSION='0.14.41.3';
+const LAB_VERSION='0.14.42';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
@@ -8,6 +8,7 @@ const startupOverlay=document.getElementById('startupOverlay'),startupOverlayInt
 const STARTUP_INTERNAL_PROMPT='Maak een rustige conceptplanning voor vandaag op basis van de beschikbare projectcontext. Kies maximaal één eerstvolgende logische actie per actief project. Zet uitvoerbare acties als potloodblokken in de agenda. Geef hooguit één noodzakelijke vraag, een korte route vooruit en concrete open items. Maak geen ruwe contextdump, verzin geen harde afspraken, plan geen overlap, en zet wat niet eerlijk past apart als needs_time.';
 const STARTUP_DONE_MSG='Ik heb alvast een rustige conceptstart klaargezet. Alles staat als potloodvoorstel.';
 let labState={agenda:[],attention:[],tasks:[],open_threads:[],project_plans:[],day_regie:{items_to_check:[],rollover_candidates:[],review_prompt:'',suggested_time:null,now_first_move:''},updated_at:null},activeAgendaTab='day',activeAgendaDate=null,currentController=null,isAnalyzing=false,dragState=null,thinkingId=0,startupAnalysisScheduled=false,activeAgendaEndPromptItemId=null,dismissedGuidanceIds=new Set(),hiddenOpenEndIds=new Set(),guidanceRefreshHint='',refreshGuidanceHintTimer=null,lastOpenItemRef=null,lastUserInputForSanitize='',lastPlanningMessage='',legacyNoiseSig=new Set(),overlayEditId=null,overlayEditDraft='',projectPlanOverlayOpenId=null,lastOpenedProjectPlanId=null;
+let projectPlanOverlayPlanningChoice=null; // {planId, project, reason}
 
 function loadLegacyNoise(){try{const raw=localStorage.getItem(LEGACY_NOISE_KEY);if(!raw)return;const a=JSON.parse(raw);if(!Array.isArray(a))return;legacyNoiseSig=new Set(a.map(String))}catch(_){}}
 function persistLegacyNoise(){try{localStorage.setItem(LEGACY_NOISE_KEY,JSON.stringify([...legacyNoiseSig].slice(0,1800)))}catch(_){}}
@@ -332,7 +333,7 @@ function isBannedGenericSuggestionText(title){
   ];
   return bans.some(b=>t===b||t.includes(b));
 }
-function titleHasConcreteVerb(title){return/\b(nalopen|controleren|testen|bouwen|maken|monteren|bestellen|schrijven|ordenen|uitwerken|opstellen|mailen|bellen|afstemmen|voorbereiden)\b/i.test(String(title||''))}
+function titleHasConcreteVerb(title){return/\b(nalopen|controleren|testen|bouwen|maken|monteren|bestellen|schrijven|ordenen|uitwerken|opstellen|mailen|bellen|afstemmen|voorbereiden|bepalen|uitschrijven|verwerken|aanscherpen|scherpzetten|uitzetten)\b/i.test(String(title||''))}
 function isConcreteAgendaItem(i){if(!i)return false;const title=String(i.title||'').trim();if(!title||isGenericAgendaTitle(title))return false;const pv=getProjectVisual(i.project||inferProjectFromTitle(title));if(!pv||pv.key==='none')return false;const dur=Number(i.estimated_duration_minutes||0);if(!Number.isFinite(dur)||dur<10)return false;return titleHasConcreteVerb(title)&&/[:—-]/.test(title)||titleHasConcreteVerb(title)}
 function mergeAgendaTruth(existingAgenda,incomingAgenda){const ex=(existingAgenda||[]).map(normalizeAgendaItem).filter(Boolean);const inc=(incomingAgenda||[]).map(normalizeAgendaItem).filter(Boolean);const out=[...ex];const sig=new Set(ex.map(agendaSignature));for(const it of inc){if(!it)continue;const proj=it.project||inferProjectFromTitle(it.title);const candidate={...it,project:proj,estimated_duration_minutes:it.estimated_duration_minutes||45};if(!isConcreteAgendaItem(candidate))continue;const itSig=agendaSignature(candidate);if(sig.has(itSig))continue;let dup=false;for(const cur of out){if(overlapsOrSimilar(cur,candidate)){dup=true;break}}if(dup)continue;const id=candidate.id&&String(candidate.id).trim()?String(candidate.id):('ag-ai-'+Date.now()+'-'+simpleHash(candidate.title+candidate.date));out.push({id,title:guidanceText(candidate.title,120),kind:candidate.kind||'planned_task',date:itemAgendaDate(candidate),start_time:candidate.start_time||null,end_time:candidate.end_time||null,estimated_duration_minutes:candidate.estimated_duration_minutes||45,status:'pencil',confirmation_required:true,source:candidate.source||'ai',project:proj});sig.add(itSig)}return markOverlaps(out)}
 function mergeLabStateFromAnalysis(prev,data){const p=prev||labState;const next={...p};const incomingAgenda=Array.isArray(data?.clara_agenda)?data.clara_agenda:[];next.agenda=mergeAgendaTruth(p.agenda||[],incomingAgenda);const dash=data?.dashboard_output||{};const rawAtt=[];for(const t of next.agenda.filter(x=>x._frontend_conflict).map(x=>x.title))if(t)rawAtt.push({title:t,kind:'risico'});for(const x of dash.attention||[]){if(typeof x==='string'&&x.trim())rawAtt.push({title:x.trim(),kind:'check'});else if(x&&x.text)rawAtt.push({title:String(x.text).trim(),kind:ATT_KINDS.has(x.kind)?x.kind:'check',project:x.project||null})}for(const pItem of data?.proposed_items||[])if(pItem.type==='attention')rawAtt.push({title:pItem.title,kind:'check',project:pItem.project||null});const rawFiltered=rawAtt.filter(r=>r&&r.title&&!isGenericAttentionMeta(r.title)&&!attentionTitleMatchesAgenda(r.title,next.agenda));let attention=normalizeAttentionItems(rawFiltered.map((r,i)=>({id:r.id||'at-'+Date.now()+'-'+i+'-'+((Math.random()*1e6)|0),...r,done:false})));if(attention.length<3){const ex=enrichAttentionFromLabState(next.agenda,(data?.proposed_items||[]).filter(i=>['task','reminder'].includes(i.type)),attention);attention=normalizeAttentionItems([...attention,...ex.map((r,i)=>({id:r.id||'at-'+Date.now()+'-x-'+i,...r}))])}if(attention.length>5)attention=attention.slice(0,5);next.attention=normalizeAttentionItems([...(p.attention||[]).filter(i=>!i.done),...attention]).slice(0,7);const incomingTasks=(data?.proposed_items||[]).filter(i=>['task','reminder'].includes(i.type)).map((i,idx)=>({id:i.id||('ta-'+Date.now()+'-'+idx),title:i.title,done:false,project:i.project||null}));const taskSeen=new Set((p.tasks||[]).map(t=>guidanceText(t.title,120).toLowerCase()));for(const t of incomingTasks){const k=guidanceText(t.title,120).toLowerCase();if(!k||taskSeen.has(k))continue;(next.tasks=next.tasks||[]).push({...t,title:guidanceText(t.title,160)});taskSeen.add(k)}next.tasks=(next.tasks||[]).filter(t=>t&&t.title).slice(0,40);const ot=Array.isArray(data?.open_threads)?data.open_threads:[];next.open_threads=Array.isArray(p.open_threads)&&p.open_threads.length?p.open_threads:ot;const dr=data?.day_review||{};next.day_regie={...p.day_regie,items_to_check:dr.items_to_check||p.day_regie?.items_to_check||[],rollover_candidates:dr.rollover_candidates||p.day_regie?.rollover_candidates||[],review_prompt:dr.review_prompt||p.day_regie?.review_prompt||'',suggested_time:dr.suggested_time??p.day_regie?.suggested_time??null,now_first_move:dr.now_first_move||p.day_regie?.now_first_move||''};next.updated_at=new Date().toISOString();return next}
@@ -607,6 +608,16 @@ function renderProjectPlanOverlay(){
   const plan=getProjectPlanById(projectPlanOverlayOpenId);
   if(!plan){projectPlanOverlayBody.innerHTML='<div class="pp-muted">Geen projectplan.</div>';return;}
   const pv=projectLabelFor(plan.project);
+  const choice=(projectPlanOverlayPlanningChoice&&String(projectPlanOverlayPlanningChoice.planId)===String(plan.id))?projectPlanOverlayPlanningChoice:null;
+  const choiceUi=choice?`<div class="pp-card pp-card--soft" style="margin-top:10px">
+    <div class="pp-card__head"><div class="pp-card__title">Te weinig ruimte</div><div class="pp-muted">${esc(choice.reason||'Voor deze week is er binnen normale werktijd te weinig ruimte.')}</div></div>
+    <div class="pp-actions" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px">
+      <button type="button" class="pp-btn" data-pp-plan-choice="this_week_spread" data-plan-id="${esc(plan.id)}">Verspreid resterende werkdagen</button>
+      <button type="button" class="pp-btn" data-pp-plan-choice="next_workday" data-plan-id="${esc(plan.id)}">Eerstvolgende werkdag</button>
+      <button type="button" class="pp-btn" data-pp-plan-choice="one_day" data-plan-id="${esc(plan.id)}">Probeer op één dag</button>
+      <button type="button" class="pp-btn pp-btn--subtle" data-pp-plan-choice="leave_open" data-plan-id="${esc(plan.id)}">Laat open</button>
+    </div>
+  </div>`:'';
   const header=`<div class="pp-top">
     <div class="pp-top__meta"><strong>${esc(pv)}</strong><span class="pp-dot">·</span>${esc(projectPlanStatusLabel(plan.status))}${plan.deadline?`<span class="pp-dot">·</span><span>deadline ${esc(plan.deadline)}</span>`:''}</div>
     <div class="pp-top__actions">
@@ -708,7 +719,7 @@ function renderProjectPlanOverlay(){
     return `<div class="pp-step ${expanded?'is-open':''}" data-pp-step-id="${esc(s.id)}">${summary}${details}</div>`;
   }).join('');
   const stepsWrap=`<div class="pp-card pp-card--soft"><div class="pp-card__head"><div class="pp-card__title">Stappen</div><div class="pp-muted">Houd stappen kort; checklist pas open als nodig.</div></div>${steps||`<div class="pp-muted">Nog geen stappen. Gebruik “Stap”.</div>`}</div>`;
-  projectPlanOverlayBody.innerHTML=header+meta+stepsWrap;
+  projectPlanOverlayBody.innerHTML=header+meta+stepsWrap+choiceUi;
 }
 
 function renderAgendaSuggestionsPanel(ls){
@@ -745,12 +756,20 @@ function addProjectPlanSavedPrompt(planId){
   scrollBottom();
 }
 
-function addProjectPlanNoFitChoicePrompt(planId,project){
-  const pid=String(planId||'');
-  const proj=projectLabelFor(project);
-  const text=`Voor deze week is er binnen normale werktijd te weinig ruimte om ${proj} eerlijk in te plannen. Wat wil je dat ik doe?`;
-  chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant"><div class="msg-body">${esc(text)}</div><div class="options"><div class="option-actions"><button data-pp-plan-choice="next_workday" data-plan-id="${esc(pid)}">Eerstvolgende werkdag</button><button data-pp-plan-choice="week_spread" data-plan-id="${esc(pid)}">Komende werkweek</button><button data-pp-plan-choice="one_day" data-plan-id="${esc(pid)}">Probeer op één dag</button><button data-pp-plan-choice="leave_open" data-plan-id="${esc(pid)}">Laat open</button></div></div></div>`);
-  scrollBottom();
+function remainingWorkdaysThisWeekFrom(startIso){
+  const start=String(startIso||todayIso()).slice(0,10);
+  const out=[];
+  const d0=dayOfWeekFromIso(start);
+  // week = Mon..Fri. Compute Monday of this week, then take start..Fri.
+  const monday=addDaysIso(start,-((d0+6)%7));
+  for(let i=0;i<7;i++){
+    const iso=addDaysIso(monday,i);
+    const dow=dayOfWeekFromIso(iso);
+    if(dow===0||dow===6)continue;
+    if(iso<start)continue;
+    out.push(iso);
+  }
+  return out;
 }
 function contextPayload(message){return 'Actuele lokale Clara status (lokale waarheid, inclusief handmatige wijzigingen):\n'+JSON.stringify(labState,null,2)+'\n\nNieuw bericht:\n'+message}
 function hasOpenThreads(ls){return(ls.open_threads||[]).some(i=>i&&i.status!=='closed')}
@@ -968,7 +987,7 @@ async function analyzeText(message,showUser=true){if(isAnalyzing&&currentControl
   currentController=new AbortController();setAnalyzing(true);setStatus('Clara denkt even mee…');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);startThinkingStatusFlow(thinking);try{let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Kon dit niet ophalen');stopThinkingStatusFlow();render(data);removeThinking(thinking);setStatus('Bijgewerkt · v'+LAB_VERSION)}catch(e){stopThinkingStatusFlow();removeThinking(thinking);try{renderFromState();const safe=safeFallbackForMessage(value,words);if(safe){addAssistantMessage(sanitizeUserFacingText(safe,'chat')||safe,deriveSuggestions())}else{addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}}catch(_){const safe=safeFallbackForMessage(value,words);addAssistantMessage(sanitizeUserFacingText(safe||analysisFallbackMessage(),'chat')||safe||analysisFallbackMessage(),safe?deriveSuggestions():[])}setStatus('Klaar · v'+LAB_VERSION)}finally{stopThinkingStatusFlow();clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
 endPromptHost?.addEventListener('click',e=>{let b=e.target.closest('[data-agenda-end-action]');if(!b)return;handleAgendaEndPromptAction(b.dataset.itemId,b.dataset.agendaEndAction)});
 chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-proposal-action]');if(!b)return;if(b.dataset.proposalAction==='ok'&&b.dataset.kind==='confirm_all'){labState.agenda.forEach(i=>{if(i.status==='pencil')i.status='confirmed';i.confirmation_required=false});touchState();renderFromState()}b.closest('.options')?.remove()});
-chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-pp-saved-action]');if(b){const id=b.dataset.planId;const act=b.dataset.ppSavedAction;if(act==='plan'){planProjectPlanThisWeek(id);b.closest('.options')?.remove()}else if(act==='later'){b.closest('.options')?.remove();setStatus('Oké, later.')}return}let c=e.target.closest('[data-pp-plan-choice]');if(!c)return;const id=c.dataset.planId;const mode=c.dataset.ppPlanChoice;if(mode==='leave_open'){c.closest('.options')?.remove();addProjectPlanAttention('keuze',inferProjectKeyFromMessage(String(id||''))||null,'[Keuze] Projectplan open laten staan; plan later wanneer er ruimte is.',id);touchState();renderFromState();setStatus('Oké, open.');return}planProjectPlanThisWeek(id,{mode});c.closest('.options')?.remove()}); 
+chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-pp-saved-action]');if(!b)return;const id=b.dataset.planId;const act=b.dataset.ppSavedAction;if(act==='plan'){planProjectPlanThisWeek(id);b.closest('.options')?.remove()}else if(act==='later'){b.closest('.options')?.remove();setStatus('Oké, later.')}}); 
 agendaSection?.addEventListener('click',e=>{let tab=e.target.closest('[data-agenda-tab]');if(tab){activeAgendaTab=tab.dataset.agendaTab;renderFromState();return}let a=e.target.closest('[data-agenda-action]');if(!a)return;let id=a.dataset.id,item=labState.agenda.find(i=>i.id===id);if(a.dataset.agendaAction==='confirm'&&item){item.status='confirmed';item.confirmation_required=false;touchState();renderFromState()}if(a.dataset.agendaAction==='delete'){labState.agenda=labState.agenda.filter(i=>i.id!==id);touchState();renderFromState()}});
 agendaCol.addEventListener('pointerdown',e=>{let h=e.target.closest('[data-resize]'),eventEl=e.target.closest('.event');if(e.target.closest('button,[contenteditable="true"],input,textarea'))return;if(!h&&!eventEl)return;e.preventDefault();let section=(h||eventEl).closest('.timeline-card'),tl=(h||eventEl).closest('.timeline'),id=h?h.dataset.id:eventEl.dataset.id,item=labState.agenda.find(i=>i.id===id);if(!section||!tl||!item)return;let rect=tl.getBoundingClientRect(),s=timeToMin(item.start_time)||Number(section.dataset.start),en=timeToMin(item.end_time)||s+(item.estimated_duration_minutes||30);dragState={id:item.id,mode:h?'resize':'move',edge:h?.dataset.resize||null,start:Number(section.dataset.start),end:Number(section.dataset.end),rect,offset:eventEl?Math.max(0,e.clientY-eventEl.getBoundingClientRect().top):0,duration:Math.max(15,en-s)};(h||eventEl).setPointerCapture?.(e.pointerId)});
 window.addEventListener('pointermove',e=>{if(!dragState)return;let item=labState.agenda.find(i=>i.id===dragState.id);if(!item)return;let y=Math.max(0,Math.min(dragState.rect.height,e.clientY-dragState.rect.top)),min=round15(dragState.start+(y/dragState.rect.height)*(dragState.end-dragState.start)),s=timeToMin(item.start_time)||dragState.start,en=timeToMin(item.end_time)||s+30;if(dragState.mode==='move'){let offMin=(dragState.offset/dragState.rect.height)*(dragState.end-dragState.start);s=round15(dragState.start+((e.clientY-dragState.rect.top)/dragState.rect.height)*(dragState.end-dragState.start)-offMin);s=Math.max(dragState.start,Math.min(s,dragState.end-dragState.duration));en=s+dragState.duration;if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.start_time=minToTime(s);item.end_time=minToTime(en);item.estimated_duration_minutes=dragState.duration}else if(dragState.edge==='start'){s=Math.min(min,en-15);if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.start_time=minToTime(s);item.estimated_duration_minutes=Math.max(15,en-s)}else{en=Math.max(min,s+15);if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.end_time=minToTime(en);item.estimated_duration_minutes=Math.max(15,en-s)}touchState();renderFromState()});
@@ -1057,7 +1076,8 @@ function planProjectPlanThisWeek(planId,opts=null){
   const mode=String(opts?.mode||'this_week');
   const startIso=startIsoForWeekPlanning();
   const nextWorkday=nextWorkdayFromIso(addDaysIso(todayIso(),1));
-  const days=mode==='next_workday'?[nextWorkday]:(mode==='one_day'?[nextWorkday]:(mode==='week_spread'?nextWorkdaysFrom(nextWorkday,5):nextWorkdaysFrom(startIso,5)));
+  const remainingThisWeek=remainingWorkdaysThisWeekFrom(startIso);
+  const days=mode==='next_workday'?[nextWorkday]:(mode==='one_day'?[nextWorkday]:(mode==='week_spread'?nextWorkdaysFrom(nextWorkday,5):(mode==='this_week_spread'?remainingThisWeek:remainingThisWeek)));
   const proj=plan.project||inferProjectFromTitle(plan.title||plan.goal||'');
   if(!proj||getProjectVisual(proj).key==='none'){setStatus('Kies eerst een project voor dit plan.');return}
 
@@ -1193,9 +1213,12 @@ function planProjectPlanThisWeek(planId,opts=null){
   touchState();
   renderFromState();
   if(!planned && (notFit||waiting)){
-    addProjectPlanNoFitChoicePrompt(plan.id,proj);
-    addProjectPlanAttention('keuze',proj,'[Keuze] Voor deze week is er te weinig ruimte. Kies: eerstvolgende werkdag / komende werkweek / één dag / open laten.',plan.id);
-    setStatus('Te weinig ruimte · keuze nodig.');
+    projectPlanOverlayPlanningChoice={planId:plan.id,project:proj,reason:'Voor deze week is er binnen normale werktijd te weinig ruimte.'};
+    // Show choice in overlay (not chat). If overlay isn't open, open it.
+    projectPlanOverlayOpenId=String(plan.id);
+    projectPlanOverlay?.classList.remove('hidden');
+    renderProjectPlanOverlay();
+    setStatus('Te weinig ruimte · kies in projectplan.');
     return;
   }
   if(planned){
@@ -1223,6 +1246,21 @@ projectPlanOverlay?.addEventListener('click',e=>{
     if(a==='close'){closeProjectPlanOverlay(false);return}
     if(a==='save'){const pid=projectPlanOverlayOpenId;closeProjectPlanOverlay(true);addProjectPlanSavedPrompt(pid);return}
     if(a==='plan-week'){planProjectPlanThisWeek(projectPlanOverlayOpenId);return}
+  }
+  const choice=e.target.closest('[data-pp-plan-choice]');
+  if(choice){
+    const mode=choice.dataset.ppPlanChoice;
+    const pid=choice.dataset.planId||projectPlanOverlayOpenId;
+    if(mode==='leave_open'){
+      projectPlanOverlayPlanningChoice=null;
+      renderProjectPlanOverlay();
+      setStatus('Oké, open.');
+      return;
+    }
+    projectPlanOverlayPlanningChoice=null;
+    renderProjectPlanOverlay();
+    planProjectPlanThisWeek(pid,{mode});
+    return;
   }
   const b=e.target.closest('[data-pp-action]');
   if(b){
