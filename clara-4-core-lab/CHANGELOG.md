@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.36 — 2026-05-05
+
+- Projectplan overlay UI/UX opgeschoond: rustiger plan-header, stappen als compacte cards met uitklappen, checklist compacter, afhankelijkheid kiezen op stapnaam (geen ruwe ids), en minimalistische dark form-styling + betere knoppenhiërarchie.
+
 ## 0.14.35 — 2026-05-05
 
 - Eerste **Projectplan overlay**: `project_plans` in lokale state, plan/step/task bewerken, en **Plan deze week** om concrete stappen/taken als potloodblokken in te plannen (zonder overlap, geen weekend).

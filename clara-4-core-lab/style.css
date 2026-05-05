@@ -158,31 +158,58 @@
 .projectplan-overlay__head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
 .projectplan-overlay__body{padding:14px 16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
 .projectplan-overlay__foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
-.projectplan-overlay__btn{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e6e6e6;padding:7px 10px;cursor:pointer}
-.projectplan-overlay__btn.primary{border-color:rgba(116,212,130,.45);background:rgba(116,212,130,.12);color:#dff5e2}
-.projectplan-overlay__btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26)}
+.projectplan-overlay__btn{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.02);color:rgba(235,235,235,.92);padding:8px 12px;cursor:pointer}
+.projectplan-overlay__btn.primary{border-color:rgba(116,212,130,.55);background:rgba(116,212,130,.16);color:#e6ffe9}
+.projectplan-overlay__btn.ghost{background:transparent;border-color:rgba(255,255,255,.12);color:rgba(220,220,220,.9)}
+.projectplan-overlay__btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.22);color:#fff}
 
 .pp-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px}
-.pp-card{border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
-.pp-card h4{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(175,175,175,.92)}
+.pp-card{border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:12px;background:rgba(255,255,255,.02)}
+.pp-card--soft{background:rgba(255,255,255,.015)}
+.pp-card__head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 10px}
+.pp-card__title{font-size:13px;font-weight:780;letter-spacing:-.01em;color:rgba(245,245,245,.95)}
 .pp-field{display:flex;flex-direction:column;gap:6px}
-.pp-field label{font-size:10.5px;font-weight:650;color:rgba(200,200,200,.88);text-transform:uppercase;letter-spacing:.04em}
-.pp-input,.pp-textarea,.pp-select{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:rgba(245,245,245,.95);border-radius:12px;padding:9px 10px;font:inherit;font-size:13px;outline:0}
-.pp-input:focus,.pp-textarea:focus,.pp-select:focus{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.06)}
+.pp-field label{font-size:11px;font-weight:560;color:rgba(205,205,205,.78);letter-spacing:.01em;text-transform:none}
+.pp-input,.pp-textarea,.pp-select{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:rgba(245,245,245,.95);border-radius:14px;padding:9px 11px;font:inherit;font-size:13px;outline:0;box-shadow:0 10px 30px rgba(0,0,0,.12) inset}
+.pp-input:focus,.pp-textarea:focus,.pp-select:focus{border-color:rgba(200,220,255,.22);background:rgba(255,255,255,.045)}
 .pp-textarea{min-height:76px;resize:vertical}
+.pp-textarea--goal{min-height:64px}
+.pp-select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,rgba(235,235,235,.7) 50%),linear-gradient(135deg,rgba(235,235,235,.7) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
 .pp-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .pp-muted{font-size:12px;color:rgba(175,175,175,.9)}
 .pp-actions{display:flex;gap:8px;flex-wrap:wrap}
-.pp-btn{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e6e6e6;padding:7px 10px;cursor:pointer}
-.pp-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26)}
-.pp-btn.primary{border-color:rgba(116,212,130,.45);background:rgba(116,212,130,.12);color:#dff5e2}
-.pp-btn.danger{border-color:rgba(255,120,120,.35);background:rgba(255,120,120,.08);color:rgba(255,225,225,.95)}
-.pp-step{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 10px;background:rgba(0,0,0,.12);display:flex;flex-direction:column;gap:10px}
-.pp-step-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.pp-step-title{font-size:13.5px;line-height:1.35;color:rgba(245,245,245,.97);margin:0}
+.pp-btn{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.02);color:rgba(235,235,235,.9);padding:7px 10px;cursor:pointer}
+.pp-btn:hover{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.22);color:#fff}
+.pp-btn--subtle{padding:6px 9px;font-size:11.5px;border-color:rgba(255,255,255,.12);background:transparent;color:rgba(220,220,220,.9)}
+.pp-btn.primary{border-color:rgba(116,212,130,.55);background:rgba(116,212,130,.14);color:#e6ffe9}
+.pp-btn.danger{border-color:rgba(255,120,120,.28);background:rgba(255,120,120,.06);color:rgba(255,225,225,.95)}
+.pp-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pp-top__meta{font-size:12.5px;color:rgba(220,220,220,.92);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.pp-dot{opacity:.65}
+.pp-top__actions{display:flex;gap:8px;flex-wrap:wrap}
+.pp-step{border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:10px 10px;background:rgba(0,0,0,.10);display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.pp-step.is-open{background:rgba(0,0,0,.14);border-color:rgba(255,255,255,.11)}
+.pp-step__summary{display:flex;align-items:flex-start;gap:10px}
+.pp-step__toggle{width:28px;height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(235,235,235,.9);cursor:pointer;display:grid;place-items:center;flex:0 0 auto;margin-top:1px}
+.pp-step__toggle:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.22);color:#fff}
+.pp-step__main{flex:1;min-width:0}
+.pp-step__name{font-size:13.5px;line-height:1.35;color:rgba(245,245,245,.97);margin:0 0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pp-step__meta{display:flex;gap:6px;flex-wrap:wrap}
+.pp-chip{font-size:11.5px;border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:4px 8px;background:rgba(255,255,255,.02);color:rgba(220,220,220,.92)}
+.pp-chip--muted{opacity:.8}
+.pp-step__actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.pp-step__details{padding:6px 2px 2px;display:flex;flex-direction:column;gap:10px}
+.pp-checklist{border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
+.pp-checklist__head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.pp-checklist__title{font-size:12.5px;font-weight:700;color:rgba(235,235,235,.92)}
+.pp-checklist__items{display:flex;flex-direction:column;gap:10px}
 .pp-task{display:flex;gap:8px;align-items:flex-start;border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
 .pp-task:first-child{border-top:0;padding-top:0}
 .pp-task-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.pp-task__meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pp-input--mini{padding:7px 10px;border-radius:12px;font-size:12px}
+.pp-select--mini{padding:7px 28px 7px 10px;border-radius:12px;font-size:12px}
+.pp-input--task{padding:9px 11px}
 .pp-projectplans-entry{display:flex;justify-content:flex-end}
 .pp-projectplans-entry .pp-btn{padding:7px 12px}
 

@@ -1,4 +1,4 @@
-const LAB_VERSION='0.14.35';
+const LAB_VERSION='0.14.36';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
@@ -176,7 +176,7 @@ function renderProjectPlansEntry(){
   return `<div class="pp-projectplans-entry"><button type="button" class="pp-btn" data-projectplans-action="open">${esc(label)}</button></div>`;
 }
 
-function projectPlanDependencyLabel(v){if(v==='after_prev')return'na vorige stap';if(v==='parallel')return'parallel';if(v==='external_wait')return'wacht op extern';return'geen'}
+function projectPlanDependencyLabel(v){if(v==='after_prev')return'na vorige';if(v==='parallel')return'parallel';if(v==='external_wait')return'wacht op extern';return'geen'}
 function projectPlanStatusLabel(v){if(v==='done')return'klaar';if(v==='paused')return'gepauzeerd';if(v==='archived')return'gearchiveerd';return'actief'}
 function stepStatusLabel(v){if(v==='done')return'klaar';if(v==='doing')return'bezig';return'todo'}
 
@@ -219,77 +219,121 @@ function closeProjectPlanOverlay(save){
   projectPlanOverlay?.classList.add('hidden');
 }
 
+let projectPlanExpandedStepIds=new Set();
+function toggleProjectPlanStepExpand(stepId){
+  const id=String(stepId||'');
+  if(!id)return;
+  if(projectPlanExpandedStepIds.has(id))projectPlanExpandedStepIds.delete(id);
+  else projectPlanExpandedStepIds.add(id);
+  renderProjectPlanOverlay();
+}
+
 function renderProjectPlanOverlay(){
   if(!projectPlanOverlayBody)return;
   const plan=getProjectPlanById(projectPlanOverlayOpenId);
   if(!plan){projectPlanOverlayBody.innerHTML='<div class="pp-muted">Geen projectplan.</div>';return;}
   const pv=projectLabelFor(plan.project);
-  const header=`<div class="pp-card"><div class="pp-row"><div class="pp-muted"><strong>${esc(pv)}</strong> · ${esc(projectPlanStatusLabel(plan.status))}${plan.deadline?` · deadline ${esc(plan.deadline)}`:''}</div><div class="pp-actions"><button type="button" class="pp-btn" data-pp-action="new-step">Stap toevoegen</button><button type="button" class="pp-btn" data-pp-action="new-task">Taak toevoegen</button><button type="button" class="pp-btn" data-pp-action="new-plan">Nieuw plan</button></div></div></div>`;
-  const meta=`<div class="pp-card"><h4>Plan</h4><div class="pp-grid">
-    <div class="pp-field" style="grid-column:span 6"><label>Project</label><select class="pp-select" data-pp-field="project">
+  const header=`<div class="pp-top">
+    <div class="pp-top__meta"><strong>${esc(pv)}</strong><span class="pp-dot">·</span>${esc(projectPlanStatusLabel(plan.status))}${plan.deadline?`<span class="pp-dot">·</span><span>deadline ${esc(plan.deadline)}</span>`:''}</div>
+    <div class="pp-top__actions">
+      <button type="button" class="pp-btn" data-pp-action="new-step">Stap</button>
+      <button type="button" class="pp-btn" data-pp-action="new-task">Taak</button>
+      <button type="button" class="pp-btn" data-pp-action="new-plan">Nieuw</button>
+    </div>
+  </div>`;
+  const meta=`<div class="pp-card pp-card--soft"><div class="pp-card__head"><div class="pp-card__title">Plan</div><div class="pp-muted">Doel → stappen → checklist</div></div><div class="pp-grid">
+    <div class="pp-field" style="grid-column:span 4"><label>Project</label><select class="pp-select" data-pp-field="project">
       <option value="">Algemeen</option>
       <option value="clara-core-lab" ${plan.project==='clara-core-lab'||plan.project==='clara'?'selected':''}>Clara</option>
       <option value="lalampe" ${plan.project==='lalampe'?'selected':''}>LaLampe</option>
       <option value="begeister" ${plan.project==='begeister'?'selected':''}>Begeister</option>
       <option value="afk-landjuweel-amarte" ${plan.project==='afk-landjuweel-amarte'||plan.project==='afk'?'selected':''}>AFK</option>
     </select></div>
-    <div class="pp-field" style="grid-column:span 6"><label>Status</label><select class="pp-select" data-pp-field="status">
+    <div class="pp-field" style="grid-column:span 4"><label>Status</label><select class="pp-select" data-pp-field="status">
       <option value="active" ${plan.status==='active'?'selected':''}>actief</option>
       <option value="paused" ${plan.status==='paused'?'selected':''}>gepauzeerd</option>
       <option value="archived" ${plan.status==='archived'?'selected':''}>gearchiveerd</option>
     </select></div>
-    <div class="pp-field" style="grid-column:span 8"><label>Titel</label><input class="pp-input" value="${esc(plan.title||'')}" data-pp-field="title"></div>
     <div class="pp-field" style="grid-column:span 4"><label>Deadline</label><input class="pp-input" type="date" value="${esc(plan.deadline||'')}" data-pp-field="deadline"></div>
-    <div class="pp-field" style="grid-column:span 12"><label>Doel</label><textarea class="pp-textarea" data-pp-field="goal">${esc(plan.goal||'')}</textarea></div>
-    <div class="pp-field" style="grid-column:span 12"><label>Context / reden</label><textarea class="pp-textarea" data-pp-field="context">${esc(plan.context||'')}</textarea></div>
+    <div class="pp-field" style="grid-column:span 12"><label>Titel</label><input class="pp-input" value="${esc(plan.title||'')}" data-pp-field="title"></div>
+    <div class="pp-field" style="grid-column:span 12"><label>Doel</label><textarea class="pp-textarea pp-textarea--goal" data-pp-field="goal" placeholder="Wat is af genoeg?">${esc(plan.goal||'')}</textarea></div>
+    <div class="pp-field" style="grid-column:span 12"><label>Context</label><textarea class="pp-textarea" data-pp-field="context" placeholder="Randvoorwaarden, risico’s, open keuzes…">${esc(plan.context||'')}</textarea></div>
   </div></div>`;
   const steps=(plan.steps||[]).map((s,ix)=>{
-    const tasks=(s.tasks||[]).map(t=>`<div class="pp-task" data-pp-task-id="${esc(t.id)}">
-      <div class="pp-task-col">
-        <div class="pp-field"><label>Taak</label><input class="pp-input" value="${esc(t.title||'')}" data-pp-task-field="title" data-pp-task-id="${esc(t.id)}"></div>
-        <div class="pp-grid">
-          <div class="pp-field" style="grid-column:span 4"><label>Duur (min)</label><input class="pp-input" inputmode="numeric" value="${esc(String(t.estimated_duration_minutes||25))}" data-pp-task-field="estimated_duration_minutes" data-pp-task-id="${esc(t.id)}"></div>
-          <div class="pp-field" style="grid-column:span 4"><label>Status</label><select class="pp-select" data-pp-task-field="status" data-pp-task-id="${esc(t.id)}">
-            <option value="todo" ${t.status==='todo'?'selected':''}>todo</option>
-            <option value="doing" ${t.status==='doing'?'selected':''}>bezig</option>
-            <option value="done" ${t.status==='done'?'selected':''}>klaar</option>
-          </select></div>
-          <div class="pp-field" style="grid-column:span 4"><label>Deadline</label><input class="pp-input" type="date" value="${esc(t.deadline||'')}" data-pp-task-field="deadline" data-pp-task-id="${esc(t.id)}"></div>
+    const expanded=projectPlanExpandedStepIds.has(String(s.id));
+    const depLbl=projectPlanDependencyLabel(s.dependency_type);
+    const depShort=(s.dependency_type&&s.dependency_type!=='none')?depLbl:'—';
+    const status=stepStatusLabel(s.status);
+    const tasksCount=(s.tasks||[]).filter(Boolean).length;
+    const summaryTitle=guidanceText(s.title||`Stap ${ix+1}`,90);
+    const summary=`<div class="pp-step__summary">
+      <button type="button" class="pp-step__toggle" data-pp-action="toggle-step" data-pp-step-id="${esc(s.id)}" aria-label="${expanded?'Inklappen':'Uitklappen'}">${expanded?'▾':'▸'}</button>
+      <div class="pp-step__main">
+        <div class="pp-step__name">Stap ${ix+1} — ${esc(summaryTitle||'—')}</div>
+        <div class="pp-step__meta">
+          <span class="pp-chip">${esc(String(s.estimated_duration_minutes||60))} min</span>
+          <span class="pp-chip">${esc(status)}</span>
+          <span class="pp-chip">${esc(depShort)}</span>
+          <span class="pp-chip pp-chip--muted">${tasksCount} taak${tasksCount===1?'':'en'}</span>
         </div>
       </div>
-      <div class="pp-actions">
-        <button type="button" class="pp-btn danger" data-pp-action="del-task" data-pp-step-id="${esc(s.id)}" data-pp-task-id="${esc(t.id)}">×</button>
+      <div class="pp-step__actions">
+        <button type="button" class="pp-btn pp-btn--subtle" data-pp-action="add-task" data-pp-step-id="${esc(s.id)}">+ taak</button>
+        <button type="button" class="pp-btn pp-btn--subtle danger" data-pp-action="del-step" data-pp-step-id="${esc(s.id)}">×</button>
       </div>
-    </div>`).join('')||`<div class="pp-muted">Nog geen taken.</div>`;
-    return `<div class="pp-step" data-pp-step-id="${esc(s.id)}">
-      <div class="pp-step-head">
-        <div class="pp-step-title">Stap ${ix+1}</div>
-        <div class="pp-actions">
-          <button type="button" class="pp-btn" data-pp-action="add-task" data-pp-step-id="${esc(s.id)}">Taak</button>
-          <button type="button" class="pp-btn danger" data-pp-action="del-step" data-pp-step-id="${esc(s.id)}">Verwijder</button>
-        </div>
-      </div>
+    </div>`;
+
+    const prevSteps=(plan.steps||[]).slice(0,ix).map((p,i2)=>({id:String(p.id),label:`Stap ${i2+1} — ${guidanceText(p.title||'',70)||'—'}`}));
+    const depSelect=(s.dependency_type&&s.dependency_type!=='none')
+      ?`<div class="pp-field" style="grid-column:span 6"><label>Afhankelijk van</label><select class="pp-select" data-pp-step-field="depends_on_step_id" data-pp-step-id="${esc(s.id)}">
+          <option value="">Kies stap…</option>
+          ${prevSteps.map(p=>`<option value="${esc(p.id)}" ${String(s.depends_on_step_id||'')===p.id?'selected':''}>${esc(p.label)}</option>`).join('')}
+        </select></div>`
+      :'';
+
+    const details=expanded?`<div class="pp-step__details">
       <div class="pp-grid">
-        <div class="pp-field" style="grid-column:span 7"><label>Titel</label><input class="pp-input" value="${esc(s.title||'')}" data-pp-step-field="title" data-pp-step-id="${esc(s.id)}"></div>
-        <div class="pp-field" style="grid-column:span 2"><label>Duur (min)</label><input class="pp-input" inputmode="numeric" value="${esc(String(s.estimated_duration_minutes||60))}" data-pp-step-field="estimated_duration_minutes" data-pp-step-id="${esc(s.id)}"></div>
+        <div class="pp-field" style="grid-column:span 12"><label>Stapnaam</label><input class="pp-input" value="${esc(s.title||'')}" data-pp-step-field="title" data-pp-step-id="${esc(s.id)}"></div>
+        <div class="pp-field" style="grid-column:span 3"><label>Duur</label><input class="pp-input" inputmode="numeric" value="${esc(String(s.estimated_duration_minutes||60))}" data-pp-step-field="estimated_duration_minutes" data-pp-step-id="${esc(s.id)}"></div>
         <div class="pp-field" style="grid-column:span 3"><label>Status</label><select class="pp-select" data-pp-step-field="status" data-pp-step-id="${esc(s.id)}">
           <option value="todo" ${s.status==='todo'?'selected':''}>todo</option>
           <option value="doing" ${s.status==='doing'?'selected':''}>bezig</option>
           <option value="done" ${s.status==='done'?'selected':''}>klaar</option>
         </select></div>
-        <div class="pp-field" style="grid-column:span 4"><label>Afhankelijkheid</label><select class="pp-select" data-pp-step-field="dependency_type" data-pp-step-id="${esc(s.id)}">
+        <div class="pp-field" style="grid-column:span 6"><label>Afhankelijkheid</label><select class="pp-select" data-pp-step-field="dependency_type" data-pp-step-id="${esc(s.id)}">
           <option value="none" ${s.dependency_type==='none'?'selected':''}>geen</option>
           <option value="after_prev" ${s.dependency_type==='after_prev'?'selected':''}>na vorige</option>
           <option value="parallel" ${s.dependency_type==='parallel'?'selected':''}>parallel</option>
-          <option value="external_wait" ${s.dependency_type==='external_wait'?'selected':''}>extern</option>
+          <option value="external_wait" ${s.dependency_type==='external_wait'?'selected':''}>wacht op extern</option>
         </select></div>
-        <div class="pp-field" style="grid-column:span 4"><label>Wacht op stap-id</label><input class="pp-input" value="${esc(s.depends_on_step_id||'')}" data-pp-step-field="depends_on_step_id" data-pp-step-id="${esc(s.id)}"></div>
-        <div class="pp-field" style="grid-column:span 4"><label>Deadline</label><input class="pp-input" type="date" value="${esc(s.deadline||'')}" data-pp-step-field="deadline" data-pp-step-id="${esc(s.id)}"></div>
+        ${depSelect}
+        <div class="pp-field" style="grid-column:span 6"><label>Deadline</label><input class="pp-input" type="date" value="${esc(s.deadline||'')}" data-pp-step-field="deadline" data-pp-step-id="${esc(s.id)}"></div>
       </div>
-      <div class="pp-card" style="padding:10px"><h4>Checklist</h4>${tasks}</div>
-    </div>`;
+      <div class="pp-checklist">
+        <div class="pp-checklist__head"><div class="pp-checklist__title">Checklist</div><div class="pp-muted">${tasksCount?`${tasksCount} item${tasksCount===1?'':'s'}`:'Nog geen taken.'}</div></div>
+        <div class="pp-checklist__items">
+          ${(s.tasks||[]).map(t=>`<div class="pp-task" data-pp-task-id="${esc(t.id)}">
+            <div class="pp-task-col">
+              <input class="pp-input pp-input--task" value="${esc(t.title||'')}" placeholder="Taak…" data-pp-task-field="title" data-pp-task-id="${esc(t.id)}">
+              <div class="pp-task__meta">
+                <select class="pp-select pp-select--mini" data-pp-task-field="status" data-pp-task-id="${esc(t.id)}">
+                  <option value="todo" ${t.status==='todo'?'selected':''}>todo</option>
+                  <option value="doing" ${t.status==='doing'?'selected':''}>bezig</option>
+                  <option value="done" ${t.status==='done'?'selected':''}>klaar</option>
+                </select>
+                <input class="pp-input pp-input--mini" inputmode="numeric" value="${esc(String(t.estimated_duration_minutes||25))}" data-pp-task-field="estimated_duration_minutes" data-pp-task-id="${esc(t.id)}">
+                <input class="pp-input pp-input--mini" type="date" value="${esc(t.deadline||'')}" data-pp-task-field="deadline" data-pp-task-id="${esc(t.id)}">
+              </div>
+            </div>
+            <button type="button" class="pp-btn pp-btn--subtle danger" data-pp-action="del-task" data-pp-step-id="${esc(s.id)}" data-pp-task-id="${esc(t.id)}">×</button>
+          </div>`).join('')||`<div class="pp-muted">Nog geen taken.</div>`}
+        </div>
+      </div>
+    </div>`:'';
+
+    return `<div class="pp-step ${expanded?'is-open':''}" data-pp-step-id="${esc(s.id)}">${summary}${details}</div>`;
   }).join('');
-  const stepsWrap=`<div class="pp-card"><h4>Stappen</h4>${steps||`<div class="pp-muted">Nog geen stappen. Gebruik “Stap toevoegen”.</div>`}</div>`;
+  const stepsWrap=`<div class="pp-card pp-card--soft"><div class="pp-card__head"><div class="pp-card__title">Stappen</div><div class="pp-muted">Houd stappen kort; checklist pas open als nodig.</div></div>${steps||`<div class="pp-muted">Nog geen stappen. Gebruik “Stap”.</div>`}</div>`;
   projectPlanOverlayBody.innerHTML=header+meta+stepsWrap;
 }
 
@@ -426,6 +470,7 @@ projectPlanOverlay?.addEventListener('click',e=>{
     const a=b.dataset.ppAction;
     const plan=getProjectPlanById(projectPlanOverlayOpenId);
     if(!plan)return;
+    if(a==='toggle-step'){toggleProjectPlanStepExpand(b.dataset.ppStepId);return}
     if(a==='new-plan'){openProjectPlanOverlay(null);return}
     if(a==='new-step'){
       const sid=plan.id+'-st-'+Date.now()+'-'+((Math.random()*1e6)|0);
@@ -494,6 +539,7 @@ projectPlanOverlay?.addEventListener('input',e=>{
     if(key==='depends_on_step_id')s.depends_on_step_id=v||'';
     if(key==='deadline')s.deadline=v||'';
     if(key==='estimated_duration_minutes'){const n=parseInt(v,10);s.estimated_duration_minutes=Number.isFinite(n)&&n>0?Math.max(10,Math.round(n/5)*5):60}
+    if(key==='dependency_type'&&(v==='none'))s.depends_on_step_id='';
     plan.updated_at=new Date().toISOString();
     upsertProjectPlan(plan);saveLabStateToStorage();return
   }
