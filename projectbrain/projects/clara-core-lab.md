@@ -1,120 +1,74 @@
 # Clara Core Lab
 
+_Last updated: 2026-05-05_
+
+## Routing
+- project_id: `clara-core-lab`
+- aliases: Clara Core Lab, Core Lab, Clara 4, projectplan overlay, Projectbrain, ACE, BIU
+- type: active development project
+
 ## Kern
-Clara Core Lab is de experimentele kernlaag van Clara. Het Lab test hoe Clara losse input omzet in projectcontext, aandachtspunten, taken, agenda-items, realistische planning, conflictlogica en dagregie.
+Clara Core Lab is de experimentele AI-first kernlaag van Clara. Het Lab test hoe Clara losse taal omzet naar projectcontext, open items, projectplannen, taken, potloodagenda en dagregie. Het is een gedragsprototype, geen klassieke takenlijst en nog geen definitieve Supabase-app.
 
-Het Lab is geen eindproduct en geen gewone takenlijst. Het is een gedragsprototype: hier wordt bepaald hoe Clara moet denken, plannen, corrigeren, tonen en samenwerken met Jeroen voordat onderdelen teruggaan naar de hoofdversie.
+## Huidige technische stand
+- Productie draait op `https://clara-4-core-lab.vercel.app`.
+- Huidige versie: `v0.14.39`.
+- Laatste commit: `ae975df fix(core-lab): isolate project plan planning`.
+- Frontend staat in `clara-4-core-lab/` met `index.html`, `style.css`, `app.js`.
+- Backend-analyse loopt via `clara-4-core-lab/api/analyze.js` en/of root `/api/analyze` afhankelijk van deploy-routing.
+- Projectbrain-context wordt server-side gelezen uit `projectbrain/projects/*.md` en recente context uit `projectbrain/raw/*.md`.
+- Lab State en projectplannen staan voorlopig lokaal in browser/localStorage.
+- Nog geen Supabase/storage-adapter voor Core Lab.
 
-## Huidige status
-Clara Core Lab draait lokaal via Cursor en wordt getest op `http://localhost:3000/clara-4-core-lab/`. De focus ligt nu op bruikbaarheid: mobiele weergave, denkbolletjes/statusflow, Aandacht, Dagregie, Projectbrain-planning en een minder herhalende welkomsttekst.
-
-De Lab-versie zit rond v0.13.x. Er wordt lokaal gewerkt en pas bewust gepusht als Jeroen de staat online wil delen, bijvoorbeeld met Marlon via Vercel.
-
-## Belangrijke feiten
-- Map: `clara-4-core-lab/`.
-- Belangrijke frontendbestanden: `index.html`, `style.css`, `app.js`.
-- Analysebackend: `api/analyze.js`.
-- Projectbrain-context komt uit `projectbrain/projects/*.md`.
-- Clara Core Lab gebruikt lokale Lab State als tijdelijk werkgeheugen.
-- Handmatige wijzigingen in Lab State zijn leidend.
-- Agenda ondersteunt Dag/Avond en meerdere dagen.
-- Datumkeuze hoort via de datumwidget/pijltjes te lopen, niet via extra losse tabs.
-- Projectbrain is context, geen automatische takenlijst.
+## Belangrijkste gebouwde lagen
+1. Startup-overlay discipline: geen generieke agenda-rommel, geen interne/fallbacktaal, alleen concrete voorstellen.
+2. Open items opgeschoond: max 1–3, gebruikersgericht, niet als debugdump.
+3. Projectplan Overlay: per project doel, deadline, context, stappen, checklisttaken, duur, afhankelijkheden en editing.
+4. Projectplan → slimme potloodplanning: `Plan deze week` maakt pencil-blokken, geen confirmed items.
+5. AI-projectplan-generator: duidelijke projectplanvragen kunnen via AI + Projectbrain een `project_plan_suggestion` maken.
+6. Projectplan-isolatie: laatst geopende plan wordt bijgehouden, maar expliciete projectnaam in commando gaat voor.
 
 ## Beslissingen
-- Clara Core Lab moet compact en rustig blijven.
-- Desktoplayout niet opnieuw ontwerpen bij kleine fixes.
-- Mobiel moet alles logisch onder elkaar tonen.
-- Denkbolletjes mogen tonen wat Clara praktisch aan het doen is, maar geen interne redenering.
-- Aandacht is radar: risico’s, keuzes, checks, needs_time, conflicten, actieve projectlijnen.
-- Dagregie is stuurlaag: Nu, Straks, Einde dag.
-- Projectbrain-planning mag alleen compacte potloodvoorstellen maken.
-- Harde afspraken alleen als Jeroen expliciet datum en tijd noemt.
-- Geen overlap; als iets niet eerlijk past, wordt het `needs_time` of Aandacht.
+- Eerst gedrag goed krijgen, daarna pas persistence/Supabase.
+- Projectbrain is context, geen automatische takenlijst.
+- Raw-context is recente beweging, geen harde waarheid.
+- Agenda-items uit projectplan blijven altijd `pencil` en `confirmation_required:true`.
+- Geen harde afspraken zonder expliciete datum en tijd.
+- Geen weekendplanning tenzij expliciet of noodzakelijk; standaard werkdagen ma-vr.
+- Maandag start later; dinsdag-vrijdag standaard 10:00–18:00.
+- Als iets niet past: naar Aandacht/open item, niet kunstmatig inkorten.
+- Chat blijft hoofdingang; overlay is correctie- en reviewlaag.
 
-## Open acties
-- Mobiele weergave verbeteren: één kolom, geen horizontale scroll, kaarten onder elkaar.
-- Denkbolletjes terugbrengen en koppelen aan een duidelijke statusflow.
-- Statusflow specifieker maken: Input lezen, Lokale dagstaat ophalen, Projectbrain raadplegen, Projectcontext wegen, Agenda voorstel maken, Aandachtspunten scheiden, Dagregie opbouwen, Overlap controleren, Resultaat bijwerken.
-- Tekst onder invoerveld verwijderen.
-- Tekst “meerdere dagen · pijltjes kiezen dag” verwijderen.
-- Datum/tijd-widget groter maken binnen hetzelfde vlak zonder redesign.
-- Aandacht functioneel maken met maximaal 5 punten en type-labels.
-- Dagregie functioneel maken met Nu / Straks / Einde dag.
-- Projectbrain-planning testen vanuit alle projecten.
-- Welkomsttekst laten variëren zodat die niet steeds exact hetzelfde blijft.
-- Daarna pas eventueel commit/push voor Marlon-review.
+## Actuele aandacht
+- Bestaande lokale teststaat kan vervuild zijn door oude v0.14.38/v0.14.39 projectplannen en agenda-items.
+- Er zijn oude LaLampe-plannen gezien met AFK/lampwezen-stappen. Dat moet door lokale state-migratie of opschonen verdwijnen.
+- Er zijn oude `[Past niet] Scope en randvoorwaarden POC bepalen` open items gezien. Die lijken uit oude planningstate te komen.
+- Nieuwe code kan schoon zijn terwijl browser-localStorage nog oude rommel toont.
 
-## Aandachtspunten
-- Risico: Aandacht en Dagregie worden dumpbakken als ze geen scherpe functie houden.
-- Check: mobiele layout moet goed zijn voordat Marlon meekijkt.
-- Check: denkstatus mag proces tonen, maar geen chain-of-thought of nep-redenering.
-- Risico: Projectbrain-context mag niet alle open lijnen automatisch op vandaag zetten.
-- Keuze: bepalen hoeveel Clara bij eerste lege start al zelf mag voorstellen.
+## Eerstvolgende logische stap
+Maak `v0.14.40` als state-cleanup/migratie:
+- eenmalige cleanup van localStorage voor bekende v0.14.38/v0.14.39-vervuiling;
+- oude LaLampe/AFK leakage verwijderen of corrigeren;
+- oude project_plan agenda-items dedupliceren;
+- replan eerst bestaande items van hetzelfde project_plan_id verwijderen;
+- projectnaam in chatcommando zwaarder laten wegen dan `lastOpenedProjectPlanId`.
 
-## Eerstvolgende logische stappen
-1. Test mobiel en fix responsive layout.
-2. Controleer of Aandacht en Dagregie al functioneel zijn; zo niet, voer dit compact door.
-3. Test Projectbrain-planning met de lopende projecten.
-4. Fix welkomsttekstrotatie.
-5. Laat Clara bij eerste start compacte opties tonen in plaats van passief te wachten.
-6. Pas daarna pushen voor online review.
+## Niet doen nu
+- Geen Supabase of storage-adapter bouwen vóór de lokale state/prototype-logica schoon getest is.
+- Geen nieuwe grote UI-restyle.
+- Geen automatische confirmed planning.
+- Geen Projectbrain-dump als agenda.
 
-## Startsuggesties voor Clara Core Lab
-Bij een eerste lege start mag Clara compact en actief openen met enkele nuttige opties, bijvoorbeeld:
-- “Ik kan een planningvoorstel maken vanuit je lopende projecten.”
-- “Ik kan eerst alleen tonen wat aandacht nodig heeft.”
-- “Ik kan je dag opdelen in Nu, Straks en Einde dag.”
-- “Ik kan per project één eerstvolgende logische actie kiezen.”
+## Goede testscenario’s
+- `Maak een projectplan voor AFK: ik wil een werkende lamp met voet als proof of concept afhebben.`
+- `Ik wil de LaLampe workshopflow verkoopbaar maken voor juni. Maak daar een projectplan voor.`
+- `Plan LaLampe projectplan deze week.`
+- `Plan AFK projectplan deze week.`
+- `Maak een dagplanning voor vandaag.`
 
-Clara moet dit niet als lange tekst tonen. Maximaal 2 tot 4 korte suggesties is genoeg.
-
-## Eerste-start planningvoorstel
-Als Jeroen Clara Core Lab voor het eerst opent en er Projectbrain-context beschikbaar is, mag Clara een rustig voorstel voorbereiden of aanbieden:
-
-Vraag:
-“Wil je dat ik vanuit Projectbrain een realistische planning voor vandaag en morgen voorstel?”
-
-Bij akkoord of expliciete vraag:
-- Clara: Core Lab mobiel/UI/gedrag testen.
-- LaLampe: workshopflow of materiaalcheck.
-- Begeister: grenzen/rollen/bespreekpunten voorbereiden.
-- AFK / Landjuweel / Amarte: aanvraagtoon en Nachtdiertjes-kern bewaken.
-
-Regels:
-- Maximaal 1 eerstvolgende actie per project, tenzij er duidelijk ruimte is.
-- Alles als potloodblok, niet als harde afspraak.
-- Risico’s en keuzes naar Aandacht.
-- Nu/Straks/Einde dag naar Dagregie.
-- Geen overlap.
-- Wat niet past naar `needs_time`.
-
-## Testvragen
-Gebruik deze vragen om Clara Core Lab te testen:
-
-```text
-Kijk naar de lopende projecten in Projectbrain en maak daar een realistische planning van voor vandaag en morgen. Kies per project alleen de belangrijkste eerstvolgende actie, zet uitvoerbare acties in agenda of taken, zet twijfelpunten/risico’s/keuzes in Aandacht, en geef in Dagregie aan wat ik nu het beste als eerste kan doen. Maak geen Projectbrain-dump, plan geen overlap, en zet wat niet eerlijk past apart als needs_time.
-```
-
-```text
-Ik wil alleen weten wat aandacht nodig heeft. Maak geen agenda tenzij iets echt tijdkritisch is.
-```
-
-```text
-Maak geen exacte planning, maar geef me een realistische richting voor deze week per project.
-```
-
-## Niet doen / grenzen
-- Geen redesign als alleen gedrag getest wordt.
-- Geen Projectbrain-dump.
-- Geen willekeurige tijden verzinnen.
-- Geen harde afspraken maken zonder expliciete datum en tijd.
-- Geen taken kunstmatig te kort maken om ze passend te krijgen.
-- Geen push naar GitHub tenzij Jeroen dat vraagt.
-- Geen Supabase/databasewijzigingen voor Lab State zolang dit nog gedragsprototype is.
-
-## Onzekerheden
-- Of Lab State tijdelijk blijft, via localStorage moet werken, of later naar Supabase gaat.
-- Hoe actief Clara bij een eerste lege start mag zijn.
-- Of Clara Core Lab permanent een eigen Projectbrain-bestand blijft.
-- Welke Core Lab-logica teruggaat naar de hoofdversie van Clara.
+## Succescriteria
+- AFK krijgt POC/lamp/voet/licht/stabiliteit/documentatie-stappen.
+- LaLampe krijgt workshopflow/materiaal/avondopbouw/test/verkoopbaarheid-stappen, geen lampwezen/voetconstructie/POC-hoofdstappen.
+- Projectplanplanning stapelt niet bij herhaald klikken.
+- Oude `Past niet`-rommel verdwijnt.
+- Agenda-suggesties tonen geen generieke placeholder zoals “één concrete eerstvolgende stap kiezen”.
