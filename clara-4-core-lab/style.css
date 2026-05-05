@@ -135,9 +135,17 @@
 .startup-overlay__btn,.startup-overlay__item-actions button{font:inherit;font-size:12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e6e6e6;padding:7px 10px;cursor:pointer}
 .startup-overlay__btn.primary,.startup-overlay__item-actions button.primary{border-color:rgba(116,212,130,.45);background:rgba(116,212,130,.12);color:#dff5e2}
 .startup-overlay__btn:hover,.startup-overlay__item-actions button:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.26)}
+.startup-overlay__section{display:grid;gap:8px}
+.startup-overlay__section-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(175,175,175,.92)}
+.startup-overlay__bullets{display:grid;gap:6px}
+.startup-overlay__bullet{font-size:12.5px;line-height:1.35;color:rgba(235,235,235,.96)}
+.startup-overlay__muted{font-size:12px;color:rgba(175,175,175,.9)}
+.startup-overlay__link{font:inherit;font-size:12px;border:none;background:transparent;color:rgba(168,212,255,.92);padding:0 6px;cursor:pointer}
+.startup-overlay__link:hover{text-decoration:underline}
+
 .startup-overlay__foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:flex-end;gap:10px}
 
-.cockpit-header{padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px}
+.cockpit-header{padding:12px 14px 8px;display:flex;flex-direction:column;gap:8px}
 .cockpit-top{display:flex;align-items:center;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;overflow:hidden}
 .cockpit-logo{width:56px;height:56px;display:grid;place-items:center;color:rgba(245,245,245,.92);flex:0 0 auto}
 .cockpit-logo-svg{width:52px;height:52px;opacity:.95}
@@ -145,7 +153,7 @@
 .cockpit-digits{font-size:clamp(54px,5.8vw,96px);line-height:.78;letter-spacing:-.09em;font-weight:260;color:rgba(245,245,245,.98);white-space:nowrap}
 .cockpit-colon{padding:0 .05em}
 .cockpit-weather{flex:1 1 auto;min-width:0;display:flex;justify-content:flex-start}
-.weather-strip{display:flex;gap:0;align-items:stretch;border-left:1px solid rgba(255,255,255,.1);padding-left:14px;overflow:hidden}
+.weather-strip{display:flex;gap:0;align-items:stretch;border-left:1px solid rgba(255,255,255,.1);padding-left:12px;overflow:hidden}
 .wcol{width:62px;display:grid;grid-template-rows:20px 18px 18px;align-items:center;justify-items:center;border-right:1px solid rgba(255,255,255,.08);padding:4px 6px}
 .wcol:last-child{border-right:0}
 .wicon{width:18px;height:18px;border-radius:999px;border:1px solid rgba(255,255,255,.18);opacity:.9}

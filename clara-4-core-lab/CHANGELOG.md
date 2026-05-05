@@ -1,16 +1,17 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.33 — 2026-05-05
+
+- Blokkeert **generieke agenda-items**: alleen agenda-blokken met concrete actie + project/context + realistische duur.
+- Open items opgeschoond: max. **1–3 zichtbaar**, en acties alleen **Antwoord · Opslaan · ×**.
+- Verboden interne woorden niet zichtbaar in normale UI; geen dubbele succes+foutmelding bij dagplanning-route.
+
 ## 0.14.32 — 2026-05-04
 
 - Inhoudelijke stabilisatie: agenda blijft **waarheid**; confirmed en pencil verdwijnen niet bij reload/analyze/refresh; voorstellen mergen in plaats van overschrijven.
 - Rechterkolom rustiger en herleidbaar: agenda-suggesties en open items worden gefilterd/geclusterd; elk item toont **project + herkomst + korte reden**; max. 1–3 open items zichtbaar.
 - Startup via **overlay** (geen automatisch chatbericht) met plan/weg/open-laten acties; dismissed blijft dismissed.
 - Header update: logo, grote klok, mock-weerstrip en datumregel met Overdag/Avond tabs (volgt `activeAgendaDate`).
-
-## 0.14.33 — 2026-05-04
-
-- Desktop-cockpitlayout gericht op de referentiescreenshot (alleen linker- en middelkolom): **grote klok boven chat**, en **datumheader in de agenda-kolom** met **Overdag/Avond-tabs rechts**.
-- Rechterkolom (Agenda suggesties / Open items) bewust niet aangepast.
 
 ## 0.14.31 — 2026-05-04
 
