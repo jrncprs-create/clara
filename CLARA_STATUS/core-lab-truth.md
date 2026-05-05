@@ -4,6 +4,47 @@ _Last updated: 2026-05-05_
 
 This document is the current design truth for Clara Core Lab. It captures what we learned in the v0.14 projectplanning line and defines the direction for v0.15. Future ChatGPT/Cursor/Codex work on Clara Core Lab should read this before proposing or implementing changes.
 
+## 0. Conceptual status / latest design decision
+
+The live app may still be on a v0.14.x version, but the current conceptual direction is already v0.15.
+
+This distinction is important:
+
+```text
+Live version = what is currently deployed.
+Conceptual status = the latest product/design truth we are working toward.
+```
+
+At the time of this update, the key conceptual decision is:
+
+```text
+v0.15 is not a normal bugfix.
+v0.15 is a reset of the interaction and state model.
+```
+
+The v0.15 direction:
+
+- move away from microguards, fallback piles and rule-bullshit;
+- stop treating vague chat text as immediate tasks;
+- use one chat input only;
+- do not add a second chat window inside overlays;
+- introduce or reshape toward an Active Workspace: a visible working surface where Clara fills in what she understands;
+- show visible progress: project recognized, intent, certainties, uncertainties, taskset/projectplan draft, planning preview;
+- let AI drive the intake route, because every project and conversation needs a different path;
+- first clarify, then propose a taskset/projectplan, then create a planning preview, then apply to agenda;
+- only accepted/saved output becomes durable state;
+- Projectbrain remains context, not an automatic task source;
+- Open Items are not Clara’s uncertainty dump;
+- Planning preview comes before agenda;
+- agenda render must always be compact and clean:
+
+```text
+Title
+PROJECT · 10:00–11:00 · ✓ ×
+```
+
+This conceptual status is more important than the deployed live version when making new prompts, design decisions or code changes. If a future chat only knows the live version but misses this v0.15 direction, it is missing the actual latest progress.
+
 ## 1. Status at the time of this truth
 
 Production URL:
