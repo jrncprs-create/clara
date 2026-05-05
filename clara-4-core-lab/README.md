@@ -8,7 +8,7 @@ Doel:
 
 ## Status
 
-Versie: `0.14.39`
+Versie: `0.14.40`
 
 Deze map staat los van Clara 3. Clara 3 blijft geparkeerd als leerprototype.
 

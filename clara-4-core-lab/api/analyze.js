@@ -2016,6 +2016,19 @@ function buildProjectPlanAppendix(singleProjectLabel) {
   return `\n\nProjectplan-voorstel (alleen als de gebruiker hier expliciet om vraagt):\n- Vul optioneel \`project_plan_suggestion\` met een **concept** projectplan.\n- Alleen doen bij duidelijke projectplan-intentie; anders: laat \`project_plan_suggestion\` weg.\n- Geen agenda-mutaties: laat \`clara_agenda\` onveranderd of leeg; maak geen nieuwe getimede blokken.\n- Kwaliteit: 3–7 stappen; elke stap 1–3 taken; realistische duur; logische afhankelijkheden.\n- dependency_type: none | after_previous | parallel | external_wait.\n- “external_wait” betekent wachten op input; dat is geen uitvoerblok.\n- Deadline alleen als expliciet genoemd of betrouwbaar af te leiden; anders null.\n- Vermijd vage stappen (“Voorbereiden”, “Afronden”, “Checken”) zonder concrete inhoud.\n- context: 1–3 zinnen waarom deze stappen logisch zijn.\n- confidence: 0–1 (hoe zeker is dit plan op basis van input+context).${focus}\n`;
 }
 
+function buildProjectPlanFocusGuard(inputText) {
+  const t = String(inputText || '').toLowerCase();
+  const wantsLaLampe = /lalampe|la\s*lampe/.test(t);
+  const wantsAFK = /\bafk\b|landjuweel|amarte/.test(t);
+  const wantsBegeister = /begeister/.test(t);
+  const wantsCoreLab = /clara\s+core\s+lab|core\s+lab|clara-4|clara\s+lab/.test(t);
+  if (wantsLaLampe && !wantsAFK) return '\n\nFocus guard: Deze aanvraag gaat over LaLampe. Gebruik AFK/Landjuweel/Amarte-context niet voor stappen, tenzij de gebruiker dat expliciet noemt.';
+  if (wantsAFK && !wantsLaLampe) return '\n\nFocus guard: Deze aanvraag gaat over AFK/Landjuweel/Amarte. Gebruik LaLampe-workshopcontext niet voor stappen, tenzij de gebruiker dat expliciet noemt.';
+  if (wantsBegeister) return '\n\nFocus guard: Deze aanvraag gaat over Begeister. Focus op samenwerking, rollen, grenzen en besluitvorming.';
+  if (wantsCoreLab) return '\n\nFocus guard: Deze aanvraag gaat over Clara Core Lab. Focus op softwaregedrag, feature-stappen en tests.';
+  return '';
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -2056,6 +2069,7 @@ export default async function handler(req, res) {
 
     const startupAppendix = isStartup ? buildStartupRawAppendix(meaningfulRawProjects, today, tomorrow) : '';
 
+    const projectPlanFocusGuard = isProjectPlanRequest ? buildProjectPlanFocusGuard(latestMessage) : '';
     const promptAddenda =
       buildDateDisciplineAppendix(today, tomorrow, todayOnlyReplan) +
       buildPlanningPolicyAppendix(now) +
@@ -2064,6 +2078,7 @@ export default async function handler(req, res) {
       (intent.weekDirectionOnly ? buildWeekDirectionAppendix(projectbrainContext) : '') +
       (!isStartup && intent.wantsProjectbrainPlanning ? buildProjectbrainPlanningAppendix(today, tomorrow, requestedDays) : '') +
       (isProjectPlanRequest ? buildProjectPlanAppendix(singleExplicitProject ? (PROJECT_LABELS[singleExplicitProject] || singleExplicitProject) : '') : '') +
+      projectPlanFocusGuard +
       buildSingleProjectAppendix(singleExplicitProject) +
       buildOpenThreadsAppendix(isStartup) +
       startupAppendix;

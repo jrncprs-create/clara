@@ -1,8 +1,9 @@
-const LAB_VERSION='0.14.39';
+const LAB_VERSION='0.14.40';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
 const LEGACY_NOISE_KEY='clara_core_lab_legacy_noise_v1';
+const MIGRATION_01440_KEY='clara_core_lab_state_migration_01440';
 const startupOverlay=document.getElementById('startupOverlay'),startupOverlayIntro=document.getElementById('startupOverlayIntro'),startupOverlayList=document.getElementById('startupOverlayList'),startupOverlayAcceptAllBtn=document.getElementById('startupOverlayAcceptAll'),projectPlanOverlay=document.getElementById('projectPlanOverlay'),projectPlanOverlayBody=document.getElementById('projectPlanOverlayBody'),weatherStrip=document.getElementById('weatherStrip');
 const STARTUP_INTERNAL_PROMPT='Maak een rustige conceptplanning voor vandaag op basis van de beschikbare projectcontext. Kies maximaal één eerstvolgende logische actie per actief project. Zet uitvoerbare acties als potloodblokken in de agenda. Geef hooguit één noodzakelijke vraag, een korte route vooruit en concrete open items. Maak geen ruwe contextdump, verzin geen harde afspraken, plan geen overlap, en zet wat niet eerlijk past apart als needs_time.';
 const STARTUP_DONE_MSG='Ik heb alvast een rustige conceptstart klaargezet. Alles staat als potloodvoorstel.';
@@ -136,6 +137,117 @@ function validateAiPlanAgainstMessage(message,plan){
 
 function loadLabStateFromStorage(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;const o=JSON.parse(raw);if(!o||typeof o!=='object')return;labState.agenda=Array.isArray(o.agenda)?o.agenda:[];labState.attention=Array.isArray(o.attention)?o.attention:[];labState.tasks=Array.isArray(o.tasks)?o.tasks:[];labState.open_threads=Array.isArray(o.open_threads)?o.open_threads:[];labState.project_plans=Array.isArray(o.project_plans)?o.project_plans.map((p,i)=>normalizeProjectPlan(p,i)).filter(Boolean):[];const dr=o.day_regie||{};labState.day_regie={items_to_check:dr.items_to_check||[],rollover_candidates:dr.rollover_candidates||[],review_prompt:dr.review_prompt||'',suggested_time:dr.suggested_time??null,now_first_move:dr.now_first_move||''};labState.updated_at=o.updated_at||null}catch(_){}}
 function saveLabStateToStorage(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({agenda:labState.agenda,attention:labState.attention,tasks:labState.tasks,open_threads:labState.open_threads,project_plans:labState.project_plans,day_regie:labState.day_regie,updated_at:labState.updated_at}))}catch(_){}}
+
+function laLampeWorkshopStepsSkeleton(planId){
+  const base=String(planId||('pp-corr-'+Date.now()));
+  const steps=[
+    {id:`${base}-s1`,title:'Workshopdoel en doelgroep scherpzetten',status:'todo',estimated_duration_minutes:45,dependency_type:'none',depends_on_step_id:'',deadline:'',tasks:[
+      {id:`${base}-s1-t1`,title:'Bepaal doelgroep + wat zij mee naar huis nemen',status:'todo',estimated_duration_minutes:25,deadline:'',source_reason:'Doel helder'},
+      {id:`${base}-s1-t2`,title:'Kies succescriteria (“af genoeg”)',status:'todo',estimated_duration_minutes:20,deadline:'',source_reason:'Kader'}
+    ]},
+    {id:`${base}-s2`,title:'Materiaal- en techniekbasis bepalen',status:'todo',estimated_duration_minutes:60,dependency_type:'after_prev',depends_on_step_id:`${base}-s1`,deadline:'',tasks:[
+      {id:`${base}-s2-t1`,title:'Maak materialenlijst + tools (minimaal)',status:'todo',estimated_duration_minutes:30,deadline:'',source_reason:'Basis'},
+      {id:`${base}-s2-t2`,title:'Check wat je moet pre-cut/prep’en',status:'todo',estimated_duration_minutes:30,deadline:'',source_reason:'Voorbereiding'}
+    ]},
+    {id:`${base}-s3`,title:'Avondflow in blokken uitschrijven',status:'todo',estimated_duration_minutes:90,dependency_type:'after_prev',depends_on_step_id:`${base}-s2`,deadline:'',tasks:[
+      {id:`${base}-s3-t1`,title:'Schrijf 5–7 blokken met tijdsindicatie',status:'todo',estimated_duration_minutes:45,deadline:'',source_reason:'Flow'},
+      {id:`${base}-s3-t2`,title:'Noteer risico’s en valkuilen per blok',status:'todo',estimated_duration_minutes:30,deadline:'',source_reason:'Risico’s'}
+    ]},
+    {id:`${base}-s4`,title:'Testmoment voorbereiden',status:'todo',estimated_duration_minutes:60,dependency_type:'after_prev',depends_on_step_id:`${base}-s3`,deadline:'',tasks:[
+      {id:`${base}-s4-t1`,title:'Maak mini-testscript (intro + 1 kernstap)',status:'todo',estimated_duration_minutes:30,deadline:'',source_reason:'Test'},
+      {id:`${base}-s4-t2`,title:'Leg demo-materialen klaar (klein setje)',status:'todo',estimated_duration_minutes:30,deadline:'',source_reason:'Praktisch'}
+    ]},
+    {id:`${base}-s5`,title:'Feedbackpunten en verkooptekst verwerken',status:'todo',estimated_duration_minutes:60,dependency_type:'after_prev',depends_on_step_id:`${base}-s4`,deadline:'',tasks:[
+      {id:`${base}-s5-t1`,title:'Verwerk 3 belangrijkste feedbackpunten',status:'todo',estimated_duration_minutes:45,deadline:'',source_reason:'Iteratie'},
+      {id:`${base}-s5-t2`,title:'Schrijf korte verkooptekst / pitch (5 bullets)',status:'todo',estimated_duration_minutes:30,deadline:'',source_reason:'Verkoopbaar'}
+    ]}
+  ];
+  return steps;
+}
+
+function textHasAFKLampLeak(text){
+  const t=String(text||'').toLowerCase();
+  return /lampwezen|voetconstructie|poc\b|lichtwezen|lichtbeeld|warmte|voeding|stabiliteit/.test(t);
+}
+function textLooksLaLampeWorkshop(text){
+  const t=String(text||'').toLowerCase();
+  return (/lalampe|la\s*lampe/.test(t)) && (/workshop|workshopflow|avondflow|verkoopbaar/.test(t));
+}
+
+function migrateState01440Once(){
+  try{
+    if(localStorage.getItem(MIGRATION_01440_KEY)==='1')return false;
+    let changed=false;
+
+    // 1) project_plans cleanup
+    const plans=(labState.project_plans||[]).map(p=>normalizeProjectPlan(p,0)).filter(Boolean);
+    for(const p of plans){
+      const blob=`${p.project||''} ${p.title||''} ${p.goal||''} ${p.context||''}`.toLowerCase();
+      const looksLL=textLooksLaLampeWorkshop(blob);
+      const looksAFK=/\bafk\b|landjuweel|amarte/.test(blob);
+      if(!p.project){
+        if(looksLL){p.project='lalampe';changed=true;}
+        else if(looksAFK){p.project='afk-landjuweel-amarte';changed=true;}
+      }
+      if(p.project==='lalampe' && looksLL){
+        const stepBlob=(p.steps||[]).map(s=>s.title).join(' ');
+        if(textHasAFKLampLeak(stepBlob)){
+          // If it is mostly leak, replace with corrected LaLampe skeleton.
+          p.steps=laLampeWorkshopStepsSkeleton(p.id);
+          p.source=p.source||'corrected_skeleton';
+          if(p.source==='ai_project_plan') p.source='corrected_skeleton';
+          changed=true;
+        }
+      }
+    }
+    labState.project_plans=plans;
+
+    // 2) agenda cleanup for project_plan source
+    const planById=new Map((labState.project_plans||[]).map(p=>[String(p.id),p]));
+    const seen=new Set();
+    const cleanedAgenda=[];
+    for(const it of (labState.agenda||[])){
+      if(!it||typeof it!=='object'){continue}
+      if(String(it.source||'')!=='project_plan'){cleanedAgenda.push(it);continue}
+      const pid=String(it.project_plan_id||'');
+      const plan=pid?planById.get(pid):null;
+      if(!plan){changed=true;continue}
+      const planProj=getProjectVisual(plan.project).key;
+      const itemProj=getProjectVisual(it.project).key;
+      if(planProj && itemProj && planProj!==itemProj){changed=true;continue}
+      if(planProj==='lalampe' && textHasAFKLampLeak(it.title)){changed=true;continue}
+      const key=`${pid}|${it.step_id||''}|${it.task_id||''}|${it.date||''}|${it.start_time||''}`;
+      if(seen.has(key)){changed=true;continue}
+      seen.add(key);
+      cleanedAgenda.push(it);
+    }
+    labState.agenda=cleanedAgenda;
+
+    // 3) attention/open items cleanup (known stale past_niet scope lines)
+    const badRe=/scope en randvoorwaarden poc bepalen/i;
+    const cleanedAtt=(labState.attention||[]).filter(a=>{
+      const t=String(a?.title||a?.text||'');
+      if(!t)return true;
+      if(a?.kind==='past_niet' && badRe.test(t)) {changed=true; return false;}
+      if(/^\[Past niet\]\s*(AFK|LALAMPE)\b/i.test(t) && badRe.test(t)){changed=true;return false;}
+      return true;
+    });
+    labState.attention=cleanedAtt;
+
+    if(changed){
+      touchState();
+    }else{
+      // still mark migration done to avoid repeated scans
+      try{localStorage.setItem(MIGRATION_01440_KEY,'1')}catch(_){}
+      return false;
+    }
+    try{localStorage.setItem(MIGRATION_01440_KEY,'1')}catch(_){}
+    return true;
+  }catch(_){
+    try{localStorage.setItem(MIGRATION_01440_KEY,'1')}catch(_){}
+    return false;
+  }
+}
 function clearStartupDoneIfEmpty(){if(dayRegieIsEmpty(labState)){try{sessionStorage.removeItem(SESSION_STARTUP_KEY)}catch(_){}}}
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function todayIso(){let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -607,13 +719,16 @@ function matchProjectPlansForMessage(msg){
   const m=String(msg||'');
   const project=inferProjectKeyFromMessage(m);
   const plans=(labState.project_plans||[]).filter(p=>p&&p.status!=='archived');
-  if(lastOpenedProjectPlanId){
+  if(project){
+    // Explicit project always wins (never pick a different last-opened plan)
+    const hits=plans.filter(p=>{
+      const pKey=inferProjectKeyFromMessage(p.project||p.title||p.goal||'')||String(p.project||'');
+      return pKey===project;
+    });
+    if(hits.length)return hits;
+  }else if(lastOpenedProjectPlanId){
     const last=getProjectPlanById(lastOpenedProjectPlanId);
-    if(last){
-      if(!project) return [last];
-      const lastProj=inferProjectKeyFromMessage(last.project||last.title||last.goal||'')||String(last.project||'');
-      if(lastProj===project) return [last];
-    }
+    if(last) return [last];
   }
   if(project){
     const hits=plans.filter(p=>inferProjectKeyFromMessage(p.project||p.title||p.goal||'')===project||String(p.project||'')===project);
@@ -721,11 +836,11 @@ function createProjectPlanFromMessage(message){
 function parseIsoDateOrNull(v){const s=String(v||'').slice(0,10);return/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null}
 function dateIndexInDays(iso,days){if(!iso)return null;const ix=days.indexOf(iso);return ix>=0?ix:null}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
-function addProjectPlanAttention(kind,project,text){
+function addProjectPlanAttention(kind,project,text,project_plan_id=null){
   const t=guidanceText(text,220);
   if(!t)return;
   if(labState.attention.some(i=>String(i.title||'')===t))return;
-  labState.attention.push({id:'at-pp-'+Date.now()+'-'+simpleHash(kind+'|'+t),title:t,kind:kind,done:false,project:project||null});
+  labState.attention.push({id:'at-pp-'+Date.now()+'-'+simpleHash(kind+'|'+t),title:t,kind:kind,done:false,project:project||null,project_plan_id:project_plan_id?String(project_plan_id):null});
 }
 function agendaTitleForProjectPlan(project,title){
   const proj=projectLabelFor(project);
@@ -763,7 +878,7 @@ function topoSortSteps(steps,project){
     }
   }
   if(out.length!==nodes.length){
-    addProjectPlanAttention('risico',project,'[Risico] Afhankelijkheden in dit projectplan zijn onduidelijk of cyclisch; ik plan in stapvolgorde.');
+    addProjectPlanAttention('risico',project,'[Risico] Afhankelijkheden in dit projectplan zijn onduidelijk of cyclisch; ik plan in stapvolgorde.',null);
     return nodes;
   }
   return out;
@@ -772,6 +887,10 @@ function topoSortSteps(steps,project){
 function planProjectPlanThisWeek(planId){
   const plan=getProjectPlanById(planId);
   if(!plan){setStatus('Geen projectplan om te plannen.');return}
+  // Replan dedupe: remove previous planning for this plan
+  labState.agenda=(labState.agenda||[]).filter(i=>!(i&&String(i.source||'')==='project_plan'&&String(i.project_plan_id||'')===String(plan.id)));
+  labState.attention=(labState.attention||[]).filter(i=>!(i&&String(i.project_plan_id||'')===String(plan.id)&&(i.kind==='past_niet'||i.kind==='wacht'||i.kind==='risico')));
+
   const startIso=startIsoForWeekPlanning();
   const days=nextWorkdaysFrom(startIso,5);
   const proj=plan.project||inferProjectFromTitle(plan.title||plan.goal||'');
@@ -846,7 +965,7 @@ function planProjectPlanThisWeek(planId){
   for(const step of orderedSteps){
     if(!step||step.status==='done')continue;
     if(step.dependency_type==='external_wait'){
-      addProjectPlanAttention('wacht',proj,`[Wacht] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,80)}” wacht op externe input.`);
+      addProjectPlanAttention('wacht',proj,`[Wacht] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,80)}” wacht op externe input.`,plan.id);
       waiting++;
       continue;
     }
@@ -864,7 +983,7 @@ function planProjectPlanThisWeek(planId){
     });
     if(placedStep&&placedStep.dayIx!=null)scheduledStepDayIx.set(String(step.id),placedStep.dayIx);
     if(!placedStep){
-      addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,90)}” past deze week niet meer.`);
+      addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,90)}” past deze week niet meer.`,plan.id);
       notFit++;
       continue;
     }
@@ -885,7 +1004,7 @@ function planProjectPlanThisWeek(planId){
         preferIx:tprefer
       });
       if(!placedTask){
-        addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: taak “${guidanceText(task.title,90)}” past deze week niet meer.`);
+        addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: taak “${guidanceText(task.title,90)}” past deze week niet meer.`,plan.id);
         notFit++;
       }
     }
@@ -895,7 +1014,7 @@ function planProjectPlanThisWeek(planId){
     const dlIx=dateIndexInDays(planDeadline,days);
     if(dlIx!=null){
       const remaining=notFit+waiting;
-      if(remaining) addProjectPlanAttention('risico',proj,`[Risico] Deadline valt deze week (${planDeadline}); niet alles past eerlijk in het weekvenster.`);
+      if(remaining) addProjectPlanAttention('risico',proj,`[Risico] Deadline valt deze week (${planDeadline}); niet alles past eerlijk in het weekvenster.`,plan.id);
     }
   }
 
@@ -1023,4 +1142,4 @@ refreshGuidanceBtn?.addEventListener('click',refreshGuidancePanels);
 agendaPrevBtn?.addEventListener('click',()=>{activeAgendaDate=addDaysIso(activeAgendaDate||todayIso(),-1);renderFromState()});
 agendaNextBtn?.addEventListener('click',()=>{activeAgendaDate=addDaysIso(activeAgendaDate||todayIso(),1);renderFromState()});
 window.addEventListener('keydown',e=>{if(!e.altKey||!e.shiftKey||e.code!=='KeyR'||e.repeat)return;if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.isContentEditable))return;e.preventDefault();clearLocalTestState()});
-btn.addEventListener('click',()=>analyzeText(input.value,true));input.addEventListener('input',resizeInput);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();analyzeText(input.value,true)}});resizeInput();updateDate();setInterval(updateDate,1000);loadLabStateFromStorage();loadDismissedGuidanceIds();loadLegacyNoise();renderFromState();setInterval(checkAgendaEndPrompts,60000);(async function boot(){if(dayRegieIsEmpty(labState)&&!sessionStorage.getItem(SESSION_STARTUP_KEY)){await runAutoStartupPlanning()}else{applyStartupGreeting()}})();
+btn.addEventListener('click',()=>analyzeText(input.value,true));input.addEventListener('input',resizeInput);input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();analyzeText(input.value,true)}});resizeInput();updateDate();setInterval(updateDate,1000);loadLabStateFromStorage();loadDismissedGuidanceIds();loadLegacyNoise();migrateState01440Once();renderFromState();setInterval(checkAgendaEndPrompts,60000);(async function boot(){if(dayRegieIsEmpty(labState)&&!sessionStorage.getItem(SESSION_STARTUP_KEY)){await runAutoStartupPlanning()}else{applyStartupGreeting()}})();

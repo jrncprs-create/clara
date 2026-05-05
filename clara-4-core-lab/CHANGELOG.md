@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.40 — 2026-05-05
+
+- State cleanup: eenmalige localStorage migratie ruimt bekende LaLampe/AFK projectplan-vervuiling, duplicate projectplan-agenda-items en oude “[Past niet] Scope en randvoorwaarden POC bepalen” open-items op. “Plan deze week” replanned zonder stapelen. `/api/analyze` kreeg een lichte focus-guard bij `project_plan_request` om cross-project leakage te verminderen.
+
 ## 0.14.39 — 2026-05-05
 
 - Fix regressies: projectplan-isolatie (last-opened plan prefereren; geen mix van stappen), LaLampe-workshopflow krijgt geen AFK/lamp-stappen (AI-voorstel wordt gevalideerd en anders fallback), “Plan deze week” start op eerstvolgende werkdag als vandaag te laat is, en agenda-suggesties blokkeren generieke placeholders.
