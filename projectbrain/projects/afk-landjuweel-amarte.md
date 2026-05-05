@@ -1,76 +1,74 @@
 # AFK / Landjuweel / Amarte
 
+_Last updated: 2026-05-05_
+
+## Routing
+- project_id: `afk-landjuweel-amarte`
+- aliases: AFK, Landjuweel, Amarte, Nachtdiertjes, lichtbeeldenroute, lichtwezen, POC lamp, werkende lamp met voet
+- type: active art/funding/concept project
+
 ## Kern
-AFK / Landjuweel / Amarte is het traject rond Jeroens lichtinstallatie voor de Ruigoord Beeldenroute / Landjuweel-context. De huidige inhoudelijke richting is de aangepaste Nachtdiertjes-versie van zijn lichtentiteiten: nachtelijke, autonome lichtwezens met dierlijk en organismisch gedrag.
+Dit traject gaat over een aangepaste versie van Jeroens lichtentiteiten voor Landjuweel/Amarte/AFK: nachtelijke autonome lichtwezens of nachtdiertjes langs een route. De nadruk ligt op ecologisch, organismisch, schuw/nieuwsgierig gedrag en nachtelijke aanwezigheid. Deze versie is niet maatschappijkritisch.
 
-Deze variant is bedoeld voor dit specifieke aanvraag- en presentatiepad. De toon is ecologisch, zintuiglijk, ruimtelijk en poëtisch. Deze versie vervangt niet automatisch de bredere, maatschappijkritische AFK-gedragsruimtevisie.
+## Wat dit project is
+- Lichtbeeldenroute / Nachtdiertjes-installatie.
+- Autonome lampachtige wezens met dierlijk of organismisch gedrag.
+- Licht, vorm, nabijheid, onderlinge aanwezigheid en sfeer zijn belangrijk.
+- Proof-of-concept kan gaan over één werkende lamp met voet of één eerste lampwezen.
+- POC moet stabiliteit, lichtbeeld, voeding/elektra, vorm en documenteerbaarheid aantonen.
+- Aanvraagtekst moet het ecologische/organismische karakter bewaken.
 
-## Huidige status
-Het traject zit in concept-, aanvraag- en verbeeldingsfase. De focus ligt op het helder formuleren van het Nachtdiertjes-concept, de ruimtelijke werking, de technische randvoorwaarden en de aanvraagtekst voor fondsen of presentatiecontext.
+## Wat dit project niet is
+- Geen LaLampe-workshopflow.
+- Geen commerciële lampenworkshop.
+- Geen boekingspagina/avondworkshop voor deelnemers.
+- Geen Begeister-rollenproject.
 
-Voor Clara-planning is dit project nu vooral geschikt voor rustige schrijf-/controleblokken: aanvraagtekst nalopen, toon bewaken, technische randvoorwaarden checken en beeld/promptmateriaal aanscherpen.
+## Huidige focus
+- POC van een werkend lichtwezen/lamp met voet kunnen maken of plannen.
+- Conceptueel bewaken dat het Nachtdiertjes-spoor ecologisch/organismisch blijft.
+- Technische randvoorwaarden helder krijgen: voet, stabiliteit, voeding, lichtbron, eventueel gedrag/sensoriek.
+- Documentatie kunnen maken: foto/video/korte tekst.
 
-## Belangrijke feiten
-- Het project speelt rond Ruigoord, Landjuweel en de lichtbeeldenroute-context.
-- De huidige aanvraagversie draait om Nachtdiertjes/lichtwezens.
-- De lichtwezens zijn autonoom, nachtelijk, schuw, nieuwsgierig en reageren op nabijheid en onderlinge aanwezigheid.
-- De toon is ecologisch en organismisch, niet primair maatschappijkritisch.
-- De installatie sluit aan bij Jeroens praktijk met licht, projectie, objecten en ruimtelijke ervaring.
-- AFK, Landjuweel en Amarte overlappen nu in dit traject, maar kunnen later weer losse projectcontexten zijn.
-- Budget, technische rider en locatie-eisen moeten realistisch en eenvoudig blijven.
+## Goede projectplan-stappen voor POC lamp/lichtwezen
+Als Clara een projectplan maakt voor AFK/POC/lamp/lichtwezen, gebruik dan stappen zoals:
+1. Scope en randvoorwaarden POC bepalen.
+2. Voetconstructie kiezen of schetsen.
+3. Lichtbron en voeding bepalen.
+4. Eerste lampwezen bouwen.
+5. Stabiliteit, lichtbeeld en veiligheid testen.
+6. Foto/video of korte documentatie maken.
 
-## Beslissingen
-- Voor dit traject wordt de Nachtdiertjes-versie gebruikt.
-- Deze versie focust op nachtelijke autonome lichtwezens, niet op expliciete maatschappijkritiek.
-- Het project mag poëtisch, mysterieus en geloofwaardig fysiek aanvoelen.
-- De context van Ruigoord en de lichtbeeldenroute is belangrijk voor toon en plaatsing.
-- Deze aangepaste versie geldt alleen voor dit traject en vervangt niet alle andere lichtentiteit-ideeën.
-
-## Open acties
-- Aanvraagtekst verder aanscherpen.
-- Visuele beschrijving van de lichtwezens verfijnen.
-- Technische randvoorwaarden en budget helder houden.
-- Beeldmateriaal of promptmateriaal voor aanvraag en presentatie ontwikkelen.
-- Onderscheid bewaken tussen deze aanvraagversie en bredere AFK-gedragsruimtevisie.
-- Checken of de tekst ecologisch/organismisch genoeg blijft.
-
-## Aandachtspunten
-- Risico: de tekst mag niet terugschieten naar maatschappijkritische gedragsruimte als dat niet voor deze aanvraag bedoeld is.
-- Check: Nachtdiertjes moeten autonoom en organismisch voelen, niet als gadgets.
-- Check: budget en technische randvoorwaarden moeten simpel en geloofwaardig blijven.
-- Keuze: hoeveel mysterie versus praktische duidelijkheid in de aanvraagtekst?
-- Grens: AFK, Landjuweel en Amarte zijn nu één traject, maar later mogelijk los.
-
-## Eerstvolgende logische stappen
-1. Lees de aanvraagtekst op toon: ecologisch, nachtelijk, organismisch.
-2. Scherp de kernbeschrijving van de Nachtdiertjes aan.
-3. Check technische randvoorwaarden en budget op eenvoud.
-4. Maak of verbeter één beeldprompt/referentiebeeld voor de aanvraag.
-5. Kort de projectomschrijving in voor fonds- of programmatekst.
-
-## Startsuggesties voor Clara Core Lab
-Deze suggesties mag Clara gebruiken als AFK / Landjuweel / Amarte in een planningvoorstel voorkomt:
-- “Plan een rustig blok om de Nachtdiertjes-aanvraagtekst op toon te controleren.”
-- “Zet toonbewaking in Aandacht: ecologisch/organismisch, niet maatschappijkritisch.”
-- “Check technische randvoorwaarden alleen als daar vandaag ruimte voor is.”
+## Checklistvoorbeelden
+- Bepaal wat de POC minimaal moet bewijzen.
+- Kies formaat, materiaal en globale vorm.
+- Schets of kies voet/stabiliteit.
+- Kies lichtbron, voeding, kabelroute en veiligheid.
+- Bouw één eerste fysieke versie.
+- Test of het object zelfstandig staat, veilig werkt en het juiste nachtdier-gevoel heeft.
+- Maak korte foto/video-documentatie voor aanvraag of vervolg.
 
 ## Planningseed
-Geschikte potloodblokken:
-- 45–75 min: aanvraagtekst nalopen op toon.
-- 30–45 min: kernbeschrijving Nachtdiertjes aanscherpen.
-- 30–45 min: technische randvoorwaarden/budget nalopen.
-- 30–60 min: beeldprompt of referentiebeeld verbeteren.
+- Eerste sessie: scope POC + randvoorwaarden bepalen, 30–60 minuten.
+- Bouwsessie: eerste lampwezen/voet/lichtbron, 90–180 minuten.
+- Testsessie: stabiliteit/licht/veiligheid/documentatie, 45–90 minuten.
+- Alles als potloodplanning tenzij Jeroen expliciet een harde afspraak noemt.
 
-Dit project vraagt rustige aandacht. Als de dag vol is, zet toonbewaking liever in Aandacht dan het blok te forceren.
+## Aandachtspunten
+- Concept niet maatschappijkritisch laten doorslaan in dit traject.
+- Niet verwarren met LaLampe-workshops.
+- Budget/uren realistisch houden.
+- Technische uitvoerbaarheid moet vroeg zichtbaar worden.
+- POC mag klein zijn, maar moet overtuigend genoeg zijn.
 
-## Niet doen / grenzen
-- Deze versie niet automatisch maatschappijkritisch maken.
-- AFK, Landjuweel en Amarte zijn nu één traject, maar kunnen later los voorkomen.
-- Open lijnen zijn geen automatische taken voor vandaag.
-- Clara moet voorzichtig zijn met het mengen van oude Windroos-, Transitus- of andere lichtinstallatiecontext als die niet expliciet gevraagd wordt.
-- Technische Clara/Projectbrain-informatie hoort niet onder dit project.
+## Niet doen
+- Geen workshopflow/doelgroep/boekingspagina-stappen als hoofdroute voor dit project.
+- Geen harde subsidie- of afspraakdata verzinnen.
+- Geen Projectbrain-dump als agenda.
 
-## Onzekerheden
-- Definitieve aanvraagtekst en budget kunnen nog wijzigen.
-- De exacte presentatievorm en plaatsing hangen af van locatie, programma en technische mogelijkheden.
-- Het onderscheid tussen fondsaanvraag, artistieke kern en praktische uitvoering moet nog verder worden aangescherpt.
+## Open acties
+- POC-scope bepalen.
+- Voet/licht/voeding technisch kiezen.
+- Eerste lampwezen bouwen of schetsen.
+- Testen en documenteren.
+- Aanvraagtekst bewaken op ecologisch/organismisch spoor.
