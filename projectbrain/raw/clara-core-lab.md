@@ -1,48 +1,35 @@
+# Raw — Clara Core Lab
 
+_Last updated: 2026-05-05_
 
-## ACE update — 2026-05-04T10:34:58.498Z
-- Source: chatgpt
-- Route: project
-- Project: clara-core-lab
-- Confidence: 0.78
-- Summary: ACE test: LaLampe workshopflow simpeler maken. Dit is een veilige eerste write-test vanuit production.
-- Signals:
-  - Mogelijke vervolgactie genoemd.
-- Raw input:
-> ACE test: LaLampe workshopflow simpeler maken. Dit is een veilige eerste write-test vanuit production.
+## Recente beweging
+- v0.14.35 bouwde de eerste Projectplan Overlay.
+- v0.14.36 maakte de overlay rustiger en bruikbaarder.
+- v0.14.37 maakte `Projectplan → Plan deze week` werkend met pencil-blokken, afhankelijkheden en concrete agenda-herkomst.
+- v0.14.38 voegde AI-projectplanvoorstellen toe via `/api/analyze` met `project_plan_suggestion`.
+- v0.14.39 fixte projectplan-isolatie, LaLampe/AFK-leakage-validatie, realistischere planner-start en generieke agenda-suggestie-filtering.
 
+## Actueel probleem uit test
+De productiecode staat op v0.14.39, maar de browser-localStorage bevat waarschijnlijk oude teststate:
+- oude LaLampe-projectplannen met AFK/lampwezen-stappen;
+- oude project_plan agenda-items die blijven staan;
+- oude `[Past niet] Scope en randvoorwaarden POC bepalen` open items;
+- projectplanplanning stapelt soms nieuwe blokken bovenop oude blokken.
 
-## ACE update — 2026-05-04T10:54:35.743Z
-- Source: biu
-- Route: project
-- Project: clara-core-lab
-- Confidence: 0.78
-- Summary: BIU extract: Project Clara Core Lab / ACE: - ACE v0.14.20 werkt end-to-end in production. - GitHub write via PROJECTBRAIN_GITHUB_TOKEN werkt. - Routingprioriteit is gefixt. - Beslissing: systeem heet ACE, methode heet B…
-- Signals:
-  - Recent signaal uit ChatGPT-input.
-- Raw input:
-> BIU extract:
-> Project Clara Core Lab / ACE:
-> - ACE v0.14.20 werkt end-to-end in production.
-> - GitHub write via PROJECTBRAIN_GITHUB_TOKEN werkt.
-> - Routingprioriteit is gefixt.
-> - Beslissing: systeem heet ACE, methode heet BIU.
-> - BIU v1 is gebouwd als check/write laag bovenop ACE.
-> - Beperking: ACE is nu nog single-target.
+## Volgende stap
+v0.14.40 moet geen nieuwe feature worden, maar een state-cleanup/migratie:
+- bekende oude vervuiling uit localStorage opschonen;
+- LaLampe-plannen met AFK-stappen corrigeren of vervangen;
+- oude project_plan agenda-items dedupliceren/verwijderen;
+- bij herplannen eerst bestaande agenda-items voor hetzelfde project_plan_id verwijderen;
+- projectnaam in chatcommando altijd zwaarder laten wegen dan laatst geopende plan.
 
+## Testfocus na v0.14.40
+- Schoon starten of migreren zonder oude LaLampe/AFK-leakage.
+- `Plan LaLampe projectplan deze week` plant alleen LaLampe.
+- `Plan AFK projectplan deze week` plant alleen AFK.
+- Geen onterechte `[Past niet]` voor stap 1.
+- Geen generieke agenda-suggesties.
 
-## ACE update — 2026-05-04T11:31:56.376Z
-- Source: biu
-- Route: project
-- Project: clara-core-lab
-- Confidence: 0.78
-- Summary: BIU extract uit ChatGPT-gesprek: Project Clara Core Lab / ACE: - BIU v1 werkt end-to-end via ACE. - Beslissing: ACE blijft het systeem, BIU is de methode. - Volgende stap: BIU v2 moet multi-target worden.
-- Signals:
-  - Mogelijke vervolgactie genoemd.
-- Raw input:
-> BIU extract uit ChatGPT-gesprek:
-> 
-> Project Clara Core Lab / ACE:
-> - BIU v1 werkt end-to-end via ACE.
-> - Beslissing: ACE blijft het systeem, BIU is de methode.
-> - Volgende stap: BIU v2 moet multi-target worden.
+## Niet vergeten
+Supabase/persistence pas na deze cleanup en na een schone projectplantest.
