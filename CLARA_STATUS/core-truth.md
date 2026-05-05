@@ -65,6 +65,27 @@ De operationele bron:
 Projectbrain is voorlopig niet de primaire agenda- of state-route.
 Het kan later terugkomen als archief/contextlaag, maar niet als bron waaruit automatisch taken of agenda-items worden gedumpt.
 
+## ChatGPT → Clara Core sync-doel
+
+Een gesprek met ChatGPT verandert Clara Core niet automatisch zolang er nog geen gedeelde patch/write-route is. v0.15 moet hier wel expliciet op voorbereid worden.
+
+Gewenste flow:
+
+```text
+ChatGPT-gesprek
+→ Clara State patch
+→ gedeelde opslag/API
+→ Clara Core ontvangt update via refresh, polling, realtime of een handmatige sync-knop
+→ Schedule-X rendert opnieuw vanuit Clara State
+```
+
+Afspraken:
+- ChatGPT blijft de denklaag en gesprekspartner.
+- Clara Core blijft de werkplek/UI.
+- Clara State is de gedeelde operationele bron van waarheid.
+- Schedule-X is alleen de calendar-view; state blijft leidend.
+- Mogelijke latere routes: handmatige sync-knop, polling, websocket/realtime of API-trigger vanuit ChatGPT/Action.
+
 ## v0.15.0 doel
 
 Eerste doel:
