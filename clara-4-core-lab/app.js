@@ -1,4 +1,4 @@
-const LAB_VERSION='0.14.41.1';
+const LAB_VERSION='0.14.41.2';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
@@ -130,12 +130,38 @@ function planHasAFKLampWords(plan){
   const blob=`${plan.title||''} ${plan.goal||''} ${(plan.steps||[]).map(s=>s.title).join(' ')}`.toLowerCase();
   return /lampwezen|voetconstructie|lichtbeeld|warmte|voeding/.test(blob);
 }
+function isForbiddenLaLampePlanText(text){
+  const t=String(text||'').toLowerCase();
+  if(!t)return false;
+  // Keep this strict: LaLampe workshopflow must never pick up AFK/Nachtdiertjes/lampwezen installation terms.
+  return /lampwezen|lampwezens|nachtdiertje|nachtdiertjes|\bafk\b|landjuweel|amarte|beeldenroute|autonome\s+lichtwezens|voetconstructie|\bservo\b|\bsensor\b|\bpoc\b/.test(t) ||
+    (/\bstabiliteit\b|\bveiligheid\b|\blich?tbeeld\b/.test(t) && /\btesten\b|\btest\b/.test(t));
+}
+function sanitizeOrReplaceLaLampeProjectPlan(plan){
+  if(!plan||typeof plan!=='object')return plan;
+  const proj=getProjectVisual(plan.project||inferProjectFromTitle(plan.title||plan.goal||'')).key;
+  if(proj!=='lalampe')return plan;
+  const blob=`${plan.title||''} ${plan.goal||''} ${plan.context||''} ${(plan.steps||[]).map(s=>`${s.title||''} ${(s.tasks||[]).map(t=>t.title||'').join(' ')}`).join(' ')}`;
+  if(isForbiddenLaLampePlanText(blob)){
+    plan.project='lalampe';
+    plan.steps=laLampeWorkshopStepsSkeleton(plan.id);
+    plan.source='corrected_skeleton';
+    plan.updated_at=new Date().toISOString();
+  }
+  return plan;
+}
+function sanitizeOrRejectLaLampeAgendaTitle(title){
+  const t=String(title||'');
+  if(!t.trim())return null;
+  return isForbiddenLaLampePlanText(t)?null:t;
+}
 function validateAiPlanAgainstMessage(message,plan){
   const msg=String(message||'');
   if(isLikelyLaLampeWorkshopRequest(msg)){
     const proj=inferProjectKeyFromMessage(msg);
     if(proj==='lalampe') plan.project='lalampe';
-    if(planHasAFKLampWords(plan)){
+    const blob=`${plan.title||''} ${plan.goal||''} ${plan.context||''} ${(plan.steps||[]).map(s=>`${s.title||''} ${(s.tasks||[]).map(t=>t.title||'').join(' ')}`).join(' ')}`;
+    if(planHasAFKLampWords(plan) || isForbiddenLaLampePlanText(blob)){
       // Hard reject: use frontend fallback rather than showing the wrong plan.
       return {ok:false,reason:'LaLampe request but AFK/lamp steps detected'};
     }
@@ -198,9 +224,9 @@ function migrateState01440Once(){
         else if(looksAFK){p.project='afk-landjuweel-amarte';changed=true;}
       }
       if(p.project==='lalampe' && looksLL){
-        const stepBlob=(p.steps||[]).map(s=>s.title).join(' ');
-        if(textHasAFKLampLeak(stepBlob)){
-          // If it is mostly leak, replace with corrected LaLampe skeleton.
+        const stepBlob=(p.steps||[]).map(s=>`${s.title||''} ${(s.tasks||[]).map(t=>t.title||'').join(' ')}`).join(' ');
+        if(textHasAFKLampLeak(stepBlob) || isForbiddenLaLampePlanText(stepBlob)){
+          // If it is leak, replace with corrected LaLampe skeleton.
           p.steps=laLampeWorkshopStepsSkeleton(p.id);
           p.source=p.source||'corrected_skeleton';
           if(p.source==='ai_project_plan') p.source='corrected_skeleton';
@@ -548,6 +574,12 @@ function openProjectPlanOverlay(id){
     upsertProjectPlan(plan);
     id=plan.id;
     touchState();
+  }
+  // Hardening: if a stored LaLampe plan contains forbidden AFK/Nachtdiertjes terms, correct it before showing.
+  const existing=getProjectPlanById(id);
+  if(existing){
+    const corrected=sanitizeOrReplaceLaLampeProjectPlan(existing);
+    if(corrected!==existing){upsertProjectPlan(corrected);touchState();}
   }
   projectPlanOverlayOpenId=String(id);
   lastOpenedProjectPlanId=projectPlanOverlayOpenId;
@@ -996,8 +1028,11 @@ function topoSortSteps(steps,project){
 }
 
 function planProjectPlanThisWeek(planId){
-  const plan=getProjectPlanById(planId);
+  let plan=getProjectPlanById(planId);
   if(!plan){setStatus('Geen projectplan om te plannen.');return}
+  // Hardening: prevent LaLampe plans from ever scheduling AFK/Nachtdiertjes terms.
+  const corrected=sanitizeOrReplaceLaLampeProjectPlan(plan);
+  if(corrected!==plan){upsertProjectPlan(corrected);touchState();plan=corrected;}
   // Replan dedupe: remove previous planning for this plan
   labState.agenda=(labState.agenda||[]).filter(i=>!(i&&String(i.source||'')==='project_plan'&&String(i.project_plan_id||'')===String(plan.id)));
   labState.attention=(labState.attention||[]).filter(i=>!(i&&String(i.project_plan_id||'')===String(plan.id)&&(i.kind==='past_niet'||i.kind==='wacht'||i.kind==='risico')));
@@ -1036,6 +1071,11 @@ function planProjectPlanThisWeek(planId){
   }
 
   function placeAgendaBlock({title,dur,step,task,reasonText,minDayIx,preferIx}){
+    if(getProjectVisual(proj).key==='lalampe'){
+      const okTitle=sanitizeOrRejectLaLampeAgendaTitle(title);
+      if(!okTitle)return false;
+      title=okTitle;
+    }
     const duration=Math.max(15,Math.round((Number(dur)||45)/5)*5);
     const cleanTitle=agendaTitleForProjectPlan(proj,title);
     if(!isConcreteAgendaItem({title:cleanTitle,project:proj,estimated_duration_minutes:duration}))return false;

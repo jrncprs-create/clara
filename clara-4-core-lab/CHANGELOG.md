@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.41.2 — 2026-05-05
+
+- Fix: LaLampe projectplan + weekplanning krijgen een centrale anti-leak guard (verbiedt AFK/Nachtdiertjes/lampwezen-termen). AI-voorstellen worden bij leakage verworpen en vervangen door een schone LaLampe workshopflow-skeleton; bestaande vervuilde LaLampe-plannen worden gecorrigeerd bij openen/plannen; agenda-items uit LaLampe-plannen worden gesanitized. Extra test: `scripts/check-lalampe-anti-leak.mjs`.
+
 ## 0.14.41.1 — 2026-05-05
 
 - Hardening: weekplanning-intents krijgen een mini smoke-test (`scripts/check-weekplanning-intents.mjs`). Daarnaast kan de “Ik liep vast…” fallback niet meer verschijnen bij korte bekende planning-intents; er wordt dan een veilige lokale planning/clarify route gebruikt. Startup overlay verbergt duidelijke oude versie-testitems (bijv. “Core Lab: v0.x inhoudelijk testen”) zonder de agenda te muteren.

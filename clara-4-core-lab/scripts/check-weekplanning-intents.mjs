@@ -54,6 +54,18 @@ for (const c of cases) {
   if (proj !== c.wantProject) fail(`wrong project for "${c.input}": got ${proj}, want ${c.wantProject}`);
 }
 
+// Ensure LaLampe weekplanning titles are clean (no AFK/Nachtdiertjes leakage)
+const forbiddenLaLampe = /(lampwezen|lampwezens|nachtdiertje|nachtdiertjes|\bafk\b|landjuweel|amarte|beeldenroute|autonome\s+lichtwezens|voetconstructie|\bservo\b|\bsensor\b|\bpoc\b)/i;
+const lalampeWeekTitles = [
+  'LaLampe: workshopflow uitschrijven',
+  'LaLampe: materiaal- en techniekbasis bepalen',
+  'LaLampe: testmoment voorbereiden',
+  'LaLampe: verkooptekst/boekingsroute aanscherpen',
+];
+for (const t of lalampeWeekTitles) {
+  if (forbiddenLaLampe.test(t)) fail(`LaLampe week title contains forbidden term: "${t}"`);
+}
+
 if (process.exitCode) process.exit(process.exitCode);
 console.log('OK: weekplanning intent smoke checks passed');
 

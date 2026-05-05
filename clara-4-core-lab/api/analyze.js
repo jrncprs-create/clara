@@ -2022,7 +2022,7 @@ function buildProjectPlanFocusGuard(inputText) {
   const wantsAFK = /\bafk\b|landjuweel|amarte/.test(t);
   const wantsBegeister = /begeister/.test(t);
   const wantsCoreLab = /clara\s+core\s+lab|core\s+lab|clara-4|clara\s+lab/.test(t);
-  if (wantsLaLampe && !wantsAFK) return '\n\nFocus guard: Deze aanvraag gaat over LaLampe. Gebruik AFK/Landjuweel/Amarte-context niet voor stappen, tenzij de gebruiker dat expliciet noemt.';
+  if (wantsLaLampe && !wantsAFK) return '\n\nFocus guard: Deze aanvraag gaat over LaLampe. Gebruik AFK/Landjuweel/Amarte-context niet voor stappen, tenzij de gebruiker dat expliciet noemt. Vermijd woorden/steps als lampwezen, nachtdiertjes, voetconstructie, servo/sensor, POC, stabiliteit/lichtbeeld/veiligheid testen, installatie-documentatie.';
   if (wantsAFK && !wantsLaLampe) return '\n\nFocus guard: Deze aanvraag gaat over AFK/Landjuweel/Amarte. Gebruik LaLampe-workshopcontext niet voor stappen, tenzij de gebruiker dat expliciet noemt.';
   if (wantsBegeister) return '\n\nFocus guard: Deze aanvraag gaat over Begeister. Focus op samenwerking, rollen, grenzen en besluitvorming.';
   if (wantsCoreLab) return '\n\nFocus guard: Deze aanvraag gaat over Clara Core Lab. Focus op softwaregedrag, feature-stappen en tests.';
