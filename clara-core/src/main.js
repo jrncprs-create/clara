@@ -1,12 +1,8 @@
 /**
- * Clara Core v0.15.2 — Clara State API (GET/POST) + Schedule-X view.
+ * Clara Core v0.15.3 — Clara State API + analyze → patchvoorstellen (expliciet toepassen).
  *
- * Initial load: probeert GET /api/clara-state; faalt dat → seed `/core.json`.
- * Wijzigingen (DnD/resize/testknop): lokaal `applyClaraStatePatch` → POST /api/clara-state/patch;
- * bij succes `response.state`; bij fout rollback + compacte API-waarschuwing in metrics.
- *
- * Dev: Vite middleware serveert `/api/*` en schrijft naar CLARA_STATE/core.json.
- * Productie (Vercel): zelfde routes; schrijven kan falen op read-only FS — zie README.
+ * Analyze: POST /api/clara-analyze (OpenAI als OPENAI_API_KEY, anders rule-based fallback).
+ * Patches worden niet blind toegepast: gebruiker kiest "Toepassen" → POST /api/clara-state/patch.
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -24,6 +20,7 @@ function patchIdForDisplay(patch) {
   if (patch.id != null) return String(patch.id)
   if (patch.item?.id != null) return String(patch.item.id)
   if (patch.task?.id != null) return String(patch.task.id)
+  if (patch.note?.id != null) return String(patch.note.id)
   return undefined
 }
 
@@ -59,6 +56,13 @@ async function main() {
   const host = document.getElementById('calendar')
   const metricsEl = document.getElementById('state-metrics')
   const shiftBtn = document.getElementById('shift-first-item')
+  const chatInput = document.getElementById('chat-input')
+  const analyzeBtn = document.getElementById('chat-analyze')
+  const analyzePanel = document.getElementById('analyze-panel')
+  const analyzeSummary = document.getElementById('analyze-summary')
+  const analyzePatches = document.getElementById('analyze-patches')
+  const analyzeApply = document.getElementById('analyze-apply')
+  const analyzeDismiss = document.getElementById('analyze-dismiss')
 
   let runtimeState = structuredClone(await loadInitialState())
   /** @type {{ type: string, id?: string, at: string } | null} */
@@ -68,6 +72,8 @@ async function main() {
   let applyingFromState = false
   /** @type {ReturnType<typeof createCalendar> | null} */
   let calendar = null
+  /** @type {object[] | null} */
+  let pendingProposedPatches = null
 
   function renderDebug() {
     if (debugEl) {
@@ -98,19 +104,44 @@ async function main() {
     }
   }
 
+  function hideAnalyzePanel() {
+    pendingProposedPatches = null
+    if (analyzePanel) analyzePanel.hidden = true
+    if (analyzeSummary) analyzeSummary.textContent = ''
+    if (analyzePatches) analyzePatches.textContent = ''
+  }
+
+  function showAnalyzePanel(summary, patches, questions, warnings) {
+    pendingProposedPatches = patches
+    if (!analyzePanel) return
+    analyzePanel.hidden = false
+    if (analyzeSummary) {
+      const q = (questions ?? []).length ? `\nVragen: ${(questions ?? []).join(' | ')}` : ''
+      const w = (warnings ?? []).length ? `\nWaarschuwingen: ${(warnings ?? []).join(' | ')}` : ''
+      analyzeSummary.textContent = `${summary}${q}${w}`
+    }
+    if (analyzePatches) {
+      analyzePatches.textContent = JSON.stringify(patches ?? [], null, 2)
+    }
+  }
+
   /**
-   * Optimistische patch + persist; rollback bij API-fout.
-   * @param {object} patch
+   * @param {object[]} patches
    */
-  async function applyPatchWithApi(patch) {
+  async function applyPatchesWithApi(patches) {
+    if (!patches?.length) return
     const snapshot = structuredClone(runtimeState)
     apiWarning = null
     try {
-      runtimeState = applyClaraStatePatch(runtimeState, patch)
+      let next = runtimeState
+      for (const p of patches) {
+        next = applyClaraStatePatch(next, p)
+      }
+      runtimeState = next
       lastPatch = {
-        type: patch.type,
+        type: `batch(${patches.length})`,
         at: Temporal.Now.zonedDateTimeISO(DEFAULT_TIMEZONE).toString(),
-        id: patchIdForDisplay(patch),
+        id: undefined,
       }
       renderDebug()
       renderMetrics()
@@ -122,7 +153,7 @@ async function main() {
       const res = await fetch('/api/clara-state/patch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ patch, source: 'clara-core' }),
+        body: JSON.stringify({ patches, source: 'clara-core' }),
       })
       const raw = await res.text()
       let data
@@ -137,9 +168,9 @@ async function main() {
       }
       runtimeState = data.state
       lastPatch = {
-        type: patch.type,
+        type: `batch(${patches.length})`,
         at: data.state?.updated_at ?? lastPatch.at,
-        id: patchIdForDisplay(patch),
+        id: undefined,
       }
       apiWarning = null
     } catch (err) {
@@ -153,6 +184,10 @@ async function main() {
     if (statusEl) {
       statusEl.textContent = `Clara State leidend · Schedule-X = view · ${nAgenda()} items · Europe/Amsterdam`
     }
+  }
+
+  async function applyPatchWithApi(patch) {
+    await applyPatchesWithApi([patch])
   }
 
   function nAgenda() {
@@ -192,6 +227,53 @@ async function main() {
         if (!first) return
         const patch = buildShiftAgendaItemMinutesPatch(runtimeState, first.id, 30)
         await applyPatchWithApi(patch)
+      })()
+    })
+  }
+
+  if (analyzeBtn && chatInput) {
+    analyzeBtn.addEventListener('click', () => {
+      void (async () => {
+        const input = String(chatInput.value ?? '').trim()
+        if (!input) return
+        try {
+          const res = await fetch('/api/clara-analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              input,
+              state: runtimeState,
+              source: 'clara-core',
+            }),
+          })
+          const data = await res.json().catch(() => null)
+          if (!res.ok || !data?.ok) {
+            showAnalyzePanel(data?.error || `Analyze mislukt (${res.status})`, [], [], [])
+            pendingProposedPatches = []
+            return
+          }
+          showAnalyzePanel(data.summary ?? '', data.patches ?? [], data.questions ?? [], data.warnings ?? [])
+        } catch (e) {
+          showAnalyzePanel(e instanceof Error ? e.message : String(e), [], [], [])
+          pendingProposedPatches = []
+        }
+      })()
+    })
+  }
+
+  if (analyzeDismiss) {
+    analyzeDismiss.addEventListener('click', () => {
+      hideAnalyzePanel()
+    })
+  }
+
+  if (analyzeApply) {
+    analyzeApply.addEventListener('click', () => {
+      void (async () => {
+        const list = pendingProposedPatches
+        if (!list?.length) return
+        await applyPatchesWithApi(list)
+        hideAnalyzePanel()
       })()
     })
   }

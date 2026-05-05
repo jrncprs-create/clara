@@ -1,8 +1,8 @@
 {
-  "version": "0.15.2",
+  "version": "0.15.3",
   "updated_at": "2026-05-06T00:00:00+02:00",
   "conversation_context": {
-    "summary": "v0.15.2: GET/POST /api/clara-state (dev) + optimistic patches; Schedule-X blijft view."
+    "summary": "v0.15.3: POST /api/clara-analyze → patchvoorstellen; Toepassen → /api/clara-state/patch."
   },
   "agenda_items": [
     {

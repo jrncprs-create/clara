@@ -25,6 +25,7 @@ const base = {
   ],
   tasks: [],
   attention: [],
+  notes: [],
 }
 
 let s = applyClaraStatePatch(base, {
@@ -57,6 +58,9 @@ assert(s.tasks.length === 1, 'task.create')
 
 s = applyClaraStatePatch(s, { type: 'attention.create', item: { id: 'att1', text: 'Let op' } })
 assert(s.attention.length === 1, 'attention.create')
+
+s = applyClaraStatePatch(s, { type: 'note.create', note: { id: 'n1', text: 'Kort notitje' } })
+assert((s.notes ?? []).length === 1, 'note.create')
 
 const shiftPatch = buildShiftAgendaItemMinutesPatch(s, 'a1', 30)
 assert(shiftPatch.type === 'agenda_item.update', 'shift patch type')

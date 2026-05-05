@@ -1,6 +1,7 @@
 /**
- * Connect-middleware voor Vite dev: GET /api/clara-state, POST /api/clara-state/patch
+ * Connect-middleware voor Vite dev: Clara State + analyze routes.
  */
+import { runClaraAnalyze } from './clara-analyze.mjs'
 import {
   postClaraStatePatchRequest,
   readClaraState,
@@ -24,6 +25,30 @@ export function createClaraStateApiMiddleware(repoRoot) {
       } catch (e) {
         res.statusCode = 500
         res.end(JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) }))
+      }
+      return
+    }
+
+    if (url === '/api/clara-analyze' && req.method === 'POST') {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-store')
+      try {
+        const body = await readJsonBodyFromNodeRequest(req)
+        const out = await runClaraAnalyze(body)
+        res.statusCode = out.ok === false ? 400 : 200
+        res.end(JSON.stringify(out))
+      } catch (e) {
+        res.statusCode = 500
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: e instanceof Error ? e.message : String(e),
+            summary: '',
+            patches: [],
+            questions: [],
+            warnings: [],
+          }),
+        )
       }
       return
     }

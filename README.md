@@ -1,14 +1,15 @@
 ## Clara (repo)
 
-### Clara Core v0.15.2 — Clara State API (eerste persistente patch-route)
+### Clara Core v0.15.3 — Analyze → patchvoorstellen (expliciet toepassen)
 
-- **Clara State** blijft de bron van waarheid. **Schedule-X** is view/interactie (DnD/resize → patch).
+- **Clara State** blijft de bron van waarheid. **Schedule-X** blijft view/interactie (DnD/resize → directe patch + POST).
 - **API (contract):**
-  - `GET /api/clara-state` — response body = volledige Clara State (JSON zoals `CLARA_STATE/core.json`).
-  - `POST /api/clara-state/patch` — body `{ "patch": { ... }, "source": "clara-core" }` of `{ "patches": [ ... ], "source": "..." }`. Bij succes: `{ "ok": true, "state": { ... }, "applied": [ ... ] }`.
-- **Implementatie:** gedeelde logica in `scripts/clara-state-repo-api.mjs`; Vercel-handlers `api/clara-state.js` en `api/clara-state/patch.js`; in **dev** idem routes via Vite-plugin in `clara-core/vite.config.js` (schrijft naar `CLARA_STATE/core.json` onder repo-root).
-- **Frontend:** `clara-core/src/main.js` — probeert GET `/api/clara-state`, faalt dat → `/core.json`; na wijziging optimistic `applyClaraStatePatch`, daarna POST; bij fout **rollback** + waarschuwing in metrics (geen crash).
-- **Checks:** `npm run test:patch` · `npm run test:api` · `npm run build` · `node --check` op gewijzigde JS (zie CI/handmatig).
+  - `GET /api/clara-state` — volledige state JSON.
+  - `POST /api/clara-state/patch` — patches toepassen + (lokaal) naar `CLARA_STATE/core.json` schrijven.
+  - **`POST /api/clara-analyze`** — `{ "input": "…", "state": {…} optioneel, "source": "clara-core"|"chatgpt" }` → `{ ok, summary, patches, questions, warnings }`. **Geen automatische state-mutatie**; Clara Core toont voorstel en gebruikt **Toepassen** → `POST /api/clara-state/patch`.
+- **AI:** met `OPENAI_API_KEY` (optioneel `OPENAI_MODEL`, default `gpt-4o-mini`) gebruikt de server een minimale JSON-prompt; zonder key → **rule-based fallback** (documenteert dev-gedrag).
+- **Implementatie:** o.a. `scripts/clara-analyze.mjs`, `scripts/clara-analyze-validate.mjs`, `scripts/clara-analyze-fallback.mjs`, `scripts/clara-analyze-openai.mjs`, `api/clara-analyze.js`, uitbreiding Vite-middleware in `scripts/clara-state-api-middleware.mjs`.
+- **Checks:** `npm run test:patch` · `npm run test:api` · `npm run test:analyze` · `npm run build`.
 
 **Runtime-beperkingen**
 
@@ -26,7 +27,7 @@
 
 ### Later
 
-- Betrouwbare centrale persistence (o.a. Supabase) + ChatGPT/analyze → dezelfde patch-types.
+- Betrouwbare centrale persistence (o.a. Supabase) + externe ChatGPT-flow die hetzelfde analyze-contract aanroept.
 
 ---
 

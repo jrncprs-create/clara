@@ -56,6 +56,13 @@ export function applyClaraStatePatch(state, patch) {
       next.attention = [...(next.attention ?? []), { ...patch.item }]
       break
     }
+    case 'note.create': {
+      if (!patch.note || patch.note.id == null || patch.note.text == null) {
+        throw new Error('note.create: note.id en note.text verplicht')
+      }
+      next.notes = [...(next.notes ?? []), { ...patch.note }]
+      break
+    }
     default:
       throw new Error(`Onbekend patch-type: ${patch.type}`)
   }

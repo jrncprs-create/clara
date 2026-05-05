@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.3 — 2026-05-06
+
+- `POST /api/clara-analyze`: `{ input, state?, source? }` → `{ ok, summary, patches, questions, warnings, engine? }`. Patches zijn **voorstellen**; Clara Core past ze pas toe na expliciete actie (POST `/api/clara-state/patch`).
+- **OpenAI** (optioneel): `OPENAI_API_KEY` + optioneel `OPENAI_MODEL`; strikt JSON via Chat Completions. Faalt de call → **rule-based fallback** (dev) met waarschuwing.
+- **Patch uitbreiding:** `note.create` in `applyClaraStatePatch`; **sanitize** in `scripts/clara-analyze-validate.mjs` (geen vage agenda, `agenda_item.update` alleen voor bekende id’s).
+- UI: Analyze-knop, compact voorstel-paneel met **Toepassen** / **Niet nu**.
+- Script: `npm run test:analyze`.
+
 ## 0.15.2 — 2026-05-06
 
 - Clara State API: `GET /api/clara-state` (volledige state) en `POST /api/clara-state/patch` (`patch` of `patches`, optioneel `source`). Server gebruikt `applyClaraStatePatch` en schrijft `CLARA_STATE/core.json`.
@@ -17,7 +25,7 @@ Beperking: op Vercel kan schrijven naar de repo-root mislukken (read-only build)
 - UI: versie `v0.15.1`, compacte metrics (aantal agenda-items, `updated_at`, laatste patch).
 - Script: `npm run test:patch` — lichte sanity-check op de patchfuncties.
 
-Nog niet: Supabase, ChatGPT/analyze-koppeling (API-contract is wél voorbereid).
+Nog niet: Supabase, volledige externe ChatGPT-koppeling buiten dit analyze-endpoint.
 
 ## 0.15.0 — eerder
 

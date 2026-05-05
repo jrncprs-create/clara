@@ -12,7 +12,7 @@
         <div class="header-main">
           <h1 class="title">Clara Core</h1>
           <p class="meta">
-            <span class="pill">v0.15.2</span>
+            <span class="pill">v0.15.3</span>
             <span class="status" id="header-status">Clara State is leidend · Schedule-X = weergave</span>
           </p>
         </div>
@@ -21,16 +21,27 @@
       <aside class="chat-panel">
         <h2 class="panel-title">Chat / ingang</h2>
         <p class="hint">
-          Later: ChatGPT-analyse → patches. Nu: GET/POST <code>/api/clara-state</code> (dev) met fallback naar
-          <code>/core.json</code>; optimistic UI + rollback bij API-fout.
+          Analyze: POST <code>/api/clara-analyze</code> — voorstellen alleen; <strong>Toepassen</strong> schrijft via
+          <code>/api/clara-state/patch</code>. Zonder dev-API: analyze faalt netjes in de UI.
         </p>
         <textarea
           id="chat-input"
           class="chat-input"
-          rows="6"
-          placeholder="Typ hier een notitie voor jezelf (wordt nog niet opgeslagen)…"
+          rows="5"
+          placeholder="Bijv. taak: bel leverancier — of expliciete ISO start/eind voor een blok…"
         ></textarea>
-        <button type="button" class="btn" id="chat-send" disabled>Verstuur (binnenkort)</button>
+        <div class="toolbar">
+          <button type="button" class="btn btn-active" id="chat-analyze">Analyze</button>
+        </div>
+        <section id="analyze-panel" class="analyze-panel" hidden>
+          <h3 class="analyze-title">Voorstel</h3>
+          <p id="analyze-summary" class="analyze-summary"></p>
+          <pre id="analyze-patches" class="analyze-pre"></pre>
+          <div class="toolbar">
+            <button type="button" class="btn btn-active" id="analyze-apply">Toepassen</button>
+            <button type="button" class="btn btn-ghost" id="analyze-dismiss">Niet nu</button>
+          </div>
+        </section>
       </aside>
 
       <main class="main">

@@ -175,6 +175,53 @@ code {
   background: rgba(139, 124, 255, 0.18);
 }
 
+.btn-ghost {
+  cursor: pointer;
+  color: var(--muted);
+  background: transparent;
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.analyze-panel {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.analyze-title {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.analyze-summary {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.analyze-pre {
+  margin: 0 0 10px;
+  max-height: 160px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--panel-border);
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
 .metrics {
   margin: 0;
   font-size: 0.78rem;
