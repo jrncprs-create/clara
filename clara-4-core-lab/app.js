@@ -1,4 +1,4 @@
-const LAB_VERSION='0.14.36';
+const LAB_VERSION='0.14.37';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
@@ -190,11 +190,135 @@ function newProjectPlanFromSeed({project,title,goal,context,source}){
   const now=new Date().toISOString();
   const plan=normalizeProjectPlan({id,project:proj,title:title||projectLabelFor(proj),goal:goal||'',deadline:'',status:'active',context:context||'',steps:[],created_at:now,updated_at:now,source:source||'local'});
   if(!plan.steps.length){
-    plan.steps=[
-      {id:id+'-s1',title:'Doel en randvoorwaarden scherpzetten',status:'todo',estimated_duration_minutes:60,dependency_type:'none',depends_on_step_id:'',deadline:'',tasks:[{id:id+'-s1-t1',title:'Kort doel en “af genoeg” vastleggen',status:'todo',estimated_duration_minutes:25,deadline:'',source_reason:'Start helder'}]},
-      {id:id+'-s2',title:'Eerste werkende kernstap bouwen/testen',status:'todo',estimated_duration_minutes:90,dependency_type:'after_prev',depends_on_step_id:id+'-s1',deadline:'',tasks:[{id:id+'-s2-t1',title:'Kernflow of POC stap 1 doen',status:'todo',estimated_duration_minutes:45,deadline:'',source_reason:'Eerste tastbaar resultaat'}]},
-      {id:id+'-s3',title:'Afronden en controleren',status:'todo',estimated_duration_minutes:60,dependency_type:'after_prev',depends_on_step_id:id+'-s2',deadline:'',tasks:[{id:id+'-s3-t1',title:'Laatste checklijstje afwerken',status:'todo',estimated_duration_minutes:25,deadline:'',source_reason:'Klaar maken'}]}
-    ];
+    const blob=`${plan.project||''} ${plan.title||''} ${plan.goal||''}`.toLowerCase();
+    const isAFK=/\bafk\b|landjuweel|amarte|lamp|voet|poc|proof/.test(blob);
+    const isLaLampe=/lalampe|la\s*lampe|workshop|avondflow|lampenkap|lamp/.test(blob);
+    const isBegeister=/begeister|rollen|verantwoord|bespreek|grens|besluit/.test(blob);
+    const isClara=/clara|core\s*lab|dashboard|overlay|agenda|startup/.test(blob);
+    function mkStep(ix,title,mins,depType,depId,tasks){
+      const sid=`${id}-s${ix}`;
+      return {id:sid,title,status:'todo',estimated_duration_minutes:mins,dependency_type:depType||'none',depends_on_step_id:depId||'',deadline:'',tasks:(tasks||[]).map((t,j)=>({id:`${sid}-t${j+1}`,title:t.title,status:'todo',estimated_duration_minutes:t.mins,deadline:'',source_reason:t.reason||''}))};
+    }
+    if(isAFK){
+      plan.steps=[
+        mkStep(1,'Scope en randvoorwaarden POC bepalen',45,'none','',[
+          {title:'Bepaal “af genoeg” + doel van de POC',mins:25,reason:'Scope helder'},
+          {title:'Check constraints (gewicht, formaat, materiaal)',mins:25,reason:'Randvoorwaarden'}
+        ]),
+        mkStep(2,'Voetconstructie kiezen of schetsen',75,'after_prev',`${id}-s1`,[
+          {title:'Kies constructieprincipe (plaat/staaf/print)',mins:30,reason:'Keuze maken'},
+          {title:'Schets maatvoering + bevestiging',mins:45,reason:'Werkbaar ontwerp'}
+        ]),
+        mkStep(3,'Lichtbron en voeding bepalen',60,'after_prev',`${id}-s2`,[
+          {title:'Kies lichtbron (type/sterkte) en voeding',mins:30,reason:'Technische keuze'},
+          {title:'Check veiligheid en warmte (basischeck)',mins:30,reason:'Risico beperken'}
+        ]),
+        mkStep(4,'Eerste lampwezen bouwen',120,'after_prev',`${id}-s3`,[
+          {title:'Bouw eerste opstelling (voet + drager)',mins:60,reason:'POC bouwen'},
+          {title:'Monteer lichtbron + voeding en test aan/uit',mins:45,reason:'Werkend maken'}
+        ]),
+        mkStep(5,'Stabiliteit, lichtbeeld en veiligheid testen',60,'after_prev',`${id}-s4`,[
+          {title:'Stabiliteit checken en zwakke punten noteren',mins:30,reason:'Test'},
+          {title:'Lichtbeeld en warmte kort nalopen',mins:30,reason:'Test'}
+        ]),
+        mkStep(6,'Foto/video of korte documentatie maken',45,'after_prev',`${id}-s5`,[
+          {title:'Maak 3 foto’s + 1 korte video',mins:25,reason:'Bewijs'},
+          {title:'Noteer wat werkt / wat niet (5 bullets)',mins:20,reason:'Vervolg'}
+        ])
+      ];
+    }else if(isLaLampe){
+      plan.steps=[
+        mkStep(1,'Workshopdoel en doelgroep scherpzetten',45,'none','',[
+          {title:'Bepaal doelgroep + wat zij mee naar huis nemen',mins:25,reason:'Doel helder'},
+          {title:'Kies succescriteria (af genoeg)',mins:20,reason:'Kader'}
+        ]),
+        mkStep(2,'Materiaal- en techniekbasis bepalen',60,'after_prev',`${id}-s1`,[
+          {title:'Maak materialenlijst + tools (minimaal)',mins:30,reason:'Basis klaar'},
+          {title:'Check wat je moet pre-cut/prep’en',mins:30,reason:'Voorbereiding'}
+        ]),
+        mkStep(3,'Avondflow in blokken uitschrijven',90,'after_prev',`${id}-s2`,[
+          {title:'Schrijf 5–7 blokken met tijdsindicatie',mins:45,reason:'Flow'},
+          {title:'Noteer “waar gaat het vaak mis?” per blok',mins:30,reason:'Risico’s'}
+        ]),
+        mkStep(4,'Testmoment voorbereiden',60,'after_prev',`${id}-s3`,[
+          {title:'Maak mini-testscript (intro + 1 kernstap)',mins:30,reason:'Test'},
+          {title:'Leg demo-materialen klaar (klein setje)',mins:30,reason:'Praktisch'}
+        ]),
+        mkStep(5,'Feedbackpunten en verbeteringen verwerken',60,'after_prev',`${id}-s4`,[
+          {title:'Verwerk 3 belangrijkste feedbackpunten',mins:45,reason:'Iteratie'},
+          {title:'Werk checklist “klaar voor avond” bij',mins:25,reason:'Afronden'}
+        ])
+      ];
+    }else if(isBegeister){
+      plan.steps=[
+        mkStep(1,'Onderwerp en grens scherpzetten',45,'none','',[
+          {title:'Schrijf 3 bullets: wat is het wél / niet',mins:25,reason:'Grens'},
+          {title:'Noteer risico: waar kan het misbegrepen worden?',mins:20,reason:'Risico'}
+        ]),
+        mkStep(2,'Rollen en verantwoordelijkheden uitschrijven',60,'after_prev',`${id}-s1`,[
+          {title:'Zet rollen op papier + wie beslist wat',mins:45,reason:'Duidelijkheid'},
+          {title:'Maak 1 alinea “verwachting per rol”',mins:30,reason:'Afspraak'}
+        ]),
+        mkStep(3,'Bespreekpunten voorbereiden',60,'after_prev',`${id}-s2`,[
+          {title:'Maak agenda met 5 bespreekpunten',mins:30,reason:'Structuur'},
+          {title:'Schrijf per punt: gewenste uitkomst',mins:30,reason:'Resultaat'}
+        ]),
+        mkStep(4,'Besluitpunten vastleggen',45,'after_prev',`${id}-s3`,[
+          {title:'Maak beslis-lijst: 3 keuzes die je nodig hebt',mins:30,reason:'Besluit'},
+          {title:'Noteer wat je als “voorstel” meeneemt',mins:25,reason:'Voorbereiding'}
+        ]),
+        mkStep(5,'Vervolgactie bepalen',45,'after_prev',`${id}-s4`,[
+          {title:'Kies 1 eerstvolgende actie + owner',mins:25,reason:'Vervolg'},
+          {title:'Plan checkmoment (kort) of open vraag',mins:20,reason:'Borging'}
+        ])
+      ];
+    }else if(isClara){
+      plan.steps=[
+        mkStep(1,'Probleem of feature scherpzetten',45,'none','',[
+          {title:'Schrijf 1 zin: wat moet er beter?',mins:20,reason:'Kader'},
+          {title:'Noteer 2 voorbeelden uit live gedrag',mins:30,reason:'Context'}
+        ]),
+        mkStep(2,'Verwacht gedrag formuleren',45,'after_prev',`${id}-s1`,[
+          {title:'Schrijf acceptatiecriteria (3 bullets)',mins:30,reason:'Duidelijk'},
+          {title:'Noteer wat níet moet gebeuren',mins:20,reason:'Guardrails'}
+        ]),
+        mkStep(3,'Kleine implementatiestap bepalen',60,'after_prev',`${id}-s2`,[
+          {title:'Kies kleinste veilige wijziging',mins:30,reason:'Scope'},
+          {title:'Maak lijstje: waar in code checken',mins:25,reason:'Route'}
+        ]),
+        mkStep(4,'Testscenario maken',45,'after_prev',`${id}-s3`,[
+          {title:'Maak 3 tests/handmatige checks',mins:30,reason:'Verifiëren'},
+          {title:'Check regressiepunten (startup/agenda)',mins:25,reason:'Geen regressie'}
+        ]),
+        mkStep(5,'Resultaat beoordelen en vervolg bepalen',45,'after_prev',`${id}-s4`,[
+          {title:'Beoordeel: wat is nu beter?',mins:20,reason:'Review'},
+          {title:'Kies vervolg: polish / extra fix / stop',mins:25,reason:'Vervolg'}
+        ])
+      ];
+    }else{
+      plan.steps=[
+        mkStep(1,'Doel en scope scherpzetten',45,'none','',[
+          {title:'Bepaal “af genoeg”',mins:25,reason:'Scope'},
+          {title:'Noteer wat je vandaag niet doet',mins:20,reason:'Rust'}
+        ]),
+        mkStep(2,'Randvoorwaarden verzamelen',45,'after_prev',`${id}-s1`,[
+          {title:'Maak korte lijst: inputs / blockers / afhankelijkheden',mins:30,reason:'Voorwaarden'},
+          {title:'Kies 1 open vraag om te beantwoorden',mins:20,reason:'Duidelijkheid'}
+        ]),
+        mkStep(3,'Eerste werkbare versie maken',90,'after_prev',`${id}-s2`,[
+          {title:'Maak eerste werkende versie (klein)',mins:60,reason:'Output'},
+          {title:'Noteer wat nog ontbreekt',mins:30,reason:'Vervolg'}
+        ]),
+        mkStep(4,'Controleren en testen',45,'after_prev',`${id}-s3`,[
+          {title:'Controleer op fouten/kwaliteit (kort)',mins:30,reason:'Check'},
+          {title:'Kies 1 verbetering die echt telt',mins:30,reason:'Polish'}
+        ]),
+        mkStep(5,'Afronden en vervolg bepalen',45,'after_prev',`${id}-s4`,[
+          {title:'Maak 3 bullets: resultaat + volgende stap',mins:25,reason:'Afronding'},
+          {title:'Plan vervolg of parkeer als open item',mins:20,reason:'Vervolg'}
+        ])
+      ];
+    }
   }
   return normalizeProjectPlan(plan,0);
 }
@@ -274,7 +398,7 @@ function renderProjectPlanOverlay(){
           <span class="pp-chip">${esc(String(s.estimated_duration_minutes||60))} min</span>
           <span class="pp-chip">${esc(status)}</span>
           <span class="pp-chip">${esc(depShort)}</span>
-          <span class="pp-chip pp-chip--muted">${tasksCount} taak${tasksCount===1?'':'en'}</span>
+          <span class="pp-chip pp-chip--muted">${tasksCount} ${tasksCount===1?'taak':'taken'}</span>
         </div>
       </div>
       <div class="pp-step__actions">
@@ -353,6 +477,14 @@ function showStartupOverlay(){if(!startupOverlay)return;renderStartupOverlayBody
 function hideStartupOverlay(markDone){startupOverlay?.classList.add('hidden');if(markDone){try{sessionStorage.setItem(SESSION_STARTUP_KEY,'1')}catch(_){}}}
 function deriveSuggestions(){let conf=labState.agenda.filter(i=>i._frontend_conflict&&!isAgendaItemDone(i)),pencils=labState.agenda.filter(i=>i.status==='pencil'&&!isAgendaItemDone(i));if(conf.length)return[{type:'conflict',text:'Er is overlap in je agenda. Zal ik een oplossing voorstellen?'}];if(pencils.length)return[{type:'confirm_all',text:'Klopt deze planning zo? Dan bevestig ik alle potloodblokken.'}];return[]}
 function addAssistantMessage(text,suggestions){const body=sanitizeUserFacingText(text,'chat')||'Ik heb iets bijgewerkt; kijk even rechts en in de agenda.';const sug0=suggestions&&suggestions[0]?sanitizeUserFacingText(suggestions[0].text,'chat'):null;const opt=sug0?`<div class="options"><div class="option-text">${esc(sug0)}</div><div class="option-actions"><button data-proposal-action="decline">Afslaan</button><button data-proposal-action="ok" data-kind="${esc(suggestions[0].type)}">Okay</button></div></div>`:'';chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant"><div class="msg-body">${esc(body)}</div>${opt}</div>`);scrollBottom()}
+function addProjectPlanSavedPrompt(planId){
+  const plan=getProjectPlanById(planId);
+  if(!plan)return;
+  const proj=projectLabelFor(plan.project||inferProjectFromTitle(plan.title||plan.goal||''));
+  const text=`Projectplan opgeslagen (${proj}). Wil je dit deze week in potlood inplannen?`;
+  chatLog.insertAdjacentHTML('beforeend',`<div class="msg assistant"><div class="msg-body">${esc(text)}</div><div class="options"><div class="option-actions"><button data-pp-saved-action="later" data-plan-id="${esc(plan.id)}">Later</button><button data-pp-saved-action="plan" data-plan-id="${esc(plan.id)}">Plan deze week</button></div></div></div>`);
+  scrollBottom();
+}
 function contextPayload(message){return 'Actuele lokale Clara status (lokale waarheid, inclusief handmatige wijzigingen):\n'+JSON.stringify(labState,null,2)+'\n\nNieuw bericht:\n'+message}
 function hasOpenThreads(ls){return(ls.open_threads||[]).some(i=>i&&i.status!=='closed')}
 function hasDayRegieContent(ls){const d=ls.day_regie||{};return!!((d.items_to_check||[]).length||(d.rollover_candidates||[]).length||String(d.review_prompt||'').trim()||d.suggested_time||String(d.now_first_move||'').trim())}
@@ -373,9 +505,37 @@ function compactDayPlanMessage(agendaAdded,taskBoost){const n=(agendaAdded||0)+(
 function render(data){syncFromAnalysis(data);renderFromState();const raw=String(data.summary||startupResultMessage(labState)).slice(0,520);addAssistantMessage(sanitizeUserFacingText(raw,'chat')||'Ik heb de planning bijgewerkt; controleer de agenda en de suggesties rechts.',deriveSuggestions())}
 function renderStartupResult(data){syncFromAnalysis(data);renderFromState();const wrap=document.querySelector('#chatLog .msg.assistant:not(.thinking) .msg-body');if(wrap)wrap.textContent=startupResultMessage(labState);try{sessionStorage.setItem(SESSION_STARTUP_KEY,'1')}catch(_){}setStatus('Concept klaar · v'+LAB_VERSION)}
 async function runAutoStartupPlanning(){if(isAnalyzing)return;if(startupAnalysisScheduled)return;startupAnalysisScheduled=true;currentController=new AbortController();setAnalyzing(true);setStatus('Clara maakt startvoorstellen…');const to=setTimeout(()=>currentController.abort(),60000);try{const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:STARTUP_INTERNAL_PROMPT,source:'projectbrain_startup',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Startvoorstellen mislukt');syncFromAnalysis(data);renderFromState();showStartupOverlay()}catch(e){renderFromState();showStartupOverlay();setStatus('Startvoorstellen klaar · v'+LAB_VERSION)}finally{clearTimeout(to);currentController=null;setAnalyzing(false);startupAnalysisScheduled=false;scrollBottom()}}
-async function analyzeText(message,showUser=true){if(isAnalyzing&&currentController){currentController.abort();return}let value=String(message||'').trim();if(!value){setStatus('Voer eerst tekst in.');return}if(showUser){rememberUserInputForSanitize(value);addUserMessage(value)}input.value='';resizeInput();const words=value.split(/\s+/).filter(Boolean).length;if(lastOpenItemRef&&words&&words<=6&&value.length<=52&&!isDayPlanningIntent(value)&&!isProjectPlanIntent(value)&&!/^\s*(wat|hoe|waarom|leg\s+uit|vertel|kun\s+je|kan\s+je|waar|wie|wanneer)\b/i.test(value)){answerOpenEnd(lastOpenItemRef.id,lastOpenItemRef.source,value);setStatus('Antwoord opgenomen.');scrollBottom();return}if(isProjectPlanIntent(value)){const plan=createProjectPlanFromMessage(value);upsertProjectPlan(plan);touchState();renderFromState();openProjectPlanOverlay(plan.id);setStatus('Projectplan klaar om te bewerken.');scrollBottom();return}if(isDayPlanningIntent(value)){const r=ensureCompactDayPlan(value);addAssistantMessage(compactDayPlanMessage(r.agendaAdded,r.taskBoost),deriveSuggestions());setStatus('Dagplanning klaar · v'+LAB_VERSION);scrollBottom();return}currentController=new AbortController();setAnalyzing(true);setStatus('Clara denkt even mee…');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);startThinkingStatusFlow(thinking);try{let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Kon dit niet ophalen');stopThinkingStatusFlow();render(data);removeThinking(thinking);setStatus('Bijgewerkt · v'+LAB_VERSION)}catch(e){stopThinkingStatusFlow();removeThinking(thinking);try{renderFromState();addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}catch(_){addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}setStatus('Klaar · v'+LAB_VERSION)}finally{stopThinkingStatusFlow();clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
+function matchProjectPlansForMessage(msg){
+  const m=String(msg||'');
+  const project=inferProjectKeyFromMessage(m);
+  const plans=(labState.project_plans||[]).filter(p=>p&&p.status!=='archived');
+  if(project){
+    const hits=plans.filter(p=>inferProjectKeyFromMessage(p.project||p.title||p.goal||'')===project||String(p.project||'')===project);
+    if(hits.length)return hits;
+  }
+  const q=m.toLowerCase();
+  const fuzzy=plans.filter(p=>`${p.title||''} ${p.goal||''} ${p.project||''}`.toLowerCase().includes(q.slice(0,18))).slice(0,3);
+  return fuzzy.length?fuzzy:plans;
+}
+
+async function analyzeText(message,showUser=true){if(isAnalyzing&&currentController){currentController.abort();return}let value=String(message||'').trim();if(!value){setStatus('Voer eerst tekst in.');return}if(showUser){rememberUserInputForSanitize(value);addUserMessage(value)}input.value='';resizeInput();const words=value.split(/\s+/).filter(Boolean).length;
+  if(isProjectPlanPlanIntent(value)){
+    const matches=matchProjectPlansForMessage(value);
+    if(!matches.length){addAssistantMessage('Er is nog geen projectplan om te plannen. Wil je dat ik er één maak?',[]);setStatus('Geen projectplan gevonden.');scrollBottom();return}
+    const uniq=[...new Map(matches.map(p=>[String(p.id),p])).values()];
+    if(uniq.length===1){planProjectPlanThisWeek(uniq[0].id);scrollBottom();return}
+    addAssistantMessage('Welke project wil je plannen? Typ bijvoorbeeld: “Plan AFK projectplan deze week”.',[]);
+    setStatus('Meerdere projectplannen gevonden.');
+    scrollBottom();
+    return;
+  }
+  if(lastOpenItemRef&&words&&words<=6&&value.length<=52&&!isDayPlanningIntent(value)&&!isProjectPlanIntent(value)&&!/^\s*(wat|hoe|waarom|leg\s+uit|vertel|kun\s+je|kan\s+je|waar|wie|wanneer)\b/i.test(value)){answerOpenEnd(lastOpenItemRef.id,lastOpenItemRef.source,value);setStatus('Antwoord opgenomen.');scrollBottom();return}
+  if(isProjectPlanIntent(value)){const plan=createProjectPlanFromMessage(value);upsertProjectPlan(plan);touchState();renderFromState();openProjectPlanOverlay(plan.id);setStatus('Projectplan klaar om te bewerken.');scrollBottom();return}
+  if(isDayPlanningIntent(value)){const r=ensureCompactDayPlan(value);addAssistantMessage(compactDayPlanMessage(r.agendaAdded,r.taskBoost),deriveSuggestions());setStatus('Dagplanning klaar · v'+LAB_VERSION);scrollBottom();return}
+  currentController=new AbortController();setAnalyzing(true);setStatus('Clara denkt even mee…');let thinking=addThinking(),to=setTimeout(()=>currentController.abort(),60000);startThinkingStatusFlow(thinking);try{let res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:contextPayload(value),source:'message',lab_state:labState}),signal:currentController.signal}),data=await res.json();if(!res.ok)throw new Error(data.message||data.error||'Kon dit niet ophalen');stopThinkingStatusFlow();render(data);removeThinking(thinking);setStatus('Bijgewerkt · v'+LAB_VERSION)}catch(e){stopThinkingStatusFlow();removeThinking(thinking);try{renderFromState();addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}catch(_){addAssistantMessage(sanitizeUserFacingText(analysisFallbackMessage(),'chat')||analysisFallbackMessage(),[])}setStatus('Klaar · v'+LAB_VERSION)}finally{stopThinkingStatusFlow();clearTimeout(to);currentController=null;setAnalyzing(false);scrollBottom()}}
 endPromptHost?.addEventListener('click',e=>{let b=e.target.closest('[data-agenda-end-action]');if(!b)return;handleAgendaEndPromptAction(b.dataset.itemId,b.dataset.agendaEndAction)});
 chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-proposal-action]');if(!b)return;if(b.dataset.proposalAction==='ok'&&b.dataset.kind==='confirm_all'){labState.agenda.forEach(i=>{if(i.status==='pencil')i.status='confirmed';i.confirmation_required=false});touchState();renderFromState()}b.closest('.options')?.remove()});
+chatLog.addEventListener('click',e=>{let b=e.target.closest('[data-pp-saved-action]');if(!b)return;const id=b.dataset.planId;const act=b.dataset.ppSavedAction;if(act==='plan'){planProjectPlanThisWeek(id);b.closest('.options')?.remove()}else if(act==='later'){b.closest('.options')?.remove();setStatus('Oké, later.')}}); 
 agendaSection?.addEventListener('click',e=>{let tab=e.target.closest('[data-agenda-tab]');if(tab){activeAgendaTab=tab.dataset.agendaTab;renderFromState();return}let a=e.target.closest('[data-agenda-action]');if(!a)return;let id=a.dataset.id,item=labState.agenda.find(i=>i.id===id);if(a.dataset.agendaAction==='confirm'&&item){item.status='confirmed';item.confirmation_required=false;touchState();renderFromState()}if(a.dataset.agendaAction==='delete'){labState.agenda=labState.agenda.filter(i=>i.id!==id);touchState();renderFromState()}});
 agendaCol.addEventListener('pointerdown',e=>{let h=e.target.closest('[data-resize]'),eventEl=e.target.closest('.event');if(e.target.closest('button,[contenteditable="true"],input,textarea'))return;if(!h&&!eventEl)return;e.preventDefault();let section=(h||eventEl).closest('.timeline-card'),tl=(h||eventEl).closest('.timeline'),id=h?h.dataset.id:eventEl.dataset.id,item=labState.agenda.find(i=>i.id===id);if(!section||!tl||!item)return;let rect=tl.getBoundingClientRect(),s=timeToMin(item.start_time)||Number(section.dataset.start),en=timeToMin(item.end_time)||s+(item.estimated_duration_minutes||30);dragState={id:item.id,mode:h?'resize':'move',edge:h?.dataset.resize||null,start:Number(section.dataset.start),end:Number(section.dataset.end),rect,offset:eventEl?Math.max(0,e.clientY-eventEl.getBoundingClientRect().top):0,duration:Math.max(15,en-s)};(h||eventEl).setPointerCapture?.(e.pointerId)});
 window.addEventListener('pointermove',e=>{if(!dragState)return;let item=labState.agenda.find(i=>i.id===dragState.id);if(!item)return;let y=Math.max(0,Math.min(dragState.rect.height,e.clientY-dragState.rect.top)),min=round15(dragState.start+(y/dragState.rect.height)*(dragState.end-dragState.start)),s=timeToMin(item.start_time)||dragState.start,en=timeToMin(item.end_time)||s+30;if(dragState.mode==='move'){let offMin=(dragState.offset/dragState.rect.height)*(dragState.end-dragState.start);s=round15(dragState.start+((e.clientY-dragState.rect.top)/dragState.rect.height)*(dragState.end-dragState.start)-offMin);s=Math.max(dragState.start,Math.min(s,dragState.end-dragState.duration));en=s+dragState.duration;if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.start_time=minToTime(s);item.end_time=minToTime(en);item.estimated_duration_minutes=dragState.duration}else if(dragState.edge==='start'){s=Math.min(min,en-15);if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.start_time=minToTime(s);item.estimated_duration_minutes=Math.max(15,en-s)}else{en=Math.max(min,s+15);if(hasAgendaOverlap(activeAgendaDate||itemAgendaDate(item),s,en,item.id))return;item.end_time=minToTime(en);item.estimated_duration_minutes=Math.max(15,en-s)}touchState();renderFromState()});
@@ -389,6 +549,7 @@ function inferProjectFromTitle(title){const pv=getProjectVisual(title);return pv
 function addLocalAgendaSuggestion(title,project){const clean=guidanceText(title,120)||'Agenda-suggestie';const date=activeAgendaDate||todayIso();const duration=45;const proj=project||inferProjectFromTitle(clean);if(!isConcreteAgendaItem({title:clean,project:proj,estimated_duration_minutes:duration}))return false;const slot=findFreeAgendaSlot(date,duration);if(!slot){const note=`Dit past op ${dateLabel(date).toLowerCase()} niet netjes meer: ${clean}`;if(!labState.attention.some(i=>String(i.title||'')===note))labState.attention.push({id:'at-fit-'+Date.now(),title:note,kind:'past_niet',done:false,project:proj});return false}labState.agenda.push({id:'ag-local-'+Date.now(),title:clean,kind:'planned_task',date,start_time:minToTime(slot.start),end_time:minToTime(slot.end),estimated_duration_minutes:duration,status:'pencil',confirmation_required:true,source:'guidance_rail',project:proj});labState.agenda=markOverlaps(labState.agenda);return true}
 
 function isProjectPlanIntent(v){return/\bprojectplan\b|\bplan\s+voor\b.*\b(project|afk|lalampe|begeister|clara)\b|\bmaak\s+.*\bprojectplan\b|\bproject\s+plan\b/i.test(String(v||''))}
+function isProjectPlanPlanIntent(v){return/\bplan\b.*\bprojectplan\b|\bzet\b.*\bprojectplan\b.*\bagenda\b|\bplan\s+(afk|lalampe|begeister|clara).*\bprojectplan\b|\bplan\s+dit\s+projectplan\b|\bplan\s+projectplan\b/i.test(String(v||''))}
 function inferProjectKeyFromMessage(v){const pv=getProjectVisual(String(v||''));if(pv&&pv.key&&pv.key!=='none'){if(pv.key==='afk')return'afk-landjuweel-amarte';if(pv.key==='clara')return'clara-core-lab';return pv.key}return null}
 function createProjectPlanFromMessage(message){
   const msg=String(message||'').trim();
@@ -399,6 +560,57 @@ function createProjectPlanFromMessage(message){
   return newProjectPlanFromSeed({project,title,goal,context,source:'chat'});
 }
 
+function parseIsoDateOrNull(v){const s=String(v||'').slice(0,10);return/^\d{4}-\d{2}-\d{2}$/.test(s)?s:null}
+function dateIndexInDays(iso,days){if(!iso)return null;const ix=days.indexOf(iso);return ix>=0?ix:null}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+function addProjectPlanAttention(kind,project,text){
+  const t=guidanceText(text,220);
+  if(!t)return;
+  if(labState.attention.some(i=>String(i.title||'')===t))return;
+  labState.attention.push({id:'at-pp-'+Date.now()+'-'+simpleHash(kind+'|'+t),title:t,kind:kind,done:false,project:project||null});
+}
+function agendaTitleForProjectPlan(project,title){
+  const proj=projectLabelFor(project);
+  const t=guidanceText(title,130);
+  return guidanceText(`${proj} — ${t}`,150);
+}
+function normalizeStepDepends(step,prevId){
+  if(!step)return step;
+  if(step.dependency_type==='after_prev'&&!String(step.depends_on_step_id||'').trim()&&prevId)step.depends_on_step_id=String(prevId);
+  if(step.dependency_type==='none')step.depends_on_step_id='';
+  return step;
+}
+function topoSortSteps(steps,project){
+  const nodes=(steps||[]).filter(Boolean);
+  const byId=new Map(nodes.map(s=>[String(s.id),s]));
+  const indeg=new Map();
+  const adj=new Map();
+  for(const s of nodes){indeg.set(String(s.id),0);adj.set(String(s.id),[])}
+  for(const s of nodes){
+    const dep=(s.dependency_type==='after_prev'&&s.depends_on_step_id)?String(s.depends_on_step_id):null;
+    if(dep&&byId.has(dep)){
+      adj.get(dep).push(String(s.id));
+      indeg.set(String(s.id),(indeg.get(String(s.id))||0)+1);
+    }
+  }
+  const q=[];
+  for(const [id,n] of indeg.entries())if(n===0)q.push(id);
+  const out=[];
+  while(q.length){
+    const id=q.shift();
+    out.push(byId.get(id));
+    for(const nxt of adj.get(id)||[]){
+      indeg.set(nxt,(indeg.get(nxt)||0)-1);
+      if(indeg.get(nxt)===0)q.push(nxt);
+    }
+  }
+  if(out.length!==nodes.length){
+    addProjectPlanAttention('risico',project,'[Risico] Afhankelijkheden in dit projectplan zijn onduidelijk of cyclisch; ik plan in stapvolgorde.');
+    return nodes;
+  }
+  return out;
+}
+
 function planProjectPlanThisWeek(planId){
   const plan=getProjectPlanById(planId);
   if(!plan){setStatus('Geen projectplan om te plannen.');return}
@@ -406,43 +618,133 @@ function planProjectPlanThisWeek(planId){
   const days=nextWorkdaysFrom(today,5);
   const proj=plan.project||inferProjectFromTitle(plan.title||plan.goal||'');
   if(!proj||getProjectVisual(proj).key==='none'){setStatus('Kies eerst een project voor dit plan.');return}
-  const candidates=[];
-  for(const step of plan.steps||[]){
-    if(!step||step.status==='done')continue;
-    const stepTitle=guidanceText(step.title,140);
-    if(stepTitle){
-      candidates.push({kind:'step',step,task:null,title:stepTitle,dur:step.estimated_duration_minutes||60});
-    }
-    for(const task of step.tasks||[]){
-      if(!task||task.status==='done')continue;
-      const tt=guidanceText(task.title,160);
-      if(tt)candidates.push({kind:'task',step,task,title:tt,dur:task.estimated_duration_minutes||25});
-    }
+
+  // Normalize dependency defaults
+  let prevId=null;
+  for(const s of plan.steps||[]){normalizeStepDepends(s,prevId);prevId=s?.id||prevId}
+
+  const orderedSteps=topoSortSteps((plan.steps||[]).filter(s=>s&&s.status!=='done'),proj);
+  const scheduledStepDayIx=new Map(); // stepId -> dayIndex
+
+  const planDeadline=parseIsoDateOrNull(plan.deadline);
+  let planned=0,notFit=0,waiting=0;
+
+  function dueFor(step,task){
+    return parseIsoDateOrNull(task?.deadline)||parseIsoDateOrNull(step?.deadline)||planDeadline;
   }
-  let planned=0,notFit=0;
-  for(const c of candidates){
-    const dur=Math.max(15,Math.round((Number(c.dur)||45)/5)*5);
-    const titleBase=`${projectLabelFor(proj)}: ${plan.title} — ${c.kind==='task'?'Taak: ':''}${c.title}`;
-    const title=guidanceText(titleBase,160);
-    if(!isConcreteAgendaItem({title,project:proj,estimated_duration_minutes:dur}))continue;
-    let placed=false;
-    for(const d of days){
-      const slot=findFreeSlotWorkday(d,dur);
+
+  function preferredDayIndex(dueIso){
+    const ix=dateIndexInDays(dueIso,days);
+    if(ix==null)return 2; // mid-week default
+    return clamp(ix,0,days.length-1);
+  }
+
+  function minDayIndexForStep(step){
+    if(step.dependency_type==='after_prev'&&step.depends_on_step_id){
+      const depIx=scheduledStepDayIx.get(String(step.depends_on_step_id));
+      if(depIx!=null)return depIx; // same day ok, but after prior step scheduling order prevents overlap
+    }
+    return 0;
+  }
+
+  function placeAgendaBlock({title,dur,step,task,reasonText,minDayIx,preferIx}){
+    const duration=Math.max(15,Math.round((Number(dur)||45)/5)*5);
+    const cleanTitle=agendaTitleForProjectPlan(proj,title);
+    if(!isConcreteAgendaItem({title:cleanTitle,project:proj,estimated_duration_minutes:duration}))return false;
+    const startIx=Math.max(0,Math.min(days.length-1,preferIx!=null?preferIx:0));
+    const searchOrder=[...days.keys()].sort((a,b)=>{
+      const da=Math.abs(a-startIx),db=Math.abs(b-startIx);
+      if(da!==db)return da-db;
+      return a-b;
+    }).filter(ix=>ix>=minDayIx);
+    for(const ix of searchOrder){
+      const d=days[ix];
+      const slot=findFreeSlotWorkday(d,duration);
       if(!slot)continue;
-      const id='ag-pp-'+Date.now()+'-'+simpleHash(plan.id+'|'+c.step.id+'|'+(c.task?.id||''));
-      labState.agenda.push({id,title,kind:'planned_task',date:d,start_time:minToTime(slot.start),end_time:minToTime(slot.end),estimated_duration_minutes:dur,status:'pencil',confirmation_required:true,source:'project_plan',project:proj,project_plan_id:plan.id,step_id:c.step.id,task_id:c.task?c.task.id:null,reason:'Uit projectplan: plan deze week'});
-      placed=true;planned++;break;
+      const id='ag-pp-'+Date.now()+'-'+simpleHash(plan.id+'|'+step.id+'|'+(task?.id||''));
+      labState.agenda.push({
+        id,
+        title:cleanTitle,
+        kind:'planned_task',
+        date:d,
+        start_time:minToTime(slot.start),
+        end_time:minToTime(slot.end),
+        estimated_duration_minutes:duration,
+        status:'pencil',
+        confirmation_required:true,
+        source:'project_plan',
+        project:proj,
+        project_plan_id:plan.id,
+        step_id:step.id,
+        task_id:task?task.id:null,
+        reason:reasonText||'Uit projectplan'
+      });
+      planned++;
+      return {dayIx:ix};
     }
-    if(!placed){
-      const note=guidanceText(`Projectplan past deze week niet: ${title}`,220);
-      if(!labState.attention.some(i=>String(i.title||'')===note))labState.attention.push({id:'at-pp-'+Date.now()+'-'+simpleHash(note),title:note,kind:'past_niet',done:false,project:proj});
+    return false;
+  }
+
+  for(const step of orderedSteps){
+    if(!step||step.status==='done')continue;
+    if(step.dependency_type==='external_wait'){
+      addProjectPlanAttention('wacht',proj,`[Wacht] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,80)}” wacht op externe input.`);
+      waiting++;
+      continue;
+    }
+    const due=dueFor(step,null);
+    const prefer=preferredDayIndex(due);
+    const minIx=minDayIndexForStep(step);
+    const placedStep=placeAgendaBlock({
+      title:step.title,
+      dur:step.estimated_duration_minutes||60,
+      step,
+      task:null,
+      reasonText:'Uit projectplan: stap',
+      minDayIx:minIx,
+      preferIx:prefer
+    });
+    if(placedStep&&placedStep.dayIx!=null)scheduledStepDayIx.set(String(step.id),placedStep.dayIx);
+    if(!placedStep){
+      addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: stap “${guidanceText(step.title,90)}” past deze week niet meer.`);
       notFit++;
+      continue;
+    }
+
+    // Tasks (optional) — schedule after step (same/next day)
+    for(const task of (step.tasks||[])){
+      if(!task||task.status==='done')continue;
+      const tdue=dueFor(step,task);
+      const tprefer=Math.max(preferredDayIndex(tdue),scheduledStepDayIx.get(String(step.id))||0);
+      const tmin=scheduledStepDayIx.get(String(step.id))||0;
+      const placedTask=placeAgendaBlock({
+        title:task.title,
+        dur:task.estimated_duration_minutes||25,
+        step,
+        task,
+        reasonText:'Uit projectplan: taak',
+        minDayIx:tmin,
+        preferIx:tprefer
+      });
+      if(!placedTask){
+        addProjectPlanAttention('past_niet',proj,`[Past niet] ${projectLabelFor(proj)}: taak “${guidanceText(task.title,90)}” past deze week niet meer.`);
+        notFit++;
+      }
     }
   }
+
+  if(planDeadline){
+    const dlIx=dateIndexInDays(planDeadline,days);
+    if(dlIx!=null){
+      const remaining=notFit+waiting;
+      if(remaining) addProjectPlanAttention('risico',proj,`[Risico] Deadline valt deze week (${planDeadline}); niet alles past eerlijk in het weekvenster.`);
+    }
+  }
+
   labState.agenda=markOverlaps(labState.agenda);
   touchState();
   renderFromState();
-  setStatus(planned?`Projectplan gepland: ${planned} blok(ken).`:(notFit?`Geen eerlijke plek deze week (${notFit} items).`:'Geen concrete stappen om te plannen.'));
+  setStatus(planned?`Projectplan gepland: ${planned} blok(ken).`:(notFit||waiting?`Niet alles past deze week.`:'Geen concrete stappen om te plannen.'));
 }
 function handleSuggestionAction(id,action,title){const item=findGuidanceSourceItem(id),clean=guidanceText(title||item?.title||id,120);if(action==='plan'){addLocalAgendaSuggestion(clean,item?.project||null);if(item&&!labState.agenda.includes(item))item.done=true;dismissedGuidanceIds.add(id)}else if(action==='dismiss'){dismissedGuidanceIds.add(id);if(item&&!labState.agenda.includes(item))item.done=true}persistDismissedGuidanceIds();touchState();renderFromState()}
 function closeGuidanceItem(id,source){hiddenOpenEndIds.add(`${source}:${id}`);if(source==='thread'){let item=(labState.open_threads||[]).find(i=>i.id===id);if(item)item.status='closed'}else if(source==='attention'){let item=(labState.attention||[]).find(i=>i.id===id);if(item)item.done=true}else if(source==='task'){let item=(labState.tasks||[]).find(i=>i.id===id);if(item)item.done=true}else if(source==='agenda'){let item=(labState.agenda||[]).find(i=>i.id===id);if(item)item.status='needs_time'}touchState();renderFromState()}
@@ -462,7 +764,7 @@ projectPlanOverlay?.addEventListener('click',e=>{
   if(act){
     const a=act.dataset.projectplanAction;
     if(a==='close'){closeProjectPlanOverlay(false);return}
-    if(a==='save'){closeProjectPlanOverlay(true);return}
+    if(a==='save'){const pid=projectPlanOverlayOpenId;closeProjectPlanOverlay(true);addProjectPlanSavedPrompt(pid);return}
     if(a==='plan-week'){planProjectPlanThisWeek(projectPlanOverlayOpenId);return}
   }
   const b=e.target.closest('[data-pp-action]');

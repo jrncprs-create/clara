@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.37 — 2026-05-05
+
+- Projectplan → slimme potloodplanning: betere skeletons per project (AFK/LaLampe/Begeister/Clara), **Plan deze week** respecteert afhankelijkheden + deadlines, “wacht op extern” gaat naar **Aandacht**, en agenda-items krijgen korte duidelijke titels + herkomst.
+
 ## 0.14.36 — 2026-05-05
 
 - Projectplan overlay UI/UX opgeschoond: rustiger plan-header, stappen als compacte cards met uitklappen, checklist compacter, afhankelijkheid kiezen op stapnaam (geen ruwe ids), en minimalistische dark form-styling + betere knoppenhiërarchie.
