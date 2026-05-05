@@ -164,6 +164,31 @@ code {
   cursor: not-allowed;
 }
 
+.btn-active {
+  cursor: pointer;
+  color: var(--text);
+  border-color: rgba(139, 124, 255, 0.45);
+  background: rgba(139, 124, 255, 0.12);
+}
+
+.btn-active:hover {
+  background: rgba(139, 124, 255, 0.18);
+}
+
+.metrics {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .calendar-host {
   flex: 1;
   min-height: 420px;

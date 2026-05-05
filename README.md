@@ -1,17 +1,22 @@
 ## Clara (repo)
 
-### Clara Core v0.15 (Schedule-X shell)
+### Clara Core v0.15.1 (Clara State patches + Schedule-X roundtrip)
 
-- **Ontwerpwaarheid:** `CLARA_STATUS/core-truth.md`, `CLARA_STATUS/clara-core-v015-breakthrough.md`, `CLARA_STATUS/clara-core-v015-history-and-principles.md`
-- **State (bron):** `CLARA_STATE/core.json` — de app leest dit; Schedule-X toont alleen een **gemapte** weergave (`clara-core/src/mapClaraAgendaToScheduleX.js`).
-- **Dev:** `npm install` → `npm run dev` (Vite draait met `--configLoader native` zodat een lege `package.json` hoger in de mapstructuur de config niet breekt).
+- **Clara State** is de bron van waarheid; wijzigingen lopen via `applyClaraStatePatch` in `clara-core/src/claraStatePatch.js` (runtime in-memory; seed: `CLARA_STATE/core.json`).
+- **Schedule-X** blijft een **view** op `agenda_items` (`clara-core/src/mapClaraAgendaToScheduleX.js`). Drag/resize gebruikt `@schedule-x/drag-and-drop` en `@schedule-x/resize`; `callbacks.onEventUpdate` zet events om met `clara-core/src/scheduleXToClaraPatch.js` en past daarna dezelfde patchlaag toe. Daarna wordt de kalender opnieuw vanuit Clara State gesynchroniseerd (geen Schedule-X als waarheid).
+- **Testactie:** knop “+30 min (eerste item)” —zelfde patchfundament, handig als DnD even niet nodig is.
+- **Checks:** `npm run build` · `npm run test:patch` · `node --check` op de gewijzigde JS-bestanden.
+- **Dev:** `npm run dev` (Vite met `--configLoader native` i.v.m. een lege `package.json` hoger in de mapstructuur).
 - **Build / preview:** `npm run build` → `clara-core/dist/` · `npm run preview`
 
-**Later aansluiten (nog niet in deze stap):**
+### Ontwerpdocumenten
 
-- Drag-and-drop / reschedule in de kalender → updates naar Clara State.
-- ChatGPT / analyze → gestructureerde patches op Clara State.
-- Gedeelde persistentie → centrale opslag van Clara State.
+`CLARA_STATUS/core-truth.md`, `CLARA_STATUS/clara-core-v015-breakthrough.md`, `CLARA_STATUS/clara-core-v015-history-and-principles.md`
+
+### Later
+
+- Persistente Clara State + gedeelde opslag
+- ChatGPT / analyze → gestructureerde patches (zelfde `applyClaraStatePatch`-contract)
 
 **Gewenste ChatGPT → Clara Core sync-flow:**
 
@@ -35,4 +40,4 @@ Afspraken:
 
 ---
 
-→ Zie `CLARA_STATUS/` voor ontwerp- en statusdocumenten.
+→ Zie `CHANGELOG.md` voor releases.

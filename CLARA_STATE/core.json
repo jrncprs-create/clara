@@ -1,8 +1,8 @@
 {
-  "version": "0.15.0-clean-start",
+  "version": "0.15.1",
   "updated_at": "2026-05-06T00:00:00+02:00",
   "conversation_context": {
-    "summary": "Voorbeeld: v0.15 clean start — Clara State als bron, Schedule-X als weergave."
+    "summary": "v0.15.1: Clara State in-memory + patches; Schedule-X drag/resize → agenda_item.update."
   },
   "agenda_items": [
     {
@@ -42,7 +42,7 @@
   "notes": [
     {
       "id": "note-1",
-      "text": "Schedule-X toont alleen agenda_items; wijzigingen in de UI schrijven nog niet terug."
+      "text": "Schedule-X blijft view: DnD/resize en testacties schrijven via patchlaag naar runtime Clara State (nog niet persistent)."
     }
   ],
   "decisions": [

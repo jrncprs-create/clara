@@ -12,7 +12,7 @@
         <div class="header-main">
           <h1 class="title">Clara Core</h1>
           <p class="meta">
-            <span class="pill">v0.15.0-clean-start</span>
+            <span class="pill">v0.15.1</span>
             <span class="status" id="header-status">Clara State is leidend · Schedule-X = weergave</span>
           </p>
         </div>
@@ -21,7 +21,7 @@
       <aside class="chat-panel">
         <h2 class="panel-title">Chat / ingang</h2>
         <p class="hint">
-          Later: ChatGPT-analyse → patch op Clara State. Nu: read-only uit
+          Later: ChatGPT-analyse → patches op Clara State. Nu: runtime in-memory; seed uit
           <code>CLARA_STATE/core.json</code>.
         </p>
         <textarea
@@ -37,14 +37,19 @@
         <h2 class="panel-title">Agenda</h2>
         <p class="hint subtle">
           Data komt uit <strong>Clara State</strong> (<code>agenda_items</code>), gemapt naar Schedule-X-events.
+          Drag/resize schrijft terug via patches; testknop gebruikt dezelfde laag.
         </p>
+        <p class="metrics" id="state-metrics" aria-live="polite"></p>
+        <div class="toolbar">
+          <button type="button" class="btn btn-active" id="shift-first-item">+30 min (eerste item)</button>
+        </div>
         <div id="calendar" class="calendar-host"></div>
       </main>
 
       <aside class="debug-panel">
         <h2 class="panel-title">State / debug</h2>
         <p class="hint compact">
-          Compact overzicht. Bron: <code>/core.json</code> (Vite publicDir → CLARA_STATE).
+          Live runtime state (niet op schijf). Seed: <code>/core.json</code> (Vite publicDir → CLARA_STATE).
         </p>
         <pre id="state-debug" class="state-pre" aria-live="polite"></pre>
       </aside>
