@@ -1,4 +1,4 @@
-const LAB_VERSION='0.14.40';
+const LAB_VERSION='0.14.41';
 const input=document.getElementById('input'),btn=document.getElementById('analyzeBtn'),statusEl=document.getElementById('status'),chatLog=document.getElementById('chatLog'),agendaCol=document.getElementById('agendaCol'),agendaHeadTabs=document.getElementById('agendaHeadTabs'),agendaDateHeader=document.getElementById('agendaDateHeader'),agendaSection=document.querySelector('section.col.agenda'),attentionCol=document.getElementById('attentionCol'),regieCol=document.getElementById('regieCol'),endPromptHost=document.getElementById('endPromptHost'),clockHour=document.getElementById('clockHour'),clockMinute=document.getElementById('clockMinute'),clockWeekday=document.getElementById('clockWeekday'),clockDate=document.getElementById('clockDate'),clockYear=document.getElementById('clockYear'),agendaPrevBtn=document.getElementById('agendaPrevBtn'),agendaNextBtn=document.getElementById('agendaNextBtn'),refreshGuidanceBtn=document.getElementById('refreshGuidanceBtn');
 const STORAGE_KEY='clara_core_lab_state_v1',SESSION_STARTUP_KEY='clara_core_lab_auto_startup_done_v1',LAB_TEST_STORAGE_KEYS=[STORAGE_KEY,'clara_last_greeting_ix'];
 const DISMISSED_KEY='clara_core_lab_dismissed_guidance_v1';
@@ -703,6 +703,60 @@ function startupResultMessage(ls){if((ls.agenda||[]).length)return STARTUP_DONE_
 function startupFallbackMessage(){return'Ik ben gestart. Er staat nog niets gepland; stel me een vraag of vraag om een conceptdag.'}
 function analysisFallbackMessage(){return'Ik liep vast op dit bericht. Wil je het korter maken, of wil je dat ik alleen één eerstvolgende stap voorstel?'}
 function isDayPlanningIntent(v){return/(maak|vul|plan|concept).*\b(dagplanning|conceptdag|planning|dag)\b|\b(dagplanning|conceptdag)\b|planning.*\b(vandaag|morgen|demo|dag)\b|marlon\s*[-]?\s*demo|demo.*\b(planning|dag)\b|marlon.*demo.*\b(planning|dag)\b|planning.*marlon|dagplanning.*marlon/i.test(String(v||''))}
+function isWeekPlanningIntent(v){
+  const s=String(v||'');
+  if(!s.trim())return false;
+  return /\bweekplanning\b|\bplan\s+mijn\s+week\b|\bplan\s+deze\s+week\b|\bplanning\s+voor\s+deze\s+week\b|\bmaak\s+.*\bplanning\b.*\bdeze\s+week\b/i.test(s);
+}
+function isProjectWeekPlanningIntent(v){
+  const s=String(v||'').toLowerCase();
+  if(!isWeekPlanningIntent(s))return false;
+  return /\b(afk|landjuweel|amarte|lalampe|la\s*lampe|begeister|clara\s+core\s+lab|core\s+lab)\b/.test(s);
+}
+function mostRecentProjectPlanForProject(projectKey){
+  const key=getProjectVisual(projectKey).key;
+  const plans=(labState.project_plans||[]).filter(p=>{
+    if(!p||p.status==='archived')return false;
+    const pk=getProjectVisual(p.project||inferProjectFromTitle(p.title||p.goal||'')).key;
+    return pk===key;
+  });
+  plans.sort((a,b)=>String(b.updated_at||b.created_at||'').localeCompare(String(a.updated_at||a.created_at||'')));
+  return plans[0]||null;
+}
+function addWeekPencilBlock(title,project,date,duration){
+  const clean=guidanceText(title,130);
+  if(!clean)return false;
+  const proj=project||inferProjectFromTitle(clean);
+  if(!isConcreteAgendaItem({title:clean,project:proj,estimated_duration_minutes:duration}))return false;
+  const win=compactDayWorkWindow(date);
+  const slot=findFreeAgendaSlot(date,duration,null,win);
+  if(!slot)return false;
+  labState.agenda.push({id:'ag-week-'+Date.now()+'-'+simpleHash(date+'|'+clean),title:clean,kind:'planned_task',date,start_time:minToTime(slot.start),end_time:minToTime(slot.end),estimated_duration_minutes:duration,status:'pencil',confirmation_required:true,source:'fast_week_fallback',project:proj});
+  return true;
+}
+function ensureProjectWeekPlanFallback(message,projectKey){
+  const startIso=startIsoForWeekPlanning();
+  const days=nextWorkdaysFrom(startIso,5);
+  const proj=projectKey;
+  const pKey=getProjectVisual(proj).key;
+  const titlesByProject={
+    'lalampe':['LaLampe: workshopflow uitschrijven','LaLampe: materiaal- en techniekbasis bepalen','LaLampe: testmoment voorbereiden','LaLampe: verkooptekst/boekingsroute aanscherpen'],
+    'afk-landjuweel-amarte':['AFK: POC-scope bepalen','AFK: voet/licht/voeding kiezen','AFK: eerste lampwezen bouwen + testen','AFK: documentatie/leerpunten vastleggen'],
+    'begeister':['Begeister: rollen en grenzen ordenen','Begeister: bespreekpunten voorbereiden','Begeister: open besluitpunten verzamelen'],
+    'clara-core-lab':['Core Lab: feature/bug scherpzetten','Core Lab: implementatiestap','Core Lab: testscenario draaien','Core Lab: resultaat beoordelen']
+  };
+  const titles=titlesByProject[proj]||['Week: één concrete stap voorbereiden','Week: uitvoerblok','Week: test/afmaakblok'];
+  let added=0;
+  for(let i=0;i<titles.length;i++){
+    const date=days[Math.min(i,days.length-1)];
+    const dur=i===0?75:60;
+    if(addWeekPencilBlock(titles[i],proj,date,dur))added++;
+  }
+  labState.agenda=markOverlaps(labState.agenda);
+  touchState();
+  renderFromState();
+  return added;
+}
 function targetDateForPlanning(v){const s=String(v||'').toLowerCase();if(/morgen/.test(s))return addDaysIso(todayIso(),1);if(/overmorgen/.test(s))return addDaysIso(todayIso(),2);if(/vandaag/.test(s))return todayIso();return activeAgendaDate||todayIso()}
 function compactPlanSeeds(v){const msg=String(v||'');const demo=/marlon|demo/.test(msg.toLowerCase());const demoSeeds=[['Clara Core Lab: demo-scope en kernflow kiezen','clara-core-lab'],['Clara Core Lab: kort inhoudelijk testen','clara-core-lab'],['LaLampe: workshopflow simpeler uitschrijven','lalampe'],['Begeister: bespreekpunten met Marlon ordenen','begeister'],['AFK/Landjuweel: aanvraagtekst nalopen op toon','afk-landjuweel-amarte']];const genericSeeds=[['Clara Core Lab: v'+LAB_VERSION+' inhoudelijk testen','clara-core-lab'],['LaLampe: workshopflow simpeler maken','lalampe'],['Begeister: open bespreekpunten ordenen','begeister'],['AFK/Landjuweel: aanvraagtekst nalopen','afk-landjuweel-amarte']];const seeds=[...(demo?demoSeeds:genericSeeds)];for(const t of labState.tasks||[])if(!t.done&&t.title){const tf=filterUserFacingLine(t.title);if(tf)seeds.unshift([tf,t.project||null])}return seeds}
 function compactSuggestionFillers(message){const demo=/marlon|demo/.test(String(message||'').toLowerCase());if(demo)return['Demo: drie bullets die je zeker wilt tonen','Demo: 2 minuten startflow droog oefenen','Demo: lijstje met vragen die Marlon waarschijnlijk stelt'];return[]}
@@ -749,6 +803,24 @@ async function analyzeText(message,showUser=true){if(isAnalyzing&&currentControl
     setStatus('Meerdere projectplannen gevonden.');
     scrollBottom();
     return;
+  }
+  if(isProjectWeekPlanningIntent(value)){
+    const proj=inferProjectKeyFromMessage(value);
+    if(proj){
+      const plan=mostRecentProjectPlanForProject(proj);
+      if(plan){
+        planProjectPlanThisWeek(plan.id);
+        addAssistantMessage(`Ik heb het meest recente projectplan voor ${projectLabelFor(proj)} deze week als potlood ingepland.`,deriveSuggestions());
+        setStatus('Weekplanning klaar · v'+LAB_VERSION);
+        scrollBottom();
+        return;
+      }
+      const added=ensureProjectWeekPlanFallback(value,proj);
+      addAssistantMessage(added?`Ik heb een rustige weekplanning voor ${projectLabelFor(proj)} als potloodblokken klaargezet.`:`Ik vond geen eerlijke plekken meer deze week; wil je 1 blok minder of een kortere duur?`,deriveSuggestions());
+      setStatus('Weekplanning klaar · v'+LAB_VERSION);
+      scrollBottom();
+      return;
+    }
   }
   if(lastOpenItemRef&&words&&words<=6&&value.length<=52&&!isDayPlanningIntent(value)&&!isProjectPlanIntent(value)&&!/^\s*(wat|hoe|waarom|leg\s+uit|vertel|kun\s+je|kan\s+je|waar|wie|wanneer)\b/i.test(value)){answerOpenEnd(lastOpenItemRef.id,lastOpenItemRef.source,value);setStatus('Antwoord opgenomen.');scrollBottom();return}
   if(isProjectPlanIntent(value)){

@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.41 — 2026-05-05
+
+- Fix: herken “weekplanning voor <project>” (LaLampe/AFK/Begeister/Core Lab) als weekplanning-intentie. Als er een projectplan bestaat wordt dat ingepland met de bestaande “Plan deze week”-logica (zonder stapelen); anders worden 2–4 veilige potloodblokken over werkdagen gezet. Geen “Ik liep vast…” fallback bij korte weekplanningvragen.
+
 ## 0.14.40 — 2026-05-05
 
 - State cleanup: eenmalige localStorage migratie ruimt bekende LaLampe/AFK projectplan-vervuiling, duplicate projectplan-agenda-items en oude “[Past niet] Scope en randvoorwaarden POC bepalen” open-items op. “Plan deze week” replanned zonder stapelen. `/api/analyze` kreeg een lichte focus-guard bij `project_plan_request` om cross-project leakage te verminderen.
