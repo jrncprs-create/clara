@@ -1988,6 +1988,34 @@ function buildOpenThreadsAppendix(isStartup) {
   return `\n\nOpen items:\n- Detecteer inhoudelijke open eindjes uit raw, projectcontext en rommelige chatcontext als \`open_threads\`.\n- Open items zijn GEEN taken, GEEN afspraken en GEEN automatische agenda-items.\n- Maak van een open item geen clara_agenda-item en geen proposed task tenzij de gebruiker expliciet vraagt om planning.\n- Als de laatste Clara-vraag duidelijk over een open_thread ging en Jeroen kort antwoordt ("marketing", "technisch", "plan maar", "sluiten", "maandag", "deze week"), behandel dat als antwoord op dat item, niet als los onderwerp.\n- Als zo'n antwoord richting geeft, werk context/status bij, herhaal de vraag niet, en maak een concrete vervolgstap of potloodblok tenzij Jeroen zegt dat het moet blijven hangen.\n- Gebruik open_threads voor rustige vervolgvragen, inhoudelijke reminders en chat-starts: "Hoe staat het hiermee?", "Weet je al wat je hiermee wil doen?", "Moet dit blijven hangen of mag het weg?"\n- Stel maximaal 1–2 rustige vragen als dat nuttig is.\n- Als raw een sectie \`## Open items / chat-reminders\` bevat, behandel die als sterke input voor open_threads.\n- Status: open | hanging | closed. Gesloten items niet opnieuw openen tenzij raw duidelijk nieuwe context geeft.\n- Objectvorm per item: id, project, title, question, context, status, source, last_seen, importance, suggested_next_step.${isStartup ? '\n- Bij startup maximaal één open_thread teruggeven; prioriteit lager dan urgente agenda/aandacht.' : ''}\n`;
 }
 
+function detectProjectPlanIntent(text) {
+  const n = String(text || '').toLowerCase();
+  const wantsPlan =
+    /maak\s+(?:een\s+)?projectplan/.test(n) ||
+    /zet\s+dit\s+om\s+in\s+een\s+projectplan/.test(n) ||
+    /help\s+me\s+dit\s+traject\s+opdelen/.test(n) ||
+    /wat\s+zijn\s+de\s+stappen\s+om/.test(n) ||
+    /\bprojectplan\b/.test(n) ||
+    /\bmaak\s+een\s+plan\b/.test(n) ||
+    /\bmaak\s+.*\bplan\s+voor\b/.test(n) ||
+    (/\bik\s+wil\b/.test(n) && /\b(bereiken|afhebben|opleveren)\b/.test(n) && /\bvoor\b/.test(n)) ||
+    (/\bik\s+wil\b/.test(n) && /\bproject\b/.test(n) && /\bplan\b/.test(n));
+  const looksLikeDayPlanning =
+    /\bdagplanning\b|\bconceptdag\b|\bplan\s+vandaag\b|\bplan\s+morgen\b/.test(n) ||
+    /maak\s+een\s+dagplanning/.test(n);
+  const tooSmall =
+    n.trim().split(/\s+/).filter(Boolean).length <= 6 &&
+    !/\bprojectplan\b/.test(n);
+  if (looksLikeDayPlanning) return false;
+  if (tooSmall) return false;
+  return wantsPlan;
+}
+
+function buildProjectPlanAppendix(singleProjectLabel) {
+  const focus = singleProjectLabel ? `\n- Focusproject: ${singleProjectLabel}. Gebruik vooral context/recente signalen van dit project; dump geen hele Projectbrain.` : '';
+  return `\n\nProjectplan-voorstel (alleen als de gebruiker hier expliciet om vraagt):\n- Vul optioneel \`project_plan_suggestion\` met een **concept** projectplan.\n- Alleen doen bij duidelijke projectplan-intentie; anders: laat \`project_plan_suggestion\` weg.\n- Geen agenda-mutaties: laat \`clara_agenda\` onveranderd of leeg; maak geen nieuwe getimede blokken.\n- Kwaliteit: 3–7 stappen; elke stap 1–3 taken; realistische duur; logische afhankelijkheden.\n- dependency_type: none | after_previous | parallel | external_wait.\n- “external_wait” betekent wachten op input; dat is geen uitvoerblok.\n- Deadline alleen als expliciet genoemd of betrouwbaar af te leiden; anders null.\n- Vermijd vage stappen (“Voorbereiden”, “Afronden”, “Checken”) zonder concrete inhoud.\n- context: 1–3 zinnen waarom deze stappen logisch zijn.\n- confidence: 0–1 (hoe zeker is dit plan op basis van input+context).${focus}\n`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -2000,6 +2028,7 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: 'Missing OPENAI_API_KEY' });
 
     const isStartup = source === 'projectbrain_startup';
+    const isProjectPlanRequest = source === 'project_plan_request' || detectProjectPlanIntent(text);
     const safeNowOverride = process.env.VERCEL_ENV === 'production' ? null : nowOverride;
     const { today, tomorrow, now } = getAmsterdamDateInfo(safeNowOverride);
     const requestedDays = isStartup ? [today, addDaysIso(today, 1)] : detectRequestedPlanningDays(text, today);
@@ -2034,6 +2063,7 @@ export default async function handler(req, res) {
       (intent.attentionOnly ? buildAttentionOnlyAppendix(labStateRaw) : '') +
       (intent.weekDirectionOnly ? buildWeekDirectionAppendix(projectbrainContext) : '') +
       (!isStartup && intent.wantsProjectbrainPlanning ? buildProjectbrainPlanningAppendix(today, tomorrow, requestedDays) : '') +
+      (isProjectPlanRequest ? buildProjectPlanAppendix(singleExplicitProject ? (PROJECT_LABELS[singleExplicitProject] || singleExplicitProject) : '') : '') +
       buildSingleProjectAppendix(singleExplicitProject) +
       buildOpenThreadsAppendix(isStartup) +
       startupAppendix;
@@ -2055,7 +2085,57 @@ export default async function handler(req, res) {
           open_threads: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['id','project','title','question','context','status','source','last_seen','importance','suggested_next_step'], properties: { id: { type: 'string' }, project: { type: ['string','null'] }, title: { type: 'string' }, question: { type: 'string' }, context: { type: 'string' }, status: { type: 'string', enum: ['open','hanging','closed'] }, source: { type: 'string' }, last_seen: { type: 'string' }, importance: { type: 'string', enum: ['low','normal','high'] }, suggested_next_step: { type: 'string' } } } },
           uncertainties: { type: 'array', items: { type: 'string' } },
           questions: { type: 'array', items: { type: 'string' } },
-          ignored_noise: { type: 'array', items: { type: 'string' } }
+          ignored_noise: { type: 'array', items: { type: 'string' } },
+          project_plan_suggestion: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['project','title','goal','deadline','status','context','confidence','source','steps'],
+            properties: {
+              project: { type: 'string' },
+              title: { type: 'string' },
+              goal: { type: 'string' },
+              deadline: { type: ['string','null'] },
+              status: { type: 'string', enum: ['concept'] },
+              context: { type: 'string' },
+              confidence: { type: 'number', minimum: 0, maximum: 1 },
+              source: { type: 'string', enum: ['ai_project_plan'] },
+              steps: {
+                type: 'array',
+                minItems: 3,
+                maxItems: 7,
+                items: {
+                  type: 'object',
+                  additionalProperties: false,
+                  required: ['title','status','estimated_duration_minutes','dependency_type','depends_on_step_id','deadline','tasks'],
+                  properties: {
+                    title: { type: 'string' },
+                    status: { type: 'string', enum: ['todo'] },
+                    estimated_duration_minutes: { type: 'number', minimum: 10, maximum: 240 },
+                    dependency_type: { type: 'string', enum: ['none','after_previous','parallel','external_wait'] },
+                    depends_on_step_id: { type: ['string','null'] },
+                    deadline: { type: ['string','null'] },
+                    tasks: {
+                      type: 'array',
+                      minItems: 1,
+                      maxItems: 3,
+                      items: {
+                        type: 'object',
+                        additionalProperties: false,
+                        required: ['title','status','estimated_duration_minutes','deadline','source_reason'],
+                        properties: {
+                          title: { type: 'string' },
+                          status: { type: 'string', enum: ['todo'] },
+                          estimated_duration_minutes: { type: 'number', minimum: 10, maximum: 180 },
+                          deadline: { type: ['string','null'] },
+                          source_reason: { type: 'string' }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       },
       strict: true
@@ -2103,6 +2183,16 @@ export default async function handler(req, res) {
     parsed = normalizeDashboardAttention(parsed);
     parsed = sanitizeClaraAgenda(parsed, { requestedDays });
     parsed = enforceTimeAwarePlanning(parsed, now, text);
+
+    if (isProjectPlanRequest && !isStartup) {
+      // Keep agenda truth unchanged; no automatic planning in this mode.
+      if (Array.isArray(labStateRaw?.agenda)) parsed.clara_agenda = JSON.parse(JSON.stringify(labStateRaw.agenda));
+      parsed.scheduling_needs = [];
+      parsed.proposed_items = [];
+      if (!parsed.dashboard_output) parsed.dashboard_output = { today: [], attention: [], waiting_for: [], agenda: [], project_signals: [], suggestions: [] };
+      if (!Array.isArray(parsed.dashboard_output.suggestions)) parsed.dashboard_output.suggestions = [];
+      if (!String(parsed.summary || '').trim()) parsed.summary = 'Ik heb een projectplan-voorstel gemaakt. Loop het even na; daarna kun je het in potlood inplannen.';
+    }
 
     const timeCritical = hasTimeCriticalBypassAttention(text);
     if (intent.noPlanning && !isStartup) {

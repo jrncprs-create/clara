@@ -1,5 +1,9 @@
 # Changelog — Clara 4 Core Lab
 
+## 0.14.38 — 2026-05-05
+
+- AI-projectplan-generator: `/api/analyze` kan optioneel `project_plan_suggestion` teruggeven bij expliciete projectplan-intentie (met Projectbrain + Lab State context). Frontend opent dit voorstel direct in de Projectplan Overlay; skeleton blijft veilige fallback. Geen automatische agenda-mutatie.
+
 ## 0.14.37 — 2026-05-05
 
 - Projectplan → slimme potloodplanning: betere skeletons per project (AFK/LaLampe/Begeister/Clara), **Plan deze week** respecteert afhankelijkheden + deadlines, “wacht op extern” gaat naar **Aandacht**, en agenda-items krijgen korte duidelijke titels + herkomst.
