@@ -1,28 +1,28 @@
+# Raw — LaLampe
 
+_Last updated: 2026-05-05_
 
-## ACE update — 2026-05-04T10:39:57.327Z
-- Source: chatgpt
-- Route: project
-- Project: lalampe
-- Confidence: 0.78
-- Summary: ACE test: LaLampe workshopflow simpeler maken. Dit is een veilige eerste write-test vanuit production.
-- Signals:
-  - Mogelijke vervolgactie genoemd.
-- Raw input:
-> ACE test: LaLampe workshopflow simpeler maken. Dit is een veilige eerste write-test vanuit production.
+## Recente beweging
+LaLampe komt nu terug als testproject voor AI-projectplannen. De actuele vraag is: “Ik wil de LaLampe workshopflow verkoopbaar maken voor juni. Maak daar een projectplan voor.”
 
+## Belangrijk signaal
+LaLampe moet in Clara nooit AFK/lampwezen/POC-stappen krijgen. In eerdere teststate gebeurde dat wel door oude projectplanvervuiling of verkeerde fallback. Dat moet als fout worden behandeld.
 
-## ACE update — 2026-05-04T11:31:57.541Z
-- Source: biu
-- Route: project
-- Project: lalampe
-- Confidence: 0.78
-- Summary: BIU extract uit ChatGPT-gesprek: Project LaLampe: - De workshopflow moet simpeler worden. - Later de rijke bewaarde LaLampe-context vergelijken met projectbrain/projects/lalampe.md en raw/lalampe.md.
-- Signals:
-  - Mogelijke vervolgactie genoemd.
-- Raw input:
-> BIU extract uit ChatGPT-gesprek:
-> 
-> Project LaLampe:
-> - De workshopflow moet simpeler worden.
-> - Later de rijke bewaarde LaLampe-context vergelijken met projectbrain/projects/lalampe.md en raw/lalampe.md.
+## Gewenste projectplanrichting
+- Workshopdoel en doelgroep scherpzetten.
+- Materiaal- en techniekbasis bepalen.
+- Avondflow in blokken uitschrijven.
+- Testmoment voorbereiden.
+- Feedbackpunten verwerken.
+- Verkooptekst/boekingspagina/CTA aanscherpen.
+
+## Planningrichting
+- Korte werksessies van 45–90 minuten.
+- Alles als potlood tenzij Jeroen expliciet een harde afspraak noemt.
+- “Voor juni” geeft urgentie/richting, maar is geen exacte deadline zonder datum.
+
+## Aandacht
+- Simpele, concrete toon.
+- Niet hard verkopen.
+- Techniek betrouwbaar vóórdat marketing harder wordt aangezet.
+- Geen verwarring met Nachtdiertjes, lampwezens, voetconstructie of AFK-POC.
