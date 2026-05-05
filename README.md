@@ -13,6 +13,26 @@
 - ChatGPT / analyze → gestructureerde patches op Clara State.
 - Gedeelde persistentie → centrale opslag van Clara State.
 
+**Gewenste ChatGPT → Clara Core sync-flow:**
+
+Een gesprek met ChatGPT verandert Clara Core niet automatisch zolang er nog geen gedeelde patch/write-route is. v0.15 moet hier wel expliciet op voorbereid worden:
+
+```text
+ChatGPT-gesprek
+→ Clara State patch
+→ gedeelde opslag/API
+→ Clara Core ontvangt update via refresh, polling, realtime of een handmatige sync-knop
+→ Schedule-X rendert opnieuw vanuit Clara State
+```
+
+Afspraken:
+
+- ChatGPT blijft de denklaag en gesprekspartner.
+- Clara Core blijft de werkplek/UI.
+- Clara State is de gedeelde operationele bron van waarheid.
+- Schedule-X is alleen de calendar-view; state blijft leidend.
+- Mogelijke latere routes: handmatige sync-knop, polling, websocket/realtime of API-trigger vanuit ChatGPT/Action.
+
 ---
 
 → Zie `CLARA_STATUS/` voor ontwerp- en statusdocumenten.
