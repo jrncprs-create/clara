@@ -1,5 +1,5 @@
 /**
- * Clara Core v0.15.4 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
+ * Clara Core v0.15.4.1 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -13,8 +13,13 @@ import {
 } from './mapClaraAgendaToScheduleX.js'
 import { scheduleXEventToAgendaItemUpdatePatch } from './scheduleXToClaraPatch.js'
 
-/** @param {object} patch */
-function patchToHumanLine(patch) {
+/**
+ * @param {object} patch
+ * @param {object} [state]
+ */
+function patchToHumanLine(patch, state) {
+  const agenda = state?.agenda_items ?? []
+  const agendaById = (id) => agenda.find((a) => String(a.id) === String(id))
   switch (patch.type) {
     case 'task.create':
       return `Nieuwe taak: ${patch.task?.title ?? '(zonder titel)'}`
@@ -23,13 +28,24 @@ function patchToHumanLine(patch) {
     case 'note.create':
       return `Notitie: ${patch.note?.text?.slice(0, 120) ?? ''}`
     case 'agenda_item.create':
-      return `Agenda (voorstel): ${patch.item?.title ?? ''} · ${patch.item?.start ?? ''} → ${patch.item?.end ?? ''}`
-    case 'agenda_item.update':
-      return `Agenda wijzigen · item ${patch.id}`
-    case 'agenda_item.delete':
-      return `Agenda verwijderen · item ${patch.id}`
+      return `Nieuw agendablok: ${patch.item?.title ?? '(zonder titel)'} · ${patch.item?.start ?? ''} → ${patch.item?.end ?? ''}`
+    case 'agenda_item.update': {
+      const cur = agendaById(patch.id)
+      const label = cur?.title ? `“${cur.title}”` : `blok ${patch.id}`
+      const ch = patch.changes ?? {}
+      const bits = []
+      if (ch.start != null) bits.push(`start ${ch.start}`)
+      if (ch.end != null) bits.push(`einde ${ch.end}`)
+      if (ch.title != null) bits.push(`titel “${ch.title}”`)
+      if (ch.project != null) bits.push(`project ${ch.project}`)
+      return bits.length ? `${label}: ${bits.join(' · ')}` : `${label} bijwerken`
+    }
+    case 'agenda_item.delete': {
+      const cur = agendaById(patch.id)
+      return cur?.title ? `Agenda verwijderen: “${cur.title}”` : `Agenda verwijderen · ${patch.id}`
+    }
     default:
-      return `Patch: ${patch.type}`
+      return `Onbekend voorstel (${String(patch.type)})`
   }
 }
 
@@ -73,6 +89,8 @@ async function main() {
   const composerInput = document.getElementById('composer-input')
   const analyzeBtn = document.getElementById('composer-analyze')
   const drawerTitle = document.getElementById('drawer-title')
+  const drawerSubtitle = document.getElementById('drawer-subtitle')
+  const drawerBack = document.getElementById('drawer-back')
   const drawerBody = document.getElementById('drawer-body')
   const drawerAnalyzeActions = document.getElementById('drawer-analyze-actions')
   const analyzeApply = document.getElementById('analyze-apply')
@@ -142,29 +160,52 @@ async function main() {
     drawerAnalyzeActions.classList.toggle('hidden', !visible)
   }
 
+  /**
+   * @param {string} title
+   * @param {string} [subtitle]
+   * @param {boolean} [showBack]
+   */
+  function setDrawerHead(title, subtitle = '', showBack = false) {
+    if (drawerTitle) drawerTitle.textContent = title
+    if (drawerSubtitle) drawerSubtitle.textContent = subtitle
+    if (drawerBack) drawerBack.hidden = !showBack
+  }
+
+  function goDrawerHome() {
+    if (drawerMode === 'analyze') {
+      hideAnalyzeDrawer()
+      return
+    }
+    selectedEvent = null
+    drawerMode = 'home'
+    setRailActive('home')
+    renderDrawer()
+  }
+
   function renderDrawer() {
     if (!drawerTitle || !drawerBody) return
 
     if (drawerMode === 'analyze') {
-      drawerTitle.textContent = 'Analyze'
+      setDrawerHead('Analyze', 'Voorstellen op basis van je invoer', true)
       setDrawerAnalyzeActionsVisible(true)
       return
     }
     setDrawerAnalyzeActionsVisible(false)
 
     if (drawerMode === 'event' && selectedEvent) {
-      drawerTitle.textContent = 'Item'
+      setDrawerHead('Agendablok', 'Detail uit de kalender', true)
+      const proj = selectedEvent.calendarId != null ? String(selectedEvent.calendarId) : ''
       drawerBody.innerHTML = `
-        <div class="stack">
-          <div><p class="kicker">Titel</p><p>${escapeHtml(String(selectedEvent.title ?? ''))}</p></div>
-          <div><p class="kicker">Tijd</p><p class="muted">${escapeHtml(String(selectedEvent.start ?? ''))} → ${escapeHtml(String(selectedEvent.end ?? ''))}</p></div>
-          <div><p class="kicker">Kalender</p><p class="muted">${escapeHtml(String(selectedEvent.calendarId ?? ''))}</p></div>
+        <div class="stack drawer-stack--event">
+          <div class="drawer-section"><p class="kicker">Titel</p><p class="drawer-lead">${escapeHtml(String(selectedEvent.title ?? ''))}</p></div>
+          <div class="drawer-section"><p class="kicker">Tijd</p><p class="muted">${escapeHtml(String(selectedEvent.start ?? ''))} → ${escapeHtml(String(selectedEvent.end ?? ''))}</p></div>
+          ${proj ? `<div class="drawer-section"><p class="kicker">Project</p><p class="muted">${escapeHtml(proj)}</p></div>` : ''}
         </div>`
       return
     }
 
     if (drawerMode === 'tasks') {
-      drawerTitle.textContent = 'Taken'
+      setDrawerHead('Taken', 'Clara State', true)
       const tasks = runtimeState.tasks ?? []
       drawerBody.innerHTML =
         tasks.length === 0
@@ -174,7 +215,7 @@ async function main() {
     }
 
     if (drawerMode === 'notes') {
-      drawerTitle.textContent = 'Notities'
+      setDrawerHead('Notities', 'Clara State', true)
       const notes = runtimeState.notes ?? []
       drawerBody.innerHTML =
         notes.length === 0
@@ -184,39 +225,43 @@ async function main() {
     }
 
     if (drawerMode === 'clara') {
-      drawerTitle.textContent = 'Clara'
+      setDrawerHead('Clara', 'Denklaag', true)
       drawerBody.innerHTML =
         '<p class="muted">Clara is de denklaag. Gebruik de invoerbalk hieronder om tekst te laten analyseren — voorstellen verschijnen in dit paneel.</p>'
       return
     }
 
     if (drawerMode === 'calendar') {
-      drawerTitle.textContent = 'Agenda'
+      setDrawerHead('Agenda', 'Kalender + state', true)
       drawerBody.innerHTML =
         '<p class="muted">De kalender is je hoofdcanvas. Sleep of resize een blok om Clara State bij te werken (via API).</p>'
       return
     }
 
     /* home */
-    drawerTitle.textContent = 'Vandaag'
+    setDrawerHead('Vandaag', '', false)
     const todayCount = countAgendaToday(runtimeState)
     const pending = (pendingProposedPatches ?? []).length
     const q = (runtimeState.conversation_context?.summary && String(runtimeState.conversation_context.summary)) || ''
     drawerBody.innerHTML = `
-      <div class="stack">
-        <section>
+      <div class="stack drawer-stack--home">
+        <section class="drawer-section">
           <p class="kicker">Vandaag</p>
           <p>${todayCount} blok(ken) vandaag · ${nAgenda()} totaal in agenda</p>
         </section>
-        <section>
+        <section class="drawer-section">
           <p class="kicker">Focus</p>
           <p class="muted">Kies een blok in de kalender voor details, of gebruik Analyze voor voorstellen.</p>
         </section>
-        <section>
-          <p class="kicker">Voorgestelde patches</p>
-          <p>${pending ? `${pending} voorstel(len) klaar in Analyze.` : 'Geen openstaande voorstellen.'}</p>
+        <section class="drawer-section">
+          <p class="kicker">Voorstellen</p>
+          ${
+            pending
+              ? `<p>${pending} voorstel(len) in Analyze — heropen via de invoer hieronder.</p>`
+              : `<div class="empty-state empty-state--inline"><p class="empty-state-title">Geen openstaande voorstellen</p><p class="empty-state-hint">Analyze toont hier eventuele patch-stappen.</p></div>`
+          }
         </section>
-        <section>
+        <section class="drawer-section">
           <p class="kicker">Context</p>
           <p class="muted">${escapeHtml(q.slice(0, 280)) || '—'}</p>
         </section>
@@ -234,20 +279,33 @@ async function main() {
   function showAnalyzeInDrawer(summary, patches, questions, warnings) {
     pendingProposedPatches = patches
     drawerMode = 'analyze'
-    if (drawerTitle) drawerTitle.textContent = 'Analyze'
-    const lines = (patches ?? []).map((p) => `<li>${escapeHtml(patchToHumanLine(p))}</li>`).join('')
+    setDrawerHead('Analyze', 'Voorstellen op basis van je invoer', true)
+    const lines = (patches ?? [])
+      .map((p) => `<li class="proposal-line">${escapeHtml(patchToHumanLine(p, runtimeState))}</li>`)
+      .join('')
     const qs = (questions ?? []).map((x) => `<li>${escapeHtml(x)}</li>`).join('')
     const ws = (warnings ?? []).map((x) => `<li>${escapeHtml(x)}</li>`).join('')
+    const hasPatches = Boolean((patches ?? []).length)
     if (drawerBody) {
       drawerBody.innerHTML = `
-        <div class="stack">
-          <p>${escapeHtml(summary || '')}</p>
-          ${lines ? `<div><p class="kicker">Voorstellen</p><ul class="list">${lines}</ul></div>` : '<p class="muted">Geen patches voorgesteld.</p>'}
-          ${qs ? `<div><p class="kicker">Vragen</p><ul class="list">${qs}</ul></div>` : ''}
-          ${ws ? `<div><p class="kicker">Waarschuwingen</p><ul class="list">${ws}</ul></div>` : ''}
+        <div class="stack drawer-stack--analyze">
+          <section class="drawer-section drawer-zone">
+            <p class="kicker">Samenvatting</p>
+            <p class="analyze-summary">${escapeHtml(summary || '—')}</p>
+          </section>
+          <section class="drawer-section drawer-zone">
+            <p class="kicker">Voorstellen</p>
+            ${
+              hasPatches
+                ? `<ul class="list proposal-list">${lines}</ul>`
+                : `<div class="empty-state"><p class="empty-state-title">Geen voorgestelde wijzigingen</p><p class="empty-state-hint">Clara heeft geen concrete patch-stappen. Pas je invoer aan of werk verder in de kalender.</p></div>`
+            }
+          </section>
+          ${qs ? `<section class="drawer-section drawer-zone"><p class="kicker">Vragen</p><ul class="list">${qs}</ul></section>` : ''}
+          ${ws ? `<section class="drawer-section drawer-zone drawer-zone--warn"><p class="kicker">Waarschuwingen</p><ul class="list">${ws}</ul></section>` : ''}
         </div>`
     }
-    setDrawerAnalyzeActionsVisible(Boolean((patches ?? []).length))
+    setDrawerAnalyzeActionsVisible(hasPatches)
     setRailActive('home')
   }
 
@@ -415,6 +473,10 @@ async function main() {
 
   devClose?.addEventListener('click', () => devDialog?.close())
 
+  drawerBack?.addEventListener('click', () => {
+    goDrawerHome()
+  })
+
   composerFocus?.addEventListener('click', () => {
     composerInput?.focus()
   })
@@ -429,10 +491,10 @@ async function main() {
   })
 
   composerInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      analyzeBtn?.click()
-    }
+    if (e.key !== 'Enter') return
+    if (e.shiftKey) return
+    e.preventDefault()
+    analyzeBtn?.click()
   })
 
   analyzeBtn?.addEventListener('click', () => {

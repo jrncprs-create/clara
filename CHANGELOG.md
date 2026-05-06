@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.4.1 — 2026-05-06
+
+- Clara Core: **UI-polish** op de calendar-first werkplek — rustigere contextdrawer (zones, lege staten, leesbare voorstelregels zonder JSON), **← Start** terug naar home, zachtere **Toepassen / Niet nu**.
+- Composer: **textarea** + **Enter** = Analyze, **Shift+Enter** = nieuwe regel; visueel ingebed in de werkplek (afgeronde balk, schaduw).
+- Schedule-X: **subtielere** gridlijnen en eventblokken; rail iets **secundairder**; drawer/kolombreedtes iets **laptop-vriendelijker**.
+
 ## 0.15.4 — 2026-05-06
 
 - Clara Core UI: **calendar-first** werkplek (Reclaim-achtige hiërarchie, donker Clara-thema): topbar, smalle rail, dominant Schedule-X-middenpaneel, rechter **context-drawer**, compacte **composer**-invoer (geen drie kolommen v0.14).

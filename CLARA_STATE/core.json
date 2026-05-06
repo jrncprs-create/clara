@@ -1,8 +1,8 @@
 {
-  "version": "0.15.4",
+  "version": "0.15.4.1",
   "updated_at": "2026-05-06T00:00:00+02:00",
   "conversation_context": {
-    "summary": "v0.15.4: calendar-first UI; analyze/patch-flows ongewijzigd."
+    "summary": "v0.15.4.1: UI-polish calendar-first; analyze/patch-flows ongewijzigd."
   },
   "agenda_items": [
     {

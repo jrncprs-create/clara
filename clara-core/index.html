@@ -13,7 +13,7 @@
           <span class="brand-mark">C</span>
           <div class="brand-text">
             <span class="brand-name">Clara Core</span>
-            <span class="brand-version">v0.15.4</span>
+            <span class="brand-version">v0.15.4.1</span>
           </div>
         </div>
 
@@ -52,24 +52,28 @@
 
         <aside class="drawer" id="context-drawer" aria-label="Context">
           <div class="drawer-head">
-            <h2 class="drawer-title" id="drawer-title">Vandaag</h2>
+            <button type="button" class="drawer-back" id="drawer-back" hidden>← Start</button>
+            <div class="drawer-head-text">
+              <h2 class="drawer-title" id="drawer-title">Vandaag</h2>
+              <p class="drawer-subtitle" id="drawer-subtitle"></p>
+            </div>
           </div>
           <div class="drawer-body" id="drawer-body"></div>
           <div class="drawer-actions hidden" id="drawer-analyze-actions">
-            <button type="button" class="btn primary" id="analyze-apply">Toepassen</button>
-            <button type="button" class="btn ghost" id="analyze-dismiss">Niet nu</button>
+            <button type="button" class="btn primary soft" id="analyze-apply">Toepassen</button>
+            <button type="button" class="btn ghost soft" id="analyze-dismiss">Niet nu</button>
           </div>
         </aside>
       </div>
 
       <div class="composer" id="composer">
-        <input
-          type="text"
+        <textarea
           class="composer-input"
           id="composer-input"
+          rows="2"
           placeholder="Vertel Clara wat er speelt…"
           autocomplete="off"
-        />
+        ></textarea>
         <button type="button" class="btn primary slim" id="composer-analyze">Analyze</button>
       </div>
     </div>
