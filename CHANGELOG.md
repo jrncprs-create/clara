@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.15.4.13 — 2026-05-06
+
+- UI: CSS-laagstapeling teruggebracht naar één harde `exact.css` override bovenop `style.css`.
+- UI: volledig monochroom, vlakker, minder ronde hoeken, geen paarse/blauwe glow.
+- UI: kalenderframe en toolbar veel vlakker; controls zonder cardachtige randen.
+- Chat: compacte chatstatus met drie denkbolletjes toegevoegd tijdens Analyze.
+
+
 ## 0.15.4.10 — 2026-05-06
 
 - Design: nieuwe `clara-core/design.css` toegevoegd als visuele Clara cockpit-laag bovenop de stabiele v0.15-shell.

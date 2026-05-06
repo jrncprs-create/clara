@@ -1,5 +1,5 @@
 /**
- * Clara Core v0.15.4.7 — stabilize calendar layout shell (ongewijzigd functioneel).
+ * Clara Core v0.15.4.13 — exact flat monochrome UI.
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -226,6 +226,12 @@ async function main() {
                 ? `<div class="chat-stack">${items}</div>`
                 : `<div class="empty-state"><p class="empty-state-title">Nog geen chat</p><p class="empty-state-hint">Gebruik de invoer hieronder om Clara te laten meedenken.</p></div>`
             }
+            ${chatIsThinking ? `
+              <div class="chat-status">
+                <span class="typing-dots"><span></span><span></span><span></span></span>
+                <span>Clara denkt even na…</span>
+              </div>
+            ` : ''}
           </div>
           <div class="chat-inputbar">
             <textarea class="chat-input" id="chat-input" rows="1" placeholder="Vertel Clara wat er speelt…">${draft}</textarea>
@@ -541,6 +547,7 @@ async function main() {
 
   /** @type {string} */
   let chatDraft = ''
+  let chatIsThinking = false
 
   async function analyzeFromChat() {
     const raw = String(chatDraft ?? '')
@@ -549,6 +556,7 @@ async function main() {
 
     chatDraft = ''
     chatHistory.push({ role: 'user', text: input, ts: Date.now() })
+    chatIsThinking = true
     if (drawerMode === 'chat') renderDrawer()
 
     try {
@@ -579,6 +587,9 @@ async function main() {
       pendingProposedPatches = []
       setDrawerAnalyzeActionsVisible(false)
       chatHistory.push({ role: 'clara', text: e instanceof Error ? e.message : String(e), ts: Date.now() })
+    } finally {
+      chatIsThinking = false
+      if (drawerMode === 'chat') renderDrawer()
     }
   }
 
