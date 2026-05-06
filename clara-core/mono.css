@@ -1,0 +1,46 @@
+/* Clara Core v0.15.4.11 — compact monochrome override */
+:root {
+  --bg:#070708;
+  --bg-elevated:#09090a;
+  --surface:#111114;
+  --surface-2:#151518;
+  --surface-3:#1a1a1e;
+  --hairline:rgba(255,255,255,.07);
+  --hairline-strong:rgba(255,255,255,.12);
+  --text:#eeeeee;
+  --muted:#98989e;
+  --accent:#d7d7d9;
+  --accent-2:#b7b7bb;
+  --accent-soft:rgba(255,255,255,.075);
+  --event:rgba(108,112,124,.34);
+  --event-border:rgba(255,255,255,.12);
+  --shadow-soft:none;
+  --radius-sm:6px;
+  --radius-md:8px;
+  --radius-lg:10px;
+}
+body{background:linear-gradient(180deg,#09090a 0%,#050506 100%)!important}
+.side-logo,.rail-btn,.btn,.chat-msg,.chat-input,.composer-input,.daypart-toggle,.daypart-btn,.calendar-frame,.calendar-shell,.calendar-shell .sx__calendar-wrapper,.dev-dialog{border-radius:6px!important;box-shadow:none!important}
+.side-rail{background:rgba(6,6,7,.84)!important;border-right:1px solid rgba(255,255,255,.055)!important}
+.side-logo{color:#eee!important;background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.14)!important}
+.rail-btn{color:rgba(170,170,176,.78)!important;background:transparent!important}
+.rail-btn:hover,.rail-btn.is-active{color:#eee!important;background:rgba(255,255,255,.085)!important}
+.context-drawer{background:linear-gradient(180deg,rgba(11,11,12,.96),rgba(7,7,8,.96))!important;border-right:1px solid rgba(255,255,255,.06)!important}
+.drawer-head,.drawer-stack--home .drawer-section + .drawer-section,.drawer-stack--analyze .drawer-section + .drawer-section,.chat-inputbar{border-color:rgba(255,255,255,.06)!important}
+.drawer-title,.kicker{color:rgba(176,176,181,.78)!important}.muted,.empty-state-hint,.drawer-home-muted,.drawer-subtitle{color:rgba(154,154,160,.86)!important}
+.btn,.btn.primary,.btn.primary.soft{color:#eee!important;background:rgba(255,255,255,.085)!important;border-color:rgba(255,255,255,.12)!important}
+.calendar-stage{background:linear-gradient(180deg,rgba(8,8,9,.96),rgba(5,5,6,.99))!important;padding:10px!important}
+.calendar-frame{background:rgba(15,15,17,.78)!important;border:1px solid rgba(255,255,255,.055)!important}
+.daypart-toggle{top:10px!important;left:10px!important;height:30px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.07)!important;backdrop-filter:none!important}
+.daypart-btn{height:24px!important;color:rgba(154,154,160,.92)!important}.daypart-btn.is-active{color:#eee!important;background:rgba(255,255,255,.1)!important}
+.calendar-shell{--sx-color-primary:#d7d7d9;--sx-color-on-primary:#101012;--sx-color-primary-container:rgba(255,255,255,.09);--sx-color-on-primary-container:#eee;--sx-color-on-surface:#eee;--sx-color-surface-container:rgba(16,16,18,.9);--sx-color-surface-container-low:rgba(12,12,14,.9);--sx-color-surface-container-high:rgba(30,30,34,.94);--sx-color-outline:rgba(255,255,255,.11);--sx-color-outline-variant:rgba(255,255,255,.06)}
+.calendar-shell .sx__calendar-header{min-height:64px!important;padding:10px 14px!important;background:rgba(14,14,16,.82)!important;border-bottom:1px solid rgba(255,255,255,.075)!important;backdrop-filter:none!important}
+.calendar-shell .sx__calendar-header button,.calendar-shell .sx__view-selection,.calendar-shell .sx__date-input,.calendar-shell input,.calendar-shell select{min-height:38px!important;border-radius:6px!important;border-color:rgba(255,255,255,.13)!important;background-color:rgba(255,255,255,.048)!important;color:#eee!important;box-shadow:none!important}
+.calendar-shell .sx__range-heading,.calendar-shell .sx__calendar-header h2{font-size:20px!important;font-weight:620!important;color:rgba(244,244,244,.96)!important}
+.calendar-shell .sx__week-grid__hour,.calendar-shell .sx__week-grid__date-axis,.calendar-shell .sx__week-grid__time-axis,.calendar-shell .sx__week-grid__day,.calendar-shell .sx__week-grid__date,.calendar-shell .sx__time-grid-day{border-color:rgba(255,255,255,.052)!important}
+.calendar-shell .sx__week-grid__hour-text,.calendar-shell .sx__time-axis-label{color:rgba(150,150,156,.76)!important}
+.calendar-shell .sx__week-grid__date-number,.calendar-shell .sx__week-grid__date-name,.calendar-shell .sx__month-grid-day__date-number{color:rgba(214,214,218,.64)!important}
+.calendar-shell .sx__is-today .sx__week-grid__date-number,.calendar-shell .sx__week-grid__date--is-today .sx__week-grid__date-number{color:#eee!important;background:rgba(255,255,255,.1)!important;border-radius:6px!important;box-shadow:none!important}
+.calendar-shell .sx__time-grid-event{border-radius:7px!important;border:1px solid rgba(255,255,255,.12)!important;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.016)),rgba(108,112,124,.34)!important;box-shadow:none!important}
+.calendar-shell .sx__time-grid-event-title{color:#eee!important}.calendar-shell .sx__time-grid-event-time{color:rgba(224,224,226,.78)!important}
+.calendar-empty{border-radius:7px!important;background:rgba(10,10,12,.72)!important;border:1px dashed rgba(255,255,255,.1)!important}
