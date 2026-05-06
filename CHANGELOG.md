@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.15.4 — 2026-05-06
+
+- Clara Core UI: **calendar-first** werkplek (Reclaim-achtige hiërarchie, donker Clara-thema): topbar, smalle rail, dominant Schedule-X-middenpaneel, rechter **context-drawer**, compacte **composer**-invoer (geen drie kolommen v0.14).
+- Drawer: start (vandaag/focus/voorstellen/context), secties Taken/Notities/Clara, detail bij kalenderklik, **Analyze** met leesbare voorstellen + Toepassen/Niet nu.
+- Debug/state: alleen in **modal (dev)**; testknop **+30 min** verplaatst naar dev-tools.
+- Schedule-X: donkere theme-tokens via wrapper-CSS voor rustiger, minder “demo”-aanzicht.
+
 ## 0.15.3 — 2026-05-06
 
 - `POST /api/clara-analyze`: `{ input, state?, source? }` → `{ ok, summary, patches, questions, warnings, engine? }`. Patches zijn **voorstellen**; Clara Core past ze pas toe na expliciete actie (POST `/api/clara-state/patch`).

@@ -1,5 +1,11 @@
 ## Clara (repo)
 
+### Clara Core v0.15.4 — Calendar-first werkplek (UI)
+
+- **Layout:** topbar (weergave + navigatie + sync), smalle **rail**, **kalender** als hoofdcanvas, rechter **context-drawer**, vaste **composer** (Clara-invoer). Geen v0.14-driepanelen-chat/debug-layout.
+- **Functionaliteit (v0.15.x):** ongewijzigd — `GET/POST /api/clara-state`, `POST /api/clara-analyze`, Schedule-X DnD/resize → patches, expliciet **Toepassen** op analyze-voorstellen.
+- **Dev:** state JSON en test **+30 min** zitten in een modal achter het rail-icoon **State (dev)**.
+
 ### Clara Core v0.15.3 — Analyze → patchvoorstellen (expliciet toepassen)
 
 - **Clara State** blijft de bron van waarheid. **Schedule-X** blijft view/interactie (DnD/resize → directe patch + POST).
