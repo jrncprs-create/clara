@@ -1,5 +1,5 @@
 /**
- * Clara Core v0.15.4.2 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
+ * Clara Core v0.15.4.3 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -276,7 +276,7 @@ async function main() {
       : ''
     drawerBody.innerHTML = `
       <div class="stack drawer-stack--home">
-        <section class="drawer-section drawer-zone">
+        <section class="drawer-section">
           <p class="kicker">Vandaag</p>
           ${todayLine}
           <p class="muted drawer-home-muted">${escapeHtml(statusLine)}</p>
@@ -322,11 +322,11 @@ async function main() {
     if (drawerBody) {
       drawerBody.innerHTML = `
         <div class="stack drawer-stack--analyze">
-          <section class="drawer-section drawer-zone">
+          <section class="drawer-section">
             <p class="kicker">Samenvatting</p>
             <p class="analyze-summary">${escapeHtml(summary || '—')}</p>
           </section>
-          <section class="drawer-section drawer-zone">
+          <section class="drawer-section">
             <p class="kicker">Voorstellen</p>
             ${
               hasPatches
@@ -334,8 +334,8 @@ async function main() {
                 : `<div class="empty-state"><p class="empty-state-title">Geen voorgestelde wijzigingen</p><p class="empty-state-hint">Clara heeft geen concrete patch-stappen. Pas je invoer aan of werk verder in de kalender.</p></div>`
             }
           </section>
-          ${qs ? `<section class="drawer-section drawer-zone"><p class="kicker">Vragen</p><ul class="list">${qs}</ul></section>` : ''}
-          ${ws ? `<section class="drawer-section drawer-zone drawer-zone--warn"><p class="kicker">Waarschuwingen</p><ul class="list">${ws}</ul></section>` : ''}
+          ${qs ? `<section class="drawer-section"><p class="kicker">Vragen</p><ul class="list">${qs}</ul></section>` : ''}
+          ${ws ? `<section class="drawer-section drawer-section--warn"><p class="kicker">Waarschuwingen</p><ul class="list">${ws}</ul></section>` : ''}
         </div>`
     }
     setDrawerAnalyzeActionsVisible(hasPatches)
@@ -431,6 +431,9 @@ async function main() {
       views,
       events: initialEvents,
       selectedDate,
+      /** Zichtbare dagrange: minder verticale span, beter binnen viewport. */
+      dayBoundaries: { start: '08:00', end: '22:00' },
+      weekOptions: { gridHeight: 760 },
       plugins: [createDragAndDropPlugin(15), createResizePlugin(15)],
       callbacks: {
         onEventUpdate: (ev) => {

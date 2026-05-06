@@ -1,8 +1,8 @@
 {
-  "version": "0.15.4.2",
+  "version": "0.15.4.3",
   "updated_at": "2026-05-06T00:00:00+02:00",
   "conversation_context": {
-    "summary": "v0.15.4.2: Schedule-X tijdstrings; lege states; mapping ongewijzigd functioneel."
+    "summary": "v0.15.4.3: visuele verfijning viewport; dayBoundaries 08–22; geen functionele wijziging API."
   },
   "agenda_items": [
     {

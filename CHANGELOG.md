@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.4.3 — 2026-05-06
+
+- Clara Core: **vlakkere, donkerdere** shell (minder borders/radius, koelere tint i.p.v. paars-demo); topbar/rail/composer **lichter qua chrome**.
+- **Viewport:** `html/body` + shell **zonder page-scroll**; grid-body `minmax(0,1fr)`; kalender **08:00–22:00** + compactere `weekOptions.gridHeight` zodat de weekgrid **binnen 100vh** blijft i.p.v. eindeloze tijd-as.
+- Drawer: **minder kaarten** — secties via subtiele **scheiding** i.p.v. boxed zones; Schedule-X-wrapper **minder “kaart”** (geen zware rand/schaduw).
+
 ## 0.15.4.2 — 2026-05-06
 
 - **Schedule-X:** agenda → events als `YYYY-MM-DD HH:mm` (geen Temporal/`[Europe/Amsterdam]`-string); kalender valideert weer; roundtrip DnD/resize → Clara State blijft via bestaande patchparser.
