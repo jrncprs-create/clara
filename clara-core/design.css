@@ -1,0 +1,445 @@
+/*
+ * Clara Core v0.15.4.10 — Clara cockpit design layer
+ *
+ * This file is intentionally a visual layer on top of the stable v0.15 shell.
+ * It does not move or clone Schedule-X internals.
+ */
+
+:root {
+  --bg: #07080d;
+  --bg-elevated: #090a10;
+  --surface: #111018;
+  --surface-2: #151521;
+  --surface-3: #1b1b2a;
+  --hairline: rgba(218, 211, 255, 0.09);
+  --hairline-strong: rgba(218, 211, 255, 0.16);
+  --text: #f1eef8;
+  --muted: #8f8aa3;
+  --muted-2: #6f6a82;
+  --accent: #c8afff;
+  --accent-2: #8d78ff;
+  --accent-soft: rgba(200, 175, 255, 0.13);
+  --accent-softer: rgba(200, 175, 255, 0.07);
+  --event: rgba(98, 118, 164, 0.32);
+  --event-border: rgba(201, 188, 255, 0.14);
+  --shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.32);
+  --rail: 54px;
+  --drawer: minmax(292px, min(25vw, 330px));
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+}
+
+body {
+  background:
+    radial-gradient(900px 520px at 16% -18%, rgba(119, 107, 255, 0.18), transparent 56%),
+    radial-gradient(760px 480px at 102% 0%, rgba(94, 142, 255, 0.10), transparent 52%),
+    linear-gradient(180deg, #08090f 0%, #05060a 100%);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.app-body {
+  grid-template-columns: var(--rail) var(--drawer) minmax(0, 1fr);
+  background: rgba(3, 4, 8, 0.38);
+}
+
+.side-rail {
+  padding: 14px 8px 12px;
+  gap: 8px;
+  background: rgba(5, 7, 12, 0.74);
+  border-right: 1px solid rgba(218, 211, 255, 0.07);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.018);
+  opacity: 1;
+}
+
+.side-brand {
+  gap: 7px;
+  padding: 0 0 18px;
+  margin-bottom: 8px;
+  border-bottom: 0;
+}
+
+.side-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  color: #f7f2ff;
+  background:
+    linear-gradient(145deg, rgba(200, 175, 255, 0.24), rgba(88, 119, 255, 0.10)),
+    rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(200, 175, 255, 0.28);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+}
+
+.side-brand-name {
+  max-width: 42px;
+  font-size: 10px;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  text-align: center;
+  color: rgba(241, 238, 248, 0.82);
+}
+
+.side-brand-version {
+  margin-top: 2px;
+  font-size: 9px;
+  color: rgba(143, 138, 163, 0.76);
+}
+
+.rail-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  color: rgba(171, 166, 190, 0.82);
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.rail-btn:hover {
+  color: #f5f1ff;
+  background: rgba(255, 255, 255, 0.055);
+  transform: translateY(-1px);
+}
+
+.rail-btn.is-active {
+  color: #f7f2ff;
+  background:
+    linear-gradient(145deg, rgba(200, 175, 255, 0.18), rgba(93, 111, 255, 0.08)),
+    rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 0 0 1px rgba(200, 175, 255, 0.16), 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.rail-dev {
+  color: rgba(143, 138, 163, 0.48);
+}
+
+.context-drawer {
+  background:
+    linear-gradient(180deg, rgba(11, 12, 19, 0.96), rgba(7, 8, 13, 0.95)),
+    rgba(8, 9, 13, 0.92);
+  border-right: 1px solid rgba(218, 211, 255, 0.075);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.015);
+}
+
+.drawer-head {
+  min-height: 62px;
+  align-items: center;
+  padding: 17px 20px 14px;
+  border-bottom: 1px solid rgba(218, 211, 255, 0.07);
+}
+
+.drawer-title {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  color: rgba(184, 178, 207, 0.76);
+}
+
+.drawer-subtitle {
+  margin-top: 7px;
+  font-size: 12px;
+  color: rgba(143, 138, 163, 0.82);
+}
+
+.drawer-back {
+  color: rgba(143, 138, 163, 0.78);
+  border-radius: 999px;
+  padding: 5px 8px;
+}
+
+.drawer-body {
+  padding: 18px 20px 20px;
+  font-size: 13px;
+  color: rgba(241, 238, 248, 0.91);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(200, 175, 255, 0.22) transparent;
+}
+
+.drawer-body::-webkit-scrollbar,
+.chat-scroll::-webkit-scrollbar,
+.dev-pre::-webkit-scrollbar {
+  width: 8px;
+}
+
+.drawer-body::-webkit-scrollbar-thumb,
+.chat-scroll::-webkit-scrollbar-thumb,
+.dev-pre::-webkit-scrollbar-thumb {
+  background: rgba(200, 175, 255, 0.18);
+  border-radius: 999px;
+}
+
+.drawer-stack--home .drawer-section + .drawer-section,
+.drawer-stack--analyze .drawer-section + .drawer-section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(218, 211, 255, 0.075);
+}
+
+.kicker {
+  margin-bottom: 8px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(169, 164, 191, 0.76);
+}
+
+.empty-state-title,
+.drawer-lead {
+  color: rgba(250, 247, 255, 0.94);
+}
+
+.empty-state-hint,
+.muted,
+.drawer-home-muted {
+  color: rgba(152, 147, 172, 0.86);
+}
+
+.chat-msg {
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(218, 211, 255, 0.07);
+}
+
+.chat-msg--user {
+  background: rgba(200, 175, 255, 0.095);
+  border-color: rgba(200, 175, 255, 0.13);
+}
+
+.chat-inputbar {
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(218, 211, 255, 0.08);
+}
+
+.chat-input,
+.composer-input {
+  min-height: 38px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(218, 211, 255, 0.075);
+}
+
+.chat-input:focus,
+.composer-input:focus {
+  background: rgba(255, 255, 255, 0.075);
+  box-shadow: 0 0 0 3px rgba(200, 175, 255, 0.09), inset 0 0 0 1px rgba(200, 175, 255, 0.28);
+}
+
+.btn {
+  border-radius: 12px;
+  border: 1px solid rgba(218, 211, 255, 0.08);
+  background: rgba(255, 255, 255, 0.055);
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(218, 211, 255, 0.13);
+}
+
+.btn.primary,
+.btn.primary.soft {
+  color: #f7f2ff;
+  background: linear-gradient(145deg, rgba(200, 175, 255, 0.26), rgba(125, 119, 255, 0.16));
+  border-color: rgba(200, 175, 255, 0.18);
+}
+
+.calendar-stage {
+  background:
+    radial-gradient(780px 420px at 50% -20%, rgba(200, 175, 255, 0.07), transparent 60%),
+    linear-gradient(180deg, rgba(8, 9, 14, 0.94), rgba(5, 6, 10, 0.98));
+  padding: 12px 12px 12px 10px;
+}
+
+.calendar-frame {
+  padding: 0;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.012)),
+    rgba(17, 16, 24, 0.86);
+  border: 1px solid rgba(218, 211, 255, 0.14);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.daypart-toggle {
+  position: absolute;
+  z-index: 6;
+  top: 14px;
+  left: 14px;
+  height: 34px;
+  margin: 0;
+  padding: 3px;
+  gap: 3px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(218, 211, 255, 0.09);
+  backdrop-filter: blur(12px);
+}
+
+.daypart-btn {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: rgba(156, 151, 176, 0.9);
+}
+
+.daypart-btn.is-active {
+  color: #f7f2ff;
+  background: rgba(200, 175, 255, 0.17);
+  box-shadow: inset 0 0 0 1px rgba(200, 175, 255, 0.12);
+}
+
+.calendar-shell {
+  border-radius: 22px;
+  --sx-color-primary: #c8afff;
+  --sx-color-on-primary: #120e1e;
+  --sx-color-primary-container: rgba(200, 175, 255, 0.18);
+  --sx-color-on-primary-container: #f7f2ff;
+  --sx-color-surface: transparent;
+  --sx-color-surface-dim: transparent;
+  --sx-color-surface-bright: rgba(255, 255, 255, 0.05);
+  --sx-color-on-surface: #f1eef8;
+  --sx-color-surface-container: rgba(16, 15, 23, 0.9);
+  --sx-color-surface-container-low: rgba(12, 12, 18, 0.9);
+  --sx-color-surface-container-high: rgba(26, 25, 36, 0.94);
+  --sx-color-background: transparent;
+  --sx-color-on-background: #f1eef8;
+  --sx-color-outline: rgba(218, 211, 255, 0.11);
+  --sx-color-outline-variant: rgba(218, 211, 255, 0.065);
+}
+
+.calendar-shell .sx__calendar-wrapper {
+  border-radius: 22px;
+  border: 0;
+  background: transparent;
+}
+
+.calendar-shell .sx__calendar-header {
+  min-height: 76px !important;
+  padding: 13px 16px !important;
+  background: rgba(12, 11, 18, 0.72) !important;
+  border-bottom: 1px solid rgba(218, 211, 255, 0.10) !important;
+  backdrop-filter: blur(14px);
+}
+
+.calendar-shell .sx__calendar-header button,
+.calendar-shell .sx__view-selection,
+.calendar-shell .sx__date-input,
+.calendar-shell input,
+.calendar-shell select {
+  border-radius: 14px !important;
+  border-color: rgba(218, 211, 255, 0.14) !important;
+  background-color: rgba(255, 255, 255, 0.045) !important;
+  color: #f3efff !important;
+  box-shadow: none !important;
+}
+
+.calendar-shell .sx__calendar-header button:hover,
+.calendar-shell .sx__view-selection:hover {
+  background-color: rgba(255, 255, 255, 0.075) !important;
+}
+
+.calendar-shell .sx__range-heading,
+.calendar-shell .sx__calendar-header h2,
+.calendar-shell .sx__calendar-header [class*='heading'] {
+  font-size: 20px !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.03em !important;
+  color: rgba(250, 247, 255, 0.96) !important;
+}
+
+.calendar-shell .sx__week-grid,
+.calendar-shell .sx__time-grid-day,
+.calendar-shell .sx__date-grid,
+.calendar-shell .sx__month-grid-day {
+  background: transparent !important;
+}
+
+.calendar-shell .sx__week-grid__hour,
+.calendar-shell .sx__week-grid__date-axis,
+.calendar-shell .sx__week-grid__time-axis,
+.calendar-shell .sx__week-grid__day,
+.calendar-shell .sx__week-grid__date,
+.calendar-shell .sx__time-grid-day {
+  border-color: rgba(218, 211, 255, 0.055) !important;
+}
+
+.calendar-shell .sx__week-grid__hour-text,
+.calendar-shell .sx__time-axis-label,
+.calendar-shell [class*='time-axis'] {
+  color: rgba(155, 150, 174, 0.72) !important;
+  font-size: 12px !important;
+}
+
+.calendar-shell .sx__week-grid__date-number,
+.calendar-shell .sx__week-grid__date-name,
+.calendar-shell .sx__month-grid-day__date-number {
+  color: rgba(235, 230, 246, 0.65) !important;
+}
+
+.calendar-shell .sx__is-today .sx__week-grid__date-number,
+.calendar-shell .sx__week-grid__date--is-today .sx__week-grid__date-number,
+.calendar-shell [class*='today'] [class*='date-number'] {
+  color: #241a40 !important;
+  background: linear-gradient(145deg, #d8c4ff, #bda4ff) !important;
+  box-shadow: 0 10px 28px rgba(200, 175, 255, 0.26) !important;
+}
+
+.calendar-shell .sx__time-grid-event {
+  overflow: hidden !important;
+  border-radius: 13px !important;
+  border: 1px solid var(--event-border) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012)),
+    var(--event) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.045) !important;
+}
+
+.calendar-shell .sx__time-grid-event-title {
+  color: #f6f2ff !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.18 !important;
+}
+
+.calendar-shell .sx__time-grid-event-time {
+  color: rgba(235, 230, 246, 0.78) !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.calendar-shell .sx__date-picker-popup,
+.calendar-shell .sx__date-picker-wrapper,
+.calendar-shell [class*='date-picker'] {
+  border-radius: 18px !important;
+  border-color: rgba(218, 211, 255, 0.16) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42) !important;
+}
+
+.calendar-empty {
+  inset: 12px;
+  border-radius: 18px;
+  background: rgba(9, 9, 14, 0.72);
+  border: 1px dashed rgba(218, 211, 255, 0.12);
+}
+
+.dev-dialog {
+  border-radius: 20px;
+  border-color: rgba(218, 211, 255, 0.14);
+  background: #0f0f17;
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --drawer: minmax(252px, 292px);
+  }
+
+  .drawer-body {
+    padding-inline: 16px;
+  }
+
+  .calendar-stage {
+    padding: 10px;
+  }
+}

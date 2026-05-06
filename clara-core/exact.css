@@ -1,0 +1,464 @@
+/* Clara Core v0.15.4.13 — exact flat monochrome UI
+   Design rule: black/grey only, no glow, no purple, no rounded bubbly components. */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #050505;
+  --bg-elevated: #070707;
+  --surface: #090909;
+  --surface-2: #0d0d0e;
+  --surface-3: #121214;
+
+  --text: #eeeeee;
+  --text-soft: #c9c9c9;
+  --muted: #8b8b8f;
+  --muted-2: #66666a;
+
+  --hairline: rgba(255,255,255,.045);
+  --hairline-soft: rgba(255,255,255,.028);
+  --hairline-strong: rgba(255,255,255,.075);
+
+  --rail: 54px;
+  --drawer: minmax(292px, min(25vw, 330px));
+
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 5px;
+
+  --event-bg: #3f4044;
+  --event-border: rgba(255,255,255,.13);
+}
+
+/* reset previous visual layer effects */
+* {
+  box-shadow: none !important;
+}
+
+html,
+body {
+  background: #050505 !important;
+}
+
+body {
+  color: var(--text) !important;
+  background: #050505 !important;
+}
+
+/* shell */
+.app-shell,
+.app-body {
+  background: #050505 !important;
+}
+
+.app-body {
+  grid-template-columns: var(--rail) var(--drawer) minmax(0, 1fr) !important;
+}
+
+/* rail */
+.side-rail {
+  background: #060606 !important;
+  border-right: 1px solid var(--hairline) !important;
+  padding: 13px 8px 12px !important;
+  gap: 8px !important;
+}
+
+.side-brand {
+  border: 0 !important;
+  margin-bottom: 8px !important;
+  padding-bottom: 14px !important;
+}
+
+.side-logo {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 4px !important;
+  color: #eeeeee !important;
+  background: #101010 !important;
+  border: 1px solid var(--hairline-strong) !important;
+}
+
+.side-brand-name {
+  color: rgba(238,238,238,.78) !important;
+  font-size: 10px !important;
+  line-height: 1.05 !important;
+}
+
+.side-brand-version {
+  color: rgba(140,140,145,.78) !important;
+  font-size: 9px !important;
+}
+
+.rail-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 3px !important;
+  color: rgba(165,165,170,.82) !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.rail-btn:hover,
+.rail-btn.is-active {
+  color: #eeeeee !important;
+  background: #151515 !important;
+}
+
+.rail-dev {
+  color: rgba(140,140,145,.45) !important;
+}
+
+/* drawer */
+.context-drawer {
+  background: #060606 !important;
+  border-right: 1px solid var(--hairline) !important;
+}
+
+.drawer-head {
+  min-height: 58px !important;
+  padding: 15px 20px 12px !important;
+  border-bottom: 1px solid var(--hairline) !important;
+}
+
+.drawer-title {
+  color: rgba(175,175,180,.82) !important;
+  font-size: 11px !important;
+  letter-spacing: .17em !important;
+}
+
+.drawer-subtitle,
+.muted,
+.empty-state-hint,
+.drawer-home-muted {
+  color: rgba(145,145,150,.86) !important;
+}
+
+.drawer-body {
+  padding: 18px 20px 20px !important;
+  color: rgba(238,238,238,.9) !important;
+}
+
+.drawer-stack--home .drawer-section + .drawer-section,
+.drawer-stack--analyze .drawer-section + .drawer-section,
+.chat-inputbar {
+  border-top: 1px solid var(--hairline) !important;
+}
+
+.kicker {
+  color: rgba(160,160,165,.76) !important;
+  letter-spacing: .18em !important;
+}
+
+/* chat — compact, flat, not bubbly */
+.chat-shell {
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.chat-scroll {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  padding: 2px 0 12px !important;
+}
+
+.chat-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.chat-msg {
+  max-width: 92% !important;
+  padding: 8px 9px !important;
+  border-radius: 4px !important;
+  background: #111111 !important;
+  border: 0 !important;
+}
+
+.chat-msg--user {
+  align-self: flex-end !important;
+  background: #171717 !important;
+}
+
+.chat-msg--clara,
+.chat-msg--assistant {
+  align-self: flex-start !important;
+}
+
+.chat-who {
+  margin: 0 0 5px !important;
+  color: rgba(145,145,150,.78) !important;
+  font-size: 10px !important;
+  letter-spacing: .14em !important;
+}
+
+.chat-text {
+  color: rgba(238,238,238,.94) !important;
+  font-size: 13px !important;
+  line-height: 1.42 !important;
+}
+
+.chat-inputbar {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+  padding-top: 12px !important;
+}
+
+.chat-input {
+  min-height: 38px !important;
+  max-height: 96px !important;
+  resize: vertical !important;
+  border-radius: 4px !important;
+  color: #eeeeee !important;
+  background: #111111 !important;
+  border: 1px solid var(--hairline-strong) !important;
+}
+
+.chat-input:focus {
+  background: #141414 !important;
+  border-color: rgba(255,255,255,.14) !important;
+}
+
+/* typing indicator */
+.chat-status {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: rgba(145,145,150,.86) !important;
+  font-size: 12px !important;
+  padding: 7px 2px !important;
+}
+
+.typing-dots {
+  display: inline-flex !important;
+  gap: 4px !important;
+}
+
+.typing-dots span {
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: rgba(180,180,184,.75) !important;
+  animation: claraTyping 1.1s infinite ease-in-out !important;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: .14s !important; }
+.typing-dots span:nth-child(3) { animation-delay: .28s !important; }
+
+@keyframes claraTyping {
+  0%, 70%, 100% { opacity: .28; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* buttons — no visible framed component look unless needed */
+.btn,
+.btn.primary,
+.btn.primary.soft,
+.btn.ghost,
+.btn.ghost.soft {
+  border-radius: 4px !important;
+  color: #eeeeee !important;
+  background: #111111 !important;
+  border: 1px solid var(--hairline-strong) !important;
+}
+
+.btn:hover,
+.btn.primary:hover,
+.btn.primary.soft:hover,
+.btn.ghost:hover,
+.btn.ghost.soft:hover {
+  background: #171717 !important;
+}
+
+/* calendar area — no card border look */
+.calendar-stage {
+  background: #050505 !important;
+  padding: 8px 10px 10px !important;
+}
+
+.calendar-frame {
+  background: #090909 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+.calendar-shell {
+  border-radius: 0 !important;
+
+  --sx-color-primary: #d6d6d6;
+  --sx-color-on-primary: #101010;
+  --sx-color-primary-container: #151515;
+  --sx-color-on-primary-container: #eeeeee;
+  --sx-color-on-surface: #eeeeee;
+  --sx-color-surface: transparent;
+  --sx-color-surface-dim: transparent;
+  --sx-color-surface-bright: #111111;
+  --sx-color-surface-container: #090909;
+  --sx-color-surface-container-low: #070707;
+  --sx-color-surface-container-high: #141414;
+  --sx-color-background: transparent;
+  --sx-color-on-background: #eeeeee;
+  --sx-color-outline: rgba(255,255,255,.075);
+  --sx-color-outline-variant: rgba(255,255,255,.04);
+}
+
+.calendar-shell .sx__calendar-wrapper {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* toolbar — flat strip, no button-card chaos */
+.calendar-shell .sx__calendar-header {
+  min-height: 58px !important;
+  padding: 8px 14px !important;
+  background: #090909 !important;
+  border-bottom: 1px solid var(--hairline) !important;
+}
+
+.calendar-shell .sx__calendar-header button,
+.calendar-shell .sx__view-selection,
+.calendar-shell .sx__date-input,
+.calendar-shell input,
+.calendar-shell select {
+  min-height: 34px !important;
+  height: 34px !important;
+  border-radius: 4px !important;
+  color: #eeeeee !important;
+  background-color: #101010 !important;
+  border: 0 !important;
+}
+
+.calendar-shell .sx__calendar-header button:hover,
+.calendar-shell .sx__view-selection:hover {
+  background-color: #171717 !important;
+}
+
+.calendar-shell .sx__range-heading,
+.calendar-shell .sx__calendar-header h2 {
+  font-size: 19px !important;
+  font-weight: 620 !important;
+  color: #eeeeee !important;
+}
+
+/* daypart */
+.daypart-toggle {
+  top: 8px !important;
+  left: 8px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  border-radius: 4px !important;
+  background: #101010 !important;
+  border: 0 !important;
+}
+
+.daypart-btn {
+  height: 28px !important;
+  padding: 0 9px !important;
+  border-radius: 3px !important;
+  color: rgba(150,150,155,.94) !important;
+  background: transparent !important;
+}
+
+.daypart-btn.is-active {
+  color: #eeeeee !important;
+  background: #191919 !important;
+}
+
+/* calendar grid */
+.calendar-shell .sx__week-grid__hour,
+.calendar-shell .sx__week-grid__date-axis,
+.calendar-shell .sx__week-grid__time-axis,
+.calendar-shell .sx__week-grid__day,
+.calendar-shell .sx__week-grid__date,
+.calendar-shell .sx__time-grid-day {
+  border-color: var(--hairline-soft) !important;
+}
+
+.calendar-shell .sx__week-grid__hour-text,
+.calendar-shell .sx__time-axis-label {
+  color: rgba(145,145,150,.72) !important;
+  font-size: 12px !important;
+}
+
+/* day labels */
+.calendar-shell .sx__week-grid__date-number,
+.calendar-shell .sx__week-grid__date-name,
+.calendar-shell .sx__month-grid-day__date-number {
+  color: rgba(205,205,208,.62) !important;
+}
+
+/* selected/today — flat small square, no color, no bubble */
+.calendar-shell .sx__is-today .sx__week-grid__date-number,
+.calendar-shell .sx__week-grid__date--is-today .sx__week-grid__date-number {
+  color: #eeeeee !important;
+  background: #2a2a2d !important;
+  border-radius: 4px !important;
+}
+
+/* event cards */
+.calendar-shell .sx__time-grid-event {
+  border-radius: 5px !important;
+  border: 1px solid var(--event-border) !important;
+  background: var(--event-bg) !important;
+  overflow: hidden !important;
+}
+
+.calendar-shell .sx__time-grid-event-title {
+  color: #eeeeee !important;
+  font-size: 12.5px !important;
+  font-weight: 680 !important;
+  line-height: 1.18 !important;
+}
+
+.calendar-shell .sx__time-grid-event-time {
+  color: rgba(224,224,226,.78) !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+/* dropdowns/date picker — flat, no bubbles */
+.calendar-shell .sx__date-picker-popup,
+.calendar-shell .sx__date-picker-wrapper,
+.calendar-shell .sx__view-selection-items {
+  border-radius: 4px !important;
+  background: #111111 !important;
+  color: #eeeeee !important;
+  border: 1px solid var(--hairline-strong) !important;
+  z-index: 80 !important;
+}
+
+.calendar-shell .sx__date-picker-popup button,
+.calendar-shell .sx__date-picker-wrapper button,
+.calendar-shell .sx__view-selection-items button {
+  border-radius: 3px !important;
+  background: transparent !important;
+  color: #eeeeee !important;
+  border: 0 !important;
+}
+
+.calendar-shell .sx__date-picker-popup button:hover,
+.calendar-shell .sx__date-picker-wrapper button:hover,
+.calendar-shell .sx__view-selection-items button:hover {
+  background: #1a1a1a !important;
+}
+
+/* empty/dev */
+.calendar-empty {
+  border-radius: 4px !important;
+  background: rgba(10,10,10,.72) !important;
+  border: 1px dashed var(--hairline-strong) !important;
+}
+
+.dev-dialog {
+  border-radius: 4px !important;
+  background: #111111 !important;
+  border-color: var(--hairline-strong) !important;
+}
