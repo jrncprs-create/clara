@@ -3,6 +3,7 @@
  */
 import 'temporal-polyfill/global'
 import { applyClaraStatePatch, buildShiftAgendaItemMinutesPatch } from '../src/claraStatePatch.js'
+import { mapClaraAgendaItemToScheduleXEvent } from '../src/mapClaraAgendaToScheduleX.js'
 import { eventTimeToClaraPlain, scheduleXEventToAgendaItemUpdatePatch } from '../src/scheduleXToClaraPatch.js'
 
 function assert(cond, msg) {
@@ -78,5 +79,31 @@ const sxPatch = scheduleXEventToAgendaItemUpdatePatch({
   title: 'X',
 })
 assert(sxPatch.changes.start === '2026-05-06T12:00:00', 'sx patch start')
+
+const bracketItem = {
+  id: 'bracket',
+  title: 'Temporal-bracket',
+  start: '2026-05-06T09:00:00+02:00[Europe/Amsterdam]',
+  end: '2026-05-06T10:30:00+02:00[Europe/Amsterdam]',
+  project: 'clara',
+  status: 'planned',
+  kind: 'focus',
+}
+const sxEv = mapClaraAgendaItemToScheduleXEvent(bracketItem)
+const sxStart = String(sxEv.start)
+const sxEnd = String(sxEv.end)
+assert(!sxStart.includes('[Europe/Amsterdam]'), 'Schedule-X start has no bracket TZ')
+assert(!sxEnd.includes('[Europe/Amsterdam]'), 'Schedule-X end has no bracket TZ')
+assert(sxStart.length > 0 && sxEnd.length > 0, 'Schedule-X start/end non-empty')
+assert(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(sxStart), `Schedule-X start format got ${sxStart}`)
+assert(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(sxEnd), `Schedule-X end format got ${sxEnd}`)
+const round = scheduleXEventToAgendaItemUpdatePatch({
+  id: sxEv.id,
+  start: sxEv.start,
+  end: sxEv.end,
+  title: sxEv.title,
+})
+assert(round.changes.start === '2026-05-06T09:00:00', `roundtrip start got ${round.changes.start}`)
+assert(round.changes.end === '2026-05-06T10:30:00', `roundtrip end got ${round.changes.end}`)
 
 console.log('patch-smoke: OK')

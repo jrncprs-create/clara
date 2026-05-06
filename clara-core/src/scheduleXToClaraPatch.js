@@ -1,6 +1,9 @@
 /**
  * Schedule-X levert UI-events; dit wordt omgezet naar Clara State-patches.
  * Clara State blijft de bron van waarheid — nooit andersom.
+ *
+ * Events gebruiken `YYYY-MM-DD HH:mm` (Schedule-X-validatie); deze laag zet
+ * dat om naar Clara `YYYY-MM-DDTHH:mm:ss` (Europe/Amsterdam-wandtijd).
  */
 
 import { DEFAULT_TIMEZONE } from './mapClaraAgendaToScheduleX.js'

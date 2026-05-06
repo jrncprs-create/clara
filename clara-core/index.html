@@ -13,7 +13,7 @@
           <span class="brand-mark">C</span>
           <div class="brand-text">
             <span class="brand-name">Clara Core</span>
-            <span class="brand-version">v0.15.4.1</span>
+            <span class="brand-version">v0.15.4.2</span>
           </div>
         </div>
 
@@ -47,7 +47,13 @@
         </nav>
 
         <main class="canvas">
-          <div id="calendar" class="calendar-shell" aria-label="Kalender"></div>
+          <div class="calendar-wrap">
+            <div id="calendar-empty" class="calendar-empty hidden" aria-live="polite">
+              <p class="calendar-empty-title">Nog niets gepland.</p>
+              <p class="calendar-empty-hint">Vertel Clara wat er speelt om een voorstel te maken.</p>
+            </div>
+            <div id="calendar" class="calendar-shell" aria-label="Kalender"></div>
+          </div>
         </main>
 
         <aside class="drawer" id="context-drawer" aria-label="Context">
@@ -70,7 +76,7 @@
         <textarea
           class="composer-input"
           id="composer-input"
-          rows="2"
+          rows="1"
           placeholder="Vertel Clara wat er speelt…"
           autocomplete="off"
         ></textarea>

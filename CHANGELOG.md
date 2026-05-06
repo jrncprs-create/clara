@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.4.2 — 2026-05-06
+
+- **Schedule-X:** agenda → events als `YYYY-MM-DD HH:mm` (geen Temporal/`[Europe/Amsterdam]`-string); kalender valideert weer; roundtrip DnD/resize → Clara State blijft via bestaande patchparser.
+- **Tests:** `patch-smoke` uitgebreid met ZonedDateTime-string in Clara-tijd en asserts op afwezigheid `[Europe/Amsterdam]`.
+- **UI:** lege kalender-overlay (“Nog niets gepland…”), vollere **Vandaag**-drawer (geen blokken vandaag, API vs seed, subtiele waarschuwing), iets compactere **composer**.
+
 ## 0.15.4.1 — 2026-05-06
 
 - Clara Core: **UI-polish** op de calendar-first werkplek — rustigere contextdrawer (zones, lege staten, leesbare voorstelregels zonder JSON), **← Start** terug naar home, zachtere **Toepassen / Niet nu**.

@@ -1,5 +1,5 @@
 /**
- * Clara Core v0.15.4.1 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
+ * Clara Core v0.15.4.2 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -49,11 +49,14 @@ function patchToHumanLine(patch, state) {
   }
 }
 
+/**
+ * @returns {Promise<{ state: object, loadedViaApi: boolean }>}
+ */
 async function loadInitialState() {
   try {
     const res = await fetch('/api/clara-state', { cache: 'no-store' })
     if (res.ok) {
-      return await res.json()
+      return { state: await res.json(), loadedViaApi: true }
     }
   } catch {
     /* geen API in preview */
@@ -62,12 +65,18 @@ async function loadInitialState() {
   if (!res.ok) {
     throw new Error(`Kon Clara State niet laden (${res.status})`)
   }
-  return res.json()
+  return { state: await res.json(), loadedViaApi: false }
 }
 
 function pickInitialPlainDate(events) {
   if (events.length > 0) {
     const first = events[0].start
+    if (typeof first === 'string') {
+      const day = first.slice(0, 10)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+        return Temporal.PlainDate.from(day)
+      }
+    }
     if (first && typeof first.toPlainDate === 'function') {
       return first.toPlainDate()
     }
@@ -102,8 +111,12 @@ async function main() {
   const composerFocus = document.getElementById('composer-focus')
   const devDialog = document.getElementById('dev-dialog')
   const devClose = document.getElementById('dev-close')
+  const calendarEmpty = document.getElementById('calendar-empty')
 
-  let runtimeState = structuredClone(await loadInitialState())
+  const { state: initialState, loadedViaApi } = await loadInitialState()
+  let runtimeState = structuredClone(initialState)
+  /** @type {boolean} */
+  let claraStateLoadedViaApi = loadedViaApi
   let apiWarning = null
   let applyingFromState = false
   /** @type {ReturnType<typeof createCalendar> | null} */
@@ -126,6 +139,12 @@ async function main() {
     syncEl.textContent = `Clara State · ${nAgenda()} agenda${warn}`.slice(0, 72)
     syncEl.classList.toggle('is-warn', Boolean(apiWarning))
     syncEl.classList.toggle('is-ok', !apiWarning)
+  }
+
+  function updateCalendarEmptyState() {
+    if (!calendarEmpty) return
+    const empty = nAgenda() === 0
+    calendarEmpty.classList.toggle('hidden', !empty)
   }
 
   function updateRangeLabel() {
@@ -151,6 +170,7 @@ async function main() {
     } finally {
       queueMicrotask(() => {
         applyingFromState = false
+        updateCalendarEmptyState()
       })
     }
   }
@@ -241,13 +261,26 @@ async function main() {
     /* home */
     setDrawerHead('Vandaag', '', false)
     const todayCount = countAgendaToday(runtimeState)
+    const totalAgenda = nAgenda()
     const pending = (pendingProposedPatches ?? []).length
     const q = (runtimeState.conversation_context?.summary && String(runtimeState.conversation_context.summary)) || ''
+    const todayLine =
+      todayCount === 0
+        ? '<p>Geen blokken gepland voor vandaag.</p>'
+        : `<p>${todayCount} blok(ken) vandaag · ${totalAgenda} totaal in agenda</p>`
+    const statusLine = claraStateLoadedViaApi
+      ? 'Clara State: verbonden via API.'
+      : 'Clara State: lokale seed (`/core.json`); API niet beschikbaar.'
+    const warnLine = apiWarning
+      ? `<p class="drawer-home-warn">Laatste actie: zie korte melding in de indicator linksboven.</p>`
+      : ''
     drawerBody.innerHTML = `
       <div class="stack drawer-stack--home">
-        <section class="drawer-section">
+        <section class="drawer-section drawer-zone">
           <p class="kicker">Vandaag</p>
-          <p>${todayCount} blok(ken) vandaag · ${nAgenda()} totaal in agenda</p>
+          ${todayLine}
+          <p class="muted drawer-home-muted">${escapeHtml(statusLine)}</p>
+          ${warnLine}
         </section>
         <section class="drawer-section">
           <p class="kicker">Focus</p>
@@ -358,6 +391,7 @@ async function main() {
       }
       runtimeState = data.state
       apiWarning = null
+      claraStateLoadedViaApi = true
     } catch (err) {
       runtimeState = snapshot
       apiWarning = err instanceof Error ? err.message : String(err)
@@ -426,6 +460,7 @@ async function main() {
     calendar.setTheme('dark')
     calendar.render(host)
     syncCalendarFromState()
+    updateCalendarEmptyState()
     requestAnimationFrame(() => updateRangeLabel())
   }
 
@@ -542,6 +577,7 @@ async function main() {
 
   renderDebug()
   updateSyncPill()
+  updateCalendarEmptyState()
   renderDrawer()
 }
 

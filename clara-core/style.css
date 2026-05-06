@@ -15,7 +15,7 @@
   --rail: 50px;
   --drawer: minmax(220px, min(30vw, 300px));
   --topbar: 52px;
-  --composer-min: 72px;
+  --composer-min: 56px;
 }
 
 *,
@@ -255,11 +255,58 @@ body {
   background: var(--bg-elevated);
 }
 
+.calendar-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px 12px;
+}
+
+.calendar-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 20px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--muted);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.calendar-empty.hidden {
+  display: none !important;
+}
+
+.calendar-empty-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #c5cad8;
+}
+
+.calendar-empty-hint {
+  margin: 0;
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .calendar-shell {
   flex: 1;
   min-height: 0;
   width: 100%;
-  padding: 10px 12px 12px;
+  padding: 0;
   /* Schedule-X theme tuning (dark) — premium, rustig */
   --sx-color-primary: #c4b5ff;
   --sx-color-on-primary: #1c1533;
@@ -405,6 +452,17 @@ body {
   padding: 0 2px;
 }
 
+.drawer-home-muted {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.drawer-home-warn {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #e8d4a8;
+}
+
 .analyze-summary {
   margin: 0;
   color: var(--text);
@@ -509,11 +567,11 @@ body {
 .composer {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 8px;
   min-height: var(--composer-min);
-  margin: 0 12px 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
+  margin: 0 12px 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
   border: 1px solid var(--hairline);
   background: rgba(12, 13, 18, 0.94);
   backdrop-filter: blur(14px);
@@ -523,16 +581,16 @@ body {
 .composer-input {
   flex: 1;
   min-width: 0;
-  min-height: 44px;
-  max-height: 140px;
+  min-height: 40px;
+  max-height: 120px;
   resize: vertical;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--hairline);
   background: rgba(255, 255, 255, 0.04);
   color: var(--text);
-  padding: 10px 14px;
+  padding: 8px 12px;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.4;
   outline: none;
 }
