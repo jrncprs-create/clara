@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.15.4.10 — 2026-05-06
+
+- Design: nieuwe `clara-core/design.css` toegevoegd als visuele Clara cockpit-laag bovenop de stabiele v0.15-shell.
+- Design: rail, drawer, kalenderkaart, toolbar, daypart-toggle, chat en agenda-items krijgen een zachtere premium dark styling richting `design.png`.
+- Veiligheid: geen AI/state/API-wijzigingen en geen Schedule-X DOM move/clone hacks; Schedule-X internals blijven op hun plek.
+- Versie: zichtbare Clara Core-versie in rail naar `v0.15.4.10`.
+
 ## 0.15.4.7 — 2026-05-06
 
 - Technisch: topbar/appbar verwijderd; branding + versie naar rail (`.side-brand`).
