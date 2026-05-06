@@ -201,7 +201,7 @@ body {
 /* —— Body: rail + canvas + drawer —— */
 .body {
   display: grid;
-  grid-template-columns: var(--rail) minmax(0, 1fr) var(--drawer);
+  grid-template-columns: var(--rail) var(--drawer) minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
 }
@@ -387,7 +387,7 @@ body {
 
 /* —— Drawer —— */
 .drawer {
-  border-left: 1px solid var(--hairline);
+  border-right: 1px solid var(--hairline);
   background: rgba(6, 7, 10, 0.92);
   backdrop-filter: blur(8px);
   display: flex;
@@ -522,6 +522,39 @@ body {
   margin: 0;
   font-size: 12px;
   color: var(--muted);
+  line-height: 1.4;
+}
+
+/* —— Chat —— */
+.chat-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-msg {
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chat-msg--user {
+  background: rgba(126, 179, 255, 0.08);
+}
+
+.chat-who {
+  margin: 0 0 6px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chat-text {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--text);
+  font-size: 13px;
   line-height: 1.4;
 }
 

@@ -13,7 +13,7 @@
           <span class="brand-mark">C</span>
           <div class="brand-text">
             <span class="brand-name">Clara Core</span>
-            <span class="brand-version">v0.15.4.3</span>
+            <span class="brand-version">v0.15.4.4</span>
           </div>
         </div>
 
@@ -21,6 +21,10 @@
           <div class="seg" role="tablist" aria-label="Weergave">
             <button type="button" class="seg-btn is-active" id="view-week" data-view="week">Week</button>
             <button type="button" class="seg-btn" id="view-day" data-view="day">Dag</button>
+          </div>
+          <div class="seg" role="tablist" aria-label="Dagdeel">
+            <button type="button" class="seg-btn is-active" id="part-day">Overdag</button>
+            <button type="button" class="seg-btn" id="part-evening">Avond</button>
           </div>
           <div class="nav-cluster">
             <button type="button" class="icon-btn" id="nav-prev" aria-label="Vorige periode">‹</button>
@@ -39,6 +43,7 @@
         <nav class="rail" aria-label="Hoofdnavigatie">
           <button type="button" class="rail-btn is-active" data-drawer="home" title="Start">◎</button>
           <button type="button" class="rail-btn" data-drawer="calendar" title="Agenda">▦</button>
+          <button type="button" class="rail-btn" data-drawer="chat" title="Chat">💬</button>
           <button type="button" class="rail-btn" data-drawer="tasks" title="Taken">☑</button>
           <button type="button" class="rail-btn" data-drawer="notes" title="Notities">✎</button>
           <button type="button" class="rail-btn" data-drawer="clara" title="Clara">◇</button>
@@ -46,17 +51,7 @@
           <button type="button" class="rail-btn rail-dev" data-action="dev" title="State (dev)">⧉</button>
         </nav>
 
-        <main class="canvas">
-          <div class="calendar-wrap">
-            <div id="calendar-empty" class="calendar-empty hidden" aria-live="polite">
-              <p class="calendar-empty-title">Nog niets gepland.</p>
-              <p class="calendar-empty-hint">Vertel Clara wat er speelt om een voorstel te maken.</p>
-            </div>
-            <div id="calendar" class="calendar-shell" aria-label="Kalender"></div>
-          </div>
-        </main>
-
-        <aside class="drawer" id="context-drawer" aria-label="Context">
+        <aside class="drawer" id="context-drawer" aria-label="Uitleg en chat">
           <div class="drawer-head">
             <button type="button" class="drawer-back" id="drawer-back" hidden>← Start</button>
             <div class="drawer-head-text">
@@ -70,6 +65,16 @@
             <button type="button" class="btn ghost soft" id="analyze-dismiss">Niet nu</button>
           </div>
         </aside>
+
+        <main class="canvas">
+          <div class="calendar-wrap">
+            <div id="calendar-empty" class="calendar-empty hidden" aria-live="polite">
+              <p class="calendar-empty-title">Nog niets gepland.</p>
+              <p class="calendar-empty-hint">Vertel Clara wat er speelt om een voorstel te maken.</p>
+            </div>
+            <div id="calendar" class="calendar-shell" aria-label="Kalender"></div>
+          </div>
+        </main>
       </div>
 
       <div class="composer" id="composer">

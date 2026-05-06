@@ -1,8 +1,8 @@
 {
-  "version": "0.15.4.3",
+  "version": "0.15.4.4",
   "updated_at": "2026-05-06T00:00:00+02:00",
   "conversation_context": {
-    "summary": "v0.15.4.3: visuele verfijning viewport; dayBoundaries 08–22; geen functionele wijziging API."
+    "summary": "v0.15.4.4: chatkolom + dagdeel tabs (09–18 / 18–00); kalender rechts; premium styling."
   },
   "agenda_items": [
     {

@@ -1,5 +1,5 @@
 /**
- * Clara Core v0.15.4.3 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
+ * Clara Core v0.15.4.4 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -106,6 +106,8 @@ async function main() {
   const analyzeDismiss = document.getElementById('analyze-dismiss')
   const viewWeekBtn = document.getElementById('view-week')
   const viewDayBtn = document.getElementById('view-day')
+  const partDayBtn = document.getElementById('part-day')
+  const partEveningBtn = document.getElementById('part-evening')
   const navPrev = document.getElementById('nav-prev')
   const navNext = document.getElementById('nav-next')
   const composerFocus = document.getElementById('composer-focus')
@@ -124,10 +126,15 @@ async function main() {
   let pendingProposedPatches = null
   /** @type {'week' | 'day'} */
   let viewMode = 'week'
-  /** @type {'home' | 'calendar' | 'tasks' | 'notes' | 'clara' | 'event' | 'analyze'} */
+  /** @type {'home' | 'calendar' | 'chat' | 'tasks' | 'notes' | 'clara' | 'event' | 'analyze'} */
   let drawerMode = 'home'
   /** @type {object | null} */
   let selectedEvent = null
+  /** @type {'day' | 'evening'} */
+  let dayPart = 'day'
+
+  /** @type {Array<{ role: 'user' | 'clara', text: string, ts: number }>} */
+  const chatHistory = []
 
   function nAgenda() {
     return (runtimeState.agenda_items ?? []).length
@@ -211,6 +218,22 @@ async function main() {
       return
     }
     setDrawerAnalyzeActionsVisible(false)
+
+    if (drawerMode === 'chat') {
+      setDrawerHead('Chat', 'Clara', false)
+      const items = chatHistory
+        .slice(-40)
+        .map((m) => {
+          const who = m.role === 'user' ? 'Jij' : 'Clara'
+          const cls = m.role === 'user' ? 'chat-msg chat-msg--user' : 'chat-msg chat-msg--clara'
+          return `<div class="${cls}"><p class="chat-who">${who}</p><p class="chat-text">${escapeHtml(m.text)}</p></div>`
+        })
+        .join('')
+      drawerBody.innerHTML = items
+        ? `<div class="chat-stack">${items}</div>`
+        : `<div class="empty-state"><p class="empty-state-title">Nog geen chat</p><p class="empty-state-hint">Gebruik de invoer onderaan om Clara te laten meedenken.</p></div>`
+      return
+    }
 
     if (drawerMode === 'event' && selectedEvent) {
       setDrawerHead('Agendablok', 'Detail uit de kalender', true)
@@ -427,13 +450,18 @@ async function main() {
     const selectedDate =
       preserveDate ?? pickInitialPlainDate(initialEvents).toString()
 
+    const dayBoundaries =
+      dayPart === 'evening'
+        ? { start: '18:00', end: '24:00' }
+        : { start: '09:00', end: '18:00' }
+
     calendar = createCalendar({
       views,
       events: initialEvents,
       selectedDate,
       /** Zichtbare dagrange: minder verticale span, beter binnen viewport. */
-      dayBoundaries: { start: '08:00', end: '22:00' },
-      weekOptions: { gridHeight: 760 },
+      dayBoundaries,
+      weekOptions: { gridHeight: 720 },
       plugins: [createDragAndDropPlugin(15), createResizePlugin(15)],
       callbacks: {
         onEventUpdate: (ev) => {
@@ -481,6 +509,16 @@ async function main() {
   viewWeekBtn?.addEventListener('click', () => setViewMode('week'))
   viewDayBtn?.addEventListener('click', () => setViewMode('day'))
 
+  function setDayPart(next) {
+    dayPart = next
+    partDayBtn?.classList.toggle('is-active', next === 'day')
+    partEveningBtn?.classList.toggle('is-active', next === 'evening')
+    rebuildCalendar()
+  }
+
+  partDayBtn?.addEventListener('click', () => setDayPart('day'))
+  partEveningBtn?.addEventListener('click', () => setDayPart('evening'))
+
   function stepNav(deltaDays) {
     if (!calendar?.$app) return
     const step = viewMode === 'week' ? 7 : 1
@@ -517,6 +555,9 @@ async function main() {
 
   composerFocus?.addEventListener('click', () => {
     composerInput?.focus()
+    drawerMode = 'chat'
+    setRailActive('chat')
+    renderDrawer()
   })
 
   shiftBtn?.addEventListener('click', () => {
@@ -539,6 +580,8 @@ async function main() {
     void (async () => {
       const input = String(composerInput?.value ?? '').trim()
       if (!input) return
+      chatHistory.push({ role: 'user', text: input, ts: Date.now() })
+      if (drawerMode === 'chat') renderDrawer()
       try {
         const res = await fetch('/api/clara-analyze', {
           method: 'POST',
@@ -554,13 +597,19 @@ async function main() {
           showAnalyzeInDrawer(data?.error || `Analyze mislukt (${res.status})`, [], [], [])
           pendingProposedPatches = []
           setDrawerAnalyzeActionsVisible(false)
+          chatHistory.push({ role: 'clara', text: String(data?.error || `Analyze mislukt (${res.status})`), ts: Date.now() })
           return
         }
+        const q = (data.questions ?? []).map((x) => `• ${x}`).join('\n')
+        const w = (data.warnings ?? []).map((x) => `• ${x}`).join('\n')
+        const msg = [data.summary ?? '', q ? `\nVragen:\n${q}` : '', w ? `\nWaarschuwingen:\n${w}` : ''].join('').trim()
+        chatHistory.push({ role: 'clara', text: msg || '—', ts: Date.now() })
         showAnalyzeInDrawer(data.summary ?? '', data.patches ?? [], data.questions ?? [], data.warnings ?? [])
       } catch (e) {
         showAnalyzeInDrawer(e instanceof Error ? e.message : String(e), [], [], [])
         pendingProposedPatches = []
         setDrawerAnalyzeActionsVisible(false)
+        chatHistory.push({ role: 'clara', text: e instanceof Error ? e.message : String(e), ts: Date.now() })
       }
     })()
   })

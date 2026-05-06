@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.4.4 — 2026-05-06
+
+- Layout: kolommen omgedraaid naar **rail → uitleg/chat → kalender** (kalender blijft dominante breedte).
+- Kalender UX: **dagdeel-tabs** (Overdag 09–18, Avond 18–00) zodat je niet hoeft te scrollen door een lange tijd-as.
+- Uitlegkolom: nieuwe **Chat**-mode (sessie-in-memory) met user/Clara bubbles; Analyze blijft voorstellen tonen.
+
 ## 0.15.4.3 — 2026-05-06
 
 - Clara Core: **vlakkere, donkerdere** shell (minder borders/radius, koelere tint i.p.v. paars-demo); topbar/rail/composer **lichter qua chrome**.
