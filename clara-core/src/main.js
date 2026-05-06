@@ -1,5 +1,5 @@
 /**
- * Clara Core v0.15.4.4 — calendar-first werkplek + analyze/patch (ongewijzigd functioneel).
+ * Clara Core v0.15.4.5 — compact calendar-first werkplek (ongewijzigd functioneel).
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -91,12 +91,9 @@ function countAgendaToday(state) {
 
 async function main() {
   const syncEl = document.getElementById('sync-indicator')
-  const rangeEl = document.getElementById('topbar-range')
   const debugEl = document.getElementById('state-debug')
   const host = document.getElementById('calendar')
   const shiftBtn = document.getElementById('shift-first-item')
-  const composerInput = document.getElementById('composer-input')
-  const analyzeBtn = document.getElementById('composer-analyze')
   const drawerTitle = document.getElementById('drawer-title')
   const drawerSubtitle = document.getElementById('drawer-subtitle')
   const drawerBack = document.getElementById('drawer-back')
@@ -104,16 +101,13 @@ async function main() {
   const drawerAnalyzeActions = document.getElementById('drawer-analyze-actions')
   const analyzeApply = document.getElementById('analyze-apply')
   const analyzeDismiss = document.getElementById('analyze-dismiss')
-  const viewWeekBtn = document.getElementById('view-week')
-  const viewDayBtn = document.getElementById('view-day')
   const partDayBtn = document.getElementById('part-day')
   const partEveningBtn = document.getElementById('part-evening')
-  const navPrev = document.getElementById('nav-prev')
-  const navNext = document.getElementById('nav-next')
   const composerFocus = document.getElementById('composer-focus')
   const devDialog = document.getElementById('dev-dialog')
   const devClose = document.getElementById('dev-close')
   const calendarEmpty = document.getElementById('calendar-empty')
+  const daypartBar = document.getElementById('daypart-bar')
 
   const { state: initialState, loadedViaApi } = await loadInitialState()
   let runtimeState = structuredClone(initialState)
@@ -124,9 +118,7 @@ async function main() {
   /** @type {ReturnType<typeof createCalendar> | null} */
   let calendar = null
   let pendingProposedPatches = null
-  /** @type {'week' | 'day'} */
-  let viewMode = 'week'
-  /** @type {'home' | 'calendar' | 'chat' | 'tasks' | 'notes' | 'clara' | 'event' | 'analyze'} */
+  /** @type {'home' | 'chat' | 'tasks' | 'notes' | 'event' | 'analyze'} */
   let drawerMode = 'home'
   /** @type {object | null} */
   let selectedEvent = null
@@ -154,12 +146,17 @@ async function main() {
     calendarEmpty.classList.toggle('hidden', !empty)
   }
 
-  function updateRangeLabel() {
-    if (!calendar?.$app || !rangeEl) return
-    const r = calendar.$app.calendarState.range.value
-    if (r?.start && r?.end) {
-      rangeEl.textContent = `${r.start} – ${r.end}`
+  function isDayViewActive() {
+    try {
+      return String(calendar?.$app?.calendarState?.view?.value ?? '') === 'day'
+    } catch {
+      return false
     }
+  }
+
+  function updateDaypartBarVisibility() {
+    if (!daypartBar) return
+    daypartBar.classList.toggle('hidden', !isDayViewActive())
   }
 
   function renderDebug() {
@@ -229,9 +226,36 @@ async function main() {
           return `<div class="${cls}"><p class="chat-who">${who}</p><p class="chat-text">${escapeHtml(m.text)}</p></div>`
         })
         .join('')
-      drawerBody.innerHTML = items
-        ? `<div class="chat-stack">${items}</div>`
-        : `<div class="empty-state"><p class="empty-state-title">Nog geen chat</p><p class="empty-state-hint">Gebruik de invoer onderaan om Clara te laten meedenken.</p></div>`
+      const draft = escapeHtml(chatDraft || '')
+      drawerBody.innerHTML = `
+        <div class="chat-shell">
+          <div class="chat-scroll">
+            ${
+              items
+                ? `<div class="chat-stack">${items}</div>`
+                : `<div class="empty-state"><p class="empty-state-title">Nog geen chat</p><p class="empty-state-hint">Gebruik de invoer hieronder om Clara te laten meedenken.</p></div>`
+            }
+          </div>
+          <div class="chat-inputbar">
+            <textarea class="chat-input" id="chat-input" rows="1" placeholder="Vertel Clara wat er speelt…">${draft}</textarea>
+            <button type="button" class="btn primary slim" id="chat-analyze">Analyze</button>
+          </div>
+        </div>`
+
+      const input = drawerBody.querySelector('#chat-input')
+      const btn = drawerBody.querySelector('#chat-analyze')
+      input?.addEventListener('input', () => {
+        chatDraft = String(input.value ?? '')
+      })
+      input?.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return
+        if (e.shiftKey) return
+        e.preventDefault()
+        btn?.click()
+      })
+      btn?.addEventListener('click', () => {
+        void analyzeFromChat()
+      })
       return
     }
 
@@ -267,19 +291,7 @@ async function main() {
       return
     }
 
-    if (drawerMode === 'clara') {
-      setDrawerHead('Clara', 'Denklaag', true)
-      drawerBody.innerHTML =
-        '<p class="muted">Clara is de denklaag. Gebruik de invoerbalk hieronder om tekst te laten analyseren — voorstellen verschijnen in dit paneel.</p>'
-      return
-    }
-
-    if (drawerMode === 'calendar') {
-      setDrawerHead('Agenda', 'Kalender + state', true)
-      drawerBody.innerHTML =
-        '<p class="muted">De kalender is je hoofdcanvas. Sleep of resize een blok om Clara State bij te werken (via API).</p>'
-      return
-    }
+    // v0.15.4.5: geen aparte “Agenda/Clara” rail-items; kalender is het hoofdcanvas.
 
     /* home */
     setDrawerHead('Vandaag', '', false)
@@ -443,10 +455,7 @@ async function main() {
       calendar = null
     }
     const initialEvents = mapClaraAgendaItemsToScheduleXEvents(runtimeState.agenda_items)
-    const views =
-      viewMode === 'day'
-        ? [createViewDay(), createViewList()]
-        : [createViewWeek(), createViewList()]
+    const views = [createViewWeek(), createViewDay(), createViewList()]
     const selectedDate =
       preserveDate ?? pickInitialPlainDate(initialEvents).toString()
 
@@ -484,7 +493,7 @@ async function main() {
           renderDrawer()
         },
         onRangeUpdate: () => {
-          updateRangeLabel()
+          updateDaypartBarVisibility()
         },
       },
     })
@@ -492,22 +501,10 @@ async function main() {
     calendar.render(host)
     syncCalendarFromState()
     updateCalendarEmptyState()
-    requestAnimationFrame(() => updateRangeLabel())
+    requestAnimationFrame(() => updateDaypartBarVisibility())
   }
 
   rebuildCalendar()
-
-  function setViewMode(mode) {
-    viewMode = mode
-    if (viewWeekBtn && viewDayBtn) {
-      viewWeekBtn.classList.toggle('is-active', mode === 'week')
-      viewDayBtn.classList.toggle('is-active', mode === 'day')
-    }
-    rebuildCalendar()
-  }
-
-  viewWeekBtn?.addEventListener('click', () => setViewMode('week'))
-  viewDayBtn?.addEventListener('click', () => setViewMode('day'))
 
   function setDayPart(next) {
     dayPart = next
@@ -518,18 +515,6 @@ async function main() {
 
   partDayBtn?.addEventListener('click', () => setDayPart('day'))
   partEveningBtn?.addEventListener('click', () => setDayPart('evening'))
-
-  function stepNav(deltaDays) {
-    if (!calendar?.$app) return
-    const step = viewMode === 'week' ? 7 : 1
-    const cur = calendar.$app.datePickerState.selectedDate.value
-    const next = Temporal.PlainDate.from(cur).add({ days: deltaDays * step }).toString()
-    calendar.$app.calendarState.setRange(next)
-    updateRangeLabel()
-  }
-
-  navPrev?.addEventListener('click', () => stepNav(-1))
-  navNext?.addEventListener('click', () => stepNav(1))
 
   document.querySelectorAll('.rail-btn[data-drawer]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -554,10 +539,12 @@ async function main() {
   })
 
   composerFocus?.addEventListener('click', () => {
-    composerInput?.focus()
     drawerMode = 'chat'
     setRailActive('chat')
     renderDrawer()
+    requestAnimationFrame(() => {
+      document.getElementById('chat-input')?.focus()
+    })
   })
 
   shiftBtn?.addEventListener('click', () => {
@@ -569,50 +556,48 @@ async function main() {
     })()
   })
 
-  composerInput?.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter') return
-    if (e.shiftKey) return
-    e.preventDefault()
-    analyzeBtn?.click()
-  })
+  /** @type {string} */
+  let chatDraft = ''
 
-  analyzeBtn?.addEventListener('click', () => {
-    void (async () => {
-      const input = String(composerInput?.value ?? '').trim()
-      if (!input) return
-      chatHistory.push({ role: 'user', text: input, ts: Date.now() })
-      if (drawerMode === 'chat') renderDrawer()
-      try {
-        const res = await fetch('/api/clara-analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            input,
-            state: runtimeState,
-            source: 'clara-core',
-          }),
-        })
-        const data = await res.json().catch(() => null)
-        if (!res.ok || !data?.ok) {
-          showAnalyzeInDrawer(data?.error || `Analyze mislukt (${res.status})`, [], [], [])
-          pendingProposedPatches = []
-          setDrawerAnalyzeActionsVisible(false)
-          chatHistory.push({ role: 'clara', text: String(data?.error || `Analyze mislukt (${res.status})`), ts: Date.now() })
-          return
-        }
-        const q = (data.questions ?? []).map((x) => `• ${x}`).join('\n')
-        const w = (data.warnings ?? []).map((x) => `• ${x}`).join('\n')
-        const msg = [data.summary ?? '', q ? `\nVragen:\n${q}` : '', w ? `\nWaarschuwingen:\n${w}` : ''].join('').trim()
-        chatHistory.push({ role: 'clara', text: msg || '—', ts: Date.now() })
-        showAnalyzeInDrawer(data.summary ?? '', data.patches ?? [], data.questions ?? [], data.warnings ?? [])
-      } catch (e) {
-        showAnalyzeInDrawer(e instanceof Error ? e.message : String(e), [], [], [])
+  async function analyzeFromChat() {
+    const raw = String(chatDraft ?? '')
+    const input = raw.trim()
+    if (!input) return
+
+    chatDraft = ''
+    chatHistory.push({ role: 'user', text: input, ts: Date.now() })
+    if (drawerMode === 'chat') renderDrawer()
+
+    try {
+      const res = await fetch('/api/clara-analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input,
+          state: runtimeState,
+          source: 'clara-core',
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.ok) {
+        showAnalyzeInDrawer(data?.error || `Analyze mislukt (${res.status})`, [], [], [])
         pendingProposedPatches = []
         setDrawerAnalyzeActionsVisible(false)
-        chatHistory.push({ role: 'clara', text: e instanceof Error ? e.message : String(e), ts: Date.now() })
+        chatHistory.push({ role: 'clara', text: String(data?.error || `Analyze mislukt (${res.status})`), ts: Date.now() })
+        return
       }
-    })()
-  })
+      const q = (data.questions ?? []).map((x) => `• ${x}`).join('\n')
+      const w = (data.warnings ?? []).map((x) => `• ${x}`).join('\n')
+      const msg = [data.summary ?? '', q ? `\nVragen:\n${q}` : '', w ? `\nWaarschuwingen:\n${w}` : ''].join('').trim()
+      chatHistory.push({ role: 'clara', text: msg || '—', ts: Date.now() })
+      showAnalyzeInDrawer(data.summary ?? '', data.patches ?? [], data.questions ?? [], data.warnings ?? [])
+    } catch (e) {
+      showAnalyzeInDrawer(e instanceof Error ? e.message : String(e), [], [], [])
+      pendingProposedPatches = []
+      setDrawerAnalyzeActionsVisible(false)
+      chatHistory.push({ role: 'clara', text: e instanceof Error ? e.message : String(e), ts: Date.now() })
+    }
+  }
 
   analyzeDismiss?.addEventListener('click', () => {
     hideAnalyzeDrawer()
@@ -630,6 +615,7 @@ async function main() {
   renderDebug()
   updateSyncPill()
   updateCalendarEmptyState()
+  updateDaypartBarVisibility()
   renderDrawer()
 }
 

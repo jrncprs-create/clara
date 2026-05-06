@@ -1,8 +1,8 @@
 {
-  "version": "0.15.4.4",
+  "version": "0.15.4.5",
   "updated_at": "2026-05-06T00:00:00+02:00",
   "conversation_context": {
-    "summary": "v0.15.4.4: chatkolom + dagdeel tabs (09–18 / 18–00); kalender rechts; premium styling."
+    "summary": "v0.15.4.5: UI-compactie; chatinvoer in drawer; rail vereenvoudigd; Schedule-X header leidend."
   },
   "agenda_items": [
     {

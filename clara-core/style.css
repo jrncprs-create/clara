@@ -96,57 +96,12 @@ body {
   color: var(--muted);
 }
 
+/* (v0.15.4.5) topbar houdt geen kalender-controls meer; Schedule-X header is leidend */
 .topbar-cal-controls {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: 1;
-  justify-content: center;
-  min-width: 0;
+  display: none;
 }
 
-.seg {
-  display: inline-flex;
-  padding: 1px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border: 0;
-}
-
-.seg-btn {
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.seg-btn.is-active {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.nav-cluster {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-}
-
-.nav-range {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-  min-width: 140px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* legacy topbar controls removed */
 
 .topbar-right {
   display: flex;
@@ -236,6 +191,8 @@ body {
   color: var(--muted);
   cursor: pointer;
   font-size: 14px;
+  display: grid;
+  place-items: center;
 }
 
 .rail-btn:hover {
@@ -259,6 +216,39 @@ body {
   flex-direction: column;
   padding: 0;
   background: var(--bg-elevated);
+}
+
+.daypart-bar {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  z-index: 3;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.daypart-bar.hidden {
+  display: none !important;
+}
+
+.daypart-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.daypart-btn.is-active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .calendar-wrap {
@@ -342,6 +332,13 @@ body {
   overflow: hidden;
   border: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 40%), var(--surface);
+}
+
+/* Schedule-X header is the only calendar controlbar */
+.calendar-shell .sx__calendar-header {
+  padding: 6px 8px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  background: rgba(0, 0, 0, 0.18) !important;
 }
 
 .calendar-shell .sx__view-container {
@@ -526,6 +523,21 @@ body {
 }
 
 /* —— Chat —— */
+.chat-shell {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
 .chat-stack {
   display: flex;
   flex-direction: column;
@@ -556,6 +568,36 @@ body {
   color: var(--text);
   font-size: 13px;
   line-height: 1.4;
+}
+
+.chat-inputbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  max-height: 96px;
+  resize: vertical;
+  border-radius: var(--radius-sm);
+  border: 0;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  outline: none;
+}
+
+.chat-input:focus {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(126, 179, 255, 0.35);
 }
 
 .drawer-actions {

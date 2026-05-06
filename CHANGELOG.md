@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.4.5 — 2026-05-06
+
+- UI-compactie: **geen globale composer**; chatinvoer + Analyze alleen in **Chat**-drawer.
+- Rail: vereenvoudigd naar **Vandaag / Chat / Taken / Notities** (+ dev/state klein onderaan), met consistente line-icons.
+- Kalender: dubbele topbar-controls verwijderd; **Schedule-X header** is de enige kalender-controlbar. **Overdag/Avond** verschijnt alleen in Dag-view.
+
 ## 0.15.4.4 — 2026-05-06
 
 - Layout: kolommen omgedraaid naar **rail → uitleg/chat → kalender** (kalender blijft dominante breedte).

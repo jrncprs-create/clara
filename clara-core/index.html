@@ -13,40 +13,41 @@
           <span class="brand-mark">C</span>
           <div class="brand-text">
             <span class="brand-name">Clara Core</span>
-            <span class="brand-version">v0.15.4.4</span>
-          </div>
-        </div>
-
-        <div class="topbar-cal-controls" id="cal-controls">
-          <div class="seg" role="tablist" aria-label="Weergave">
-            <button type="button" class="seg-btn is-active" id="view-week" data-view="week">Week</button>
-            <button type="button" class="seg-btn" id="view-day" data-view="day">Dag</button>
-          </div>
-          <div class="seg" role="tablist" aria-label="Dagdeel">
-            <button type="button" class="seg-btn is-active" id="part-day">Overdag</button>
-            <button type="button" class="seg-btn" id="part-evening">Avond</button>
-          </div>
-          <div class="nav-cluster">
-            <button type="button" class="icon-btn" id="nav-prev" aria-label="Vorige periode">‹</button>
-            <span class="nav-range" id="topbar-range" aria-live="polite">—</span>
-            <button type="button" class="icon-btn" id="nav-next" aria-label="Volgende periode">›</button>
+            <span class="brand-version">v0.15.4.5</span>
           </div>
         </div>
 
         <div class="topbar-right">
           <span class="sync-pill" id="sync-indicator" aria-live="polite">Sync</span>
-          <button type="button" class="icon-btn ghost" id="composer-focus" aria-label="Clara-invoer" title="Clara-invoer">⌘</button>
+          <button type="button" class="icon-btn ghost" id="composer-focus" aria-label="Open chat" title="Chat">⌘</button>
         </div>
       </header>
 
       <div class="body">
         <nav class="rail" aria-label="Hoofdnavigatie">
-          <button type="button" class="rail-btn is-active" data-drawer="home" title="Start">◎</button>
-          <button type="button" class="rail-btn" data-drawer="calendar" title="Agenda">▦</button>
-          <button type="button" class="rail-btn" data-drawer="chat" title="Chat">💬</button>
-          <button type="button" class="rail-btn" data-drawer="tasks" title="Taken">☑</button>
-          <button type="button" class="rail-btn" data-drawer="notes" title="Notities">✎</button>
-          <button type="button" class="rail-btn" data-drawer="clara" title="Clara">◇</button>
+          <button type="button" class="rail-btn is-active" data-drawer="home" title="Vandaag" aria-label="Vandaag">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button type="button" class="rail-btn" data-drawer="chat" title="Chat" aria-label="Chat">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M7 18.5 4 20V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M8 9h8M8 12h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button type="button" class="rail-btn" data-drawer="tasks" title="Taken" aria-label="Taken">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M9 11.5 11 13.5 15.5 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 4h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button type="button" class="rail-btn" data-drawer="notes" title="Notities" aria-label="Notities">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M4 20h4l11-11a2 2 0 0 0 0-3l-1-1a2 2 0 0 0-3 0L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M13 6l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
           <span class="rail-spacer"></span>
           <button type="button" class="rail-btn rail-dev" data-action="dev" title="State (dev)">⧉</button>
         </nav>
@@ -72,20 +73,13 @@
               <p class="calendar-empty-title">Nog niets gepland.</p>
               <p class="calendar-empty-hint">Vertel Clara wat er speelt om een voorstel te maken.</p>
             </div>
+            <div class="daypart-bar hidden" id="daypart-bar" aria-label="Dagdeel">
+              <button type="button" class="daypart-btn is-active" id="part-day">Overdag</button>
+              <button type="button" class="daypart-btn" id="part-evening">Avond</button>
+            </div>
             <div id="calendar" class="calendar-shell" aria-label="Kalender"></div>
           </div>
         </main>
-      </div>
-
-      <div class="composer" id="composer">
-        <textarea
-          class="composer-input"
-          id="composer-input"
-          rows="1"
-          placeholder="Vertel Clara wat er speelt…"
-          autocomplete="off"
-        ></textarea>
-        <button type="button" class="btn primary slim" id="composer-analyze">Analyze</button>
       </div>
     </div>
 
