@@ -538,15 +538,6 @@ async function main() {
     goDrawerHome()
   })
 
-  composerFocus?.addEventListener('click', () => {
-    drawerMode = 'chat'
-    setRailActive('chat')
-    renderDrawer()
-    requestAnimationFrame(() => {
-      document.getElementById('chat-input')?.focus()
-    })
-  })
-
   shiftBtn?.addEventListener('click', () => {
     void (async () => {
       const first = runtimeState.agenda_items?.[0]

@@ -9,7 +9,8 @@
     "preview": "vite preview --configLoader native --config clara-core/vite.config.js",
     "test:patch": "node clara-core/scripts/patch-smoke.mjs",
     "test:api": "node scripts/clara-state-api-smoke.mjs",
-    "test:analyze": "node scripts/clara-analyze-smoke.mjs"
+    "test:analyze": "node scripts/clara-analyze-smoke.mjs",
+    "test:ui": "node clara-core/scripts/ui-smoke.mjs"
   },
   "dependencies": {
     "@schedule-x/calendar": "^2.2.0",
