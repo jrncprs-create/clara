@@ -1,46 +1,514 @@
-/* Clara Core v0.15.4.11 — compact monochrome override */
+/* Clara Core v0.15.4.12 — exact monochrome correction
+   Visual override only. No Schedule-X DOM movement. */
+
 :root {
-  --bg:#070708;
-  --bg-elevated:#09090a;
-  --surface:#111114;
-  --surface-2:#151518;
-  --surface-3:#1a1a1e;
-  --hairline:rgba(255,255,255,.07);
-  --hairline-strong:rgba(255,255,255,.12);
-  --text:#eeeeee;
-  --muted:#98989e;
-  --accent:#d7d7d9;
-  --accent-2:#b7b7bb;
-  --accent-soft:rgba(255,255,255,.075);
-  --event:rgba(108,112,124,.34);
-  --event-border:rgba(255,255,255,.12);
-  --shadow-soft:none;
-  --radius-sm:6px;
-  --radius-md:8px;
-  --radius-lg:10px;
+  color-scheme: dark;
+
+  --bg: #050505;
+  --bg-elevated: #080808;
+  --surface: #101012;
+  --surface-2: #141416;
+  --surface-3: #1a1a1d;
+
+  --text: #eeeeee;
+  --text-soft: #c9c9cc;
+  --muted: #8e8e94;
+  --muted-2: #68686d;
+
+  --hairline: rgba(255, 255, 255, 0.065);
+  --hairline-strong: rgba(255, 255, 255, 0.12);
+
+  --accent: #d8d8da;
+  --accent-soft: rgba(255, 255, 255, 0.075);
+
+  --event-bg: rgba(110, 113, 120, 0.34);
+  --event-border: rgba(255, 255, 255, 0.13);
+
+  --rail: 54px;
+  --drawer: minmax(292px, min(25vw, 330px));
+
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 9px;
 }
-body{background:linear-gradient(180deg,#09090a 0%,#050506 100%)!important}
-.side-logo,.rail-btn,.btn,.chat-msg,.chat-input,.composer-input,.daypart-toggle,.daypart-btn,.calendar-frame,.calendar-shell,.calendar-shell .sx__calendar-wrapper,.dev-dialog{border-radius:6px!important;box-shadow:none!important}
-.side-rail{background:rgba(6,6,7,.84)!important;border-right:1px solid rgba(255,255,255,.055)!important}
-.side-logo{color:#eee!important;background:rgba(255,255,255,.07)!important;border-color:rgba(255,255,255,.14)!important}
-.rail-btn{color:rgba(170,170,176,.78)!important;background:transparent!important}
-.rail-btn:hover,.rail-btn.is-active{color:#eee!important;background:rgba(255,255,255,.085)!important}
-.context-drawer{background:linear-gradient(180deg,rgba(11,11,12,.96),rgba(7,7,8,.96))!important;border-right:1px solid rgba(255,255,255,.06)!important}
-.drawer-head,.drawer-stack--home .drawer-section + .drawer-section,.drawer-stack--analyze .drawer-section + .drawer-section,.chat-inputbar{border-color:rgba(255,255,255,.06)!important}
-.drawer-title,.kicker{color:rgba(176,176,181,.78)!important}.muted,.empty-state-hint,.drawer-home-muted,.drawer-subtitle{color:rgba(154,154,160,.86)!important}
-.btn,.btn.primary,.btn.primary.soft{color:#eee!important;background:rgba(255,255,255,.085)!important;border-color:rgba(255,255,255,.12)!important}
-.calendar-stage{background:linear-gradient(180deg,rgba(8,8,9,.96),rgba(5,5,6,.99))!important;padding:10px!important}
-.calendar-frame{background:rgba(15,15,17,.78)!important;border:1px solid rgba(255,255,255,.055)!important}
-.daypart-toggle{top:10px!important;left:10px!important;height:30px!important;background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.07)!important;backdrop-filter:none!important}
-.daypart-btn{height:24px!important;color:rgba(154,154,160,.92)!important}.daypart-btn.is-active{color:#eee!important;background:rgba(255,255,255,.1)!important}
-.calendar-shell{--sx-color-primary:#d7d7d9;--sx-color-on-primary:#101012;--sx-color-primary-container:rgba(255,255,255,.09);--sx-color-on-primary-container:#eee;--sx-color-on-surface:#eee;--sx-color-surface-container:rgba(16,16,18,.9);--sx-color-surface-container-low:rgba(12,12,14,.9);--sx-color-surface-container-high:rgba(30,30,34,.94);--sx-color-outline:rgba(255,255,255,.11);--sx-color-outline-variant:rgba(255,255,255,.06)}
-.calendar-shell .sx__calendar-header{min-height:64px!important;padding:10px 14px!important;background:rgba(14,14,16,.82)!important;border-bottom:1px solid rgba(255,255,255,.075)!important;backdrop-filter:none!important}
-.calendar-shell .sx__calendar-header button,.calendar-shell .sx__view-selection,.calendar-shell .sx__date-input,.calendar-shell input,.calendar-shell select{min-height:38px!important;border-radius:6px!important;border-color:rgba(255,255,255,.13)!important;background-color:rgba(255,255,255,.048)!important;color:#eee!important;box-shadow:none!important}
-.calendar-shell .sx__range-heading,.calendar-shell .sx__calendar-header h2{font-size:20px!important;font-weight:620!important;color:rgba(244,244,244,.96)!important}
-.calendar-shell .sx__week-grid__hour,.calendar-shell .sx__week-grid__date-axis,.calendar-shell .sx__week-grid__time-axis,.calendar-shell .sx__week-grid__day,.calendar-shell .sx__week-grid__date,.calendar-shell .sx__time-grid-day{border-color:rgba(255,255,255,.052)!important}
-.calendar-shell .sx__week-grid__hour-text,.calendar-shell .sx__time-axis-label{color:rgba(150,150,156,.76)!important}
-.calendar-shell .sx__week-grid__date-number,.calendar-shell .sx__week-grid__date-name,.calendar-shell .sx__month-grid-day__date-number{color:rgba(214,214,218,.64)!important}
-.calendar-shell .sx__is-today .sx__week-grid__date-number,.calendar-shell .sx__week-grid__date--is-today .sx__week-grid__date-number{color:#eee!important;background:rgba(255,255,255,.1)!important;border-radius:6px!important;box-shadow:none!important}
-.calendar-shell .sx__time-grid-event{border-radius:7px!important;border:1px solid rgba(255,255,255,.12)!important;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.016)),rgba(108,112,124,.34)!important;box-shadow:none!important}
-.calendar-shell .sx__time-grid-event-title{color:#eee!important}.calendar-shell .sx__time-grid-event-time{color:rgba(224,224,226,.78)!important}
-.calendar-empty{border-radius:7px!important;background:rgba(10,10,12,.72)!important;border:1px dashed rgba(255,255,255,.1)!important}
+
+/* Base */
+html,
+body {
+  background: #050505 !important;
+}
+
+body {
+  background:
+    linear-gradient(180deg, #090909 0%, #050505 100%) !important;
+  color: var(--text) !important;
+}
+
+/* kill color/glow from earlier visual layers */
+* {
+  box-shadow: none;
+}
+
+.app-body {
+  background: #050505 !important;
+}
+
+/* Rail */
+.side-rail {
+  background: #070708 !important;
+  border-right: 1px solid var(--hairline) !important;
+  padding: 13px 8px 12px !important;
+  gap: 8px !important;
+}
+
+.side-brand {
+  padding-bottom: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+.side-logo {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 5px !important;
+  color: #eeeeee !important;
+  background: #151517 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+
+.side-brand-name {
+  color: rgba(238, 238, 238, 0.78) !important;
+  font-size: 10px !important;
+  line-height: 1.05 !important;
+}
+
+.side-brand-version {
+  color: rgba(145, 145, 150, 0.78) !important;
+  font-size: 9px !important;
+}
+
+.rail-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 5px !important;
+  color: rgba(165, 165, 170, 0.82) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.rail-btn:hover {
+  color: #eeeeee !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  transform: none !important;
+}
+
+.rail-btn.is-active {
+  color: #eeeeee !important;
+  background: rgba(255, 255, 255, 0.095) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+}
+
+.rail-dev {
+  color: rgba(145, 145, 150, 0.48) !important;
+}
+
+/* Drawer */
+.context-drawer {
+  background:
+    linear-gradient(180deg, rgba(10, 10, 11, 0.98), rgba(6, 6, 7, 0.98)) !important;
+  border-right: 1px solid var(--hairline) !important;
+  box-shadow: none !important;
+}
+
+.drawer-head {
+  min-height: 58px !important;
+  padding: 15px 20px 12px !important;
+  border-bottom: 1px solid var(--hairline) !important;
+}
+
+.drawer-title {
+  color: rgba(178, 178, 184, 0.82) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.17em !important;
+}
+
+.drawer-subtitle {
+  color: rgba(145, 145, 150, 0.82) !important;
+  font-size: 12px !important;
+}
+
+.drawer-back {
+  border-radius: 5px !important;
+  color: rgba(145, 145, 150, 0.82) !important;
+}
+
+.drawer-body {
+  padding: 18px 20px 20px !important;
+  color: rgba(238, 238, 238, 0.9) !important;
+}
+
+.drawer-stack--home .drawer-section + .drawer-section,
+.drawer-stack--analyze .drawer-section + .drawer-section {
+  border-top: 1px solid var(--hairline) !important;
+}
+
+.kicker {
+  color: rgba(165, 165, 170, 0.78) !important;
+  letter-spacing: 0.18em !important;
+}
+
+.muted,
+.empty-state-hint,
+.drawer-home-muted,
+.drawer-subtitle {
+  color: rgba(150, 150, 155, 0.86) !important;
+}
+
+.empty-state-title,
+.drawer-lead {
+  color: rgba(238, 238, 238, 0.94) !important;
+}
+
+/* Chat — terug richting compacte v0.14 bubble-UI */
+.chat-shell {
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.chat-scroll {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  padding: 2px 2px 12px 0 !important;
+}
+
+.chat-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+}
+
+.chat-msg {
+  max-width: 92% !important;
+  padding: 9px 10px !important;
+  border-radius: 8px !important;
+  background: #151517 !important;
+  border: 1px solid rgba(255, 255, 255, 0.065) !important;
+  box-shadow: none !important;
+}
+
+.chat-msg--user {
+  align-self: flex-end !important;
+  background: #1d1d20 !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+.chat-msg--assistant,
+.chat-msg--clara {
+  align-self: flex-start !important;
+}
+
+.chat-who {
+  color: rgba(150, 150, 155, 0.78) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+  margin-bottom: 5px !important;
+}
+
+.chat-text {
+  color: rgba(238, 238, 238, 0.94) !important;
+  font-size: 13px !important;
+  line-height: 1.42 !important;
+}
+
+/* Optional typing/status classes.
+   Add markup only if main.js already has a clean place for it. */
+.chat-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(150, 150, 155, 0.86);
+  font-size: 12px;
+  padding: 7px 2px;
+}
+
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(190, 190, 194, 0.75);
+  animation: claraTyping 1.1s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.14s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@keyframes claraTyping {
+  0%, 70%, 100% { opacity: 0.28; transform: translateY(0); }
+  35% { opacity: 1; transform: translateY(-2px); }
+}
+
+.chat-inputbar {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid var(--hairline) !important;
+}
+
+.chat-input,
+.composer-input {
+  min-height: 38px !important;
+  max-height: 96px !important;
+  border-radius: 7px !important;
+  color: #eeeeee !important;
+  background: #131315 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: none !important;
+}
+
+.chat-input:focus,
+.composer-input:focus {
+  background: #171719 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: none !important;
+}
+
+/* Buttons */
+.btn,
+.btn.primary,
+.btn.primary.soft,
+.btn.ghost,
+.btn.ghost.soft {
+  border-radius: 6px !important;
+  color: #eeeeee !important;
+  background: #151517 !important;
+  border: 1px solid rgba(255, 255, 255, 0.095) !important;
+  box-shadow: none !important;
+}
+
+.btn:hover,
+.btn.primary:hover,
+.btn.primary.soft:hover,
+.btn.ghost:hover,
+.btn.ghost.soft:hover {
+  background: #1c1c1f !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Calendar shell */
+.calendar-stage {
+  background: #070708 !important;
+  padding: 10px !important;
+}
+
+.calendar-frame {
+  background: #101012 !important;
+  border: 1px solid rgba(255, 255, 255, 0.055) !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.calendar-shell {
+  border-radius: 9px !important;
+
+  --sx-color-primary: #d6d6d8;
+  --sx-color-on-primary: #101012;
+  --sx-color-primary-container: rgba(255, 255, 255, 0.09);
+  --sx-color-on-primary-container: #eeeeee;
+  --sx-color-on-surface: #eeeeee;
+  --sx-color-surface: transparent;
+  --sx-color-surface-dim: transparent;
+  --sx-color-surface-bright: rgba(255, 255, 255, 0.04);
+  --sx-color-surface-container: rgba(16, 16, 18, 0.94);
+  --sx-color-surface-container-low: rgba(12, 12, 14, 0.94);
+  --sx-color-surface-container-high: rgba(28, 28, 31, 0.96);
+  --sx-color-background: transparent;
+  --sx-color-on-background: #eeeeee;
+  --sx-color-outline: rgba(255, 255, 255, 0.1);
+  --sx-color-outline-variant: rgba(255, 255, 255, 0.055);
+}
+
+.calendar-shell .sx__calendar-wrapper {
+  border-radius: 9px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Toolbar/header */
+.calendar-shell .sx__calendar-header {
+  min-height: 60px !important;
+  padding: 9px 14px !important;
+  background: #101012 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.065) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.calendar-shell .sx__calendar-header button,
+.calendar-shell .sx__view-selection,
+.calendar-shell .sx__date-input,
+.calendar-shell input,
+.calendar-shell select {
+  min-height: 36px !important;
+  height: 36px !important;
+  border-radius: 6px !important;
+  color: #eeeeee !important;
+  background-color: #151517 !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  box-shadow: none !important;
+}
+
+.calendar-shell .sx__calendar-header button:hover,
+.calendar-shell .sx__view-selection:hover {
+  background-color: #1c1c1f !important;
+}
+
+.calendar-shell .sx__range-heading,
+.calendar-shell .sx__calendar-header h2 {
+  font-size: 19px !important;
+  font-weight: 620 !important;
+  letter-spacing: -0.03em !important;
+  color: #eeeeee !important;
+}
+
+/* Daypart */
+.daypart-toggle {
+  top: 10px !important;
+  left: 10px !important;
+  height: 30px !important;
+  padding: 2px !important;
+  gap: 2px !important;
+  border-radius: 6px !important;
+  background: #151517 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.daypart-btn {
+  height: 24px !important;
+  padding: 0 9px !important;
+  border-radius: 4px !important;
+  color: rgba(160, 160, 165, 0.94) !important;
+  background: transparent !important;
+}
+
+.daypart-btn.is-active {
+  color: #eeeeee !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: none !important;
+}
+
+/* Calendar grid */
+.calendar-shell .sx__week-grid__hour,
+.calendar-shell .sx__week-grid__date-axis,
+.calendar-shell .sx__week-grid__time-axis,
+.calendar-shell .sx__week-grid__day,
+.calendar-shell .sx__week-grid__date,
+.calendar-shell .sx__time-grid-day {
+  border-color: rgba(255, 255, 255, 0.048) !important;
+}
+
+.calendar-shell .sx__week-grid__hour-text,
+.calendar-shell .sx__time-axis-label {
+  color: rgba(150, 150, 156, 0.76) !important;
+  font-size: 12px !important;
+}
+
+.calendar-shell .sx__week-grid__date-number,
+.calendar-shell .sx__week-grid__date-name,
+.calendar-shell .sx__month-grid-day__date-number {
+  color: rgba(214, 214, 218, 0.64) !important;
+}
+
+/* Today/selected date: no color, no bubble */
+.calendar-shell .sx__is-today .sx__week-grid__date-number,
+.calendar-shell .sx__week-grid__date--is-today .sx__week-grid__date-number {
+  color: #eeeeee !important;
+  background: rgba(255, 255, 255, 0.095) !important;
+  border-radius: 5px !important;
+  box-shadow: none !important;
+}
+
+/* Events */
+.calendar-shell .sx__time-grid-event {
+  border-radius: 7px !important;
+  border: 1px solid var(--event-border) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.014)),
+    var(--event-bg) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.calendar-shell .sx__time-grid-event-title {
+  color: #eeeeee !important;
+  font-size: 12.5px !important;
+  font-weight: 680 !important;
+  line-height: 1.18 !important;
+}
+
+.calendar-shell .sx__time-grid-event-time {
+  color: rgba(224, 224, 226, 0.78) !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+/* Popup/date picker/menu cleanup */
+.calendar-shell .sx__date-picker-popup,
+.calendar-shell .sx__date-picker-wrapper,
+.calendar-shell .sx__view-selection-items {
+  border-radius: 7px !important;
+  background: #18181a !important;
+  color: #eeeeee !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.44) !important;
+  z-index: 80 !important;
+}
+
+.calendar-shell .sx__date-picker-popup button,
+.calendar-shell .sx__date-picker-wrapper button,
+.calendar-shell .sx__view-selection-items button {
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: #eeeeee !important;
+  box-shadow: none !important;
+}
+
+.calendar-shell .sx__date-picker-popup button:hover,
+.calendar-shell .sx__date-picker-wrapper button:hover,
+.calendar-shell .sx__view-selection-items button:hover {
+  background: rgba(255, 255, 255, 0.075) !important;
+}
+
+/* Empty/dev */
+.calendar-empty {
+  border-radius: 7px !important;
+  background: rgba(10, 10, 12, 0.72) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.1) !important;
+}
+
+.dev-dialog {
+  border-radius: 8px !important;
+  background: #111114 !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
+}
