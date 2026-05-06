@@ -14,7 +14,6 @@
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --rail: 46px;
   --drawer: minmax(220px, min(30vw, 300px));
-  --topbar: 46px;
   --composer-min: 44px;
   --radius-sm: 4px;
   --radius-md: 5px;
@@ -40,33 +39,56 @@ body {
   color: var(--text);
 }
 
-.shell {
-  height: 100%;
-  max-height: 100dvh;
-  min-height: 0;
+.app-shell {
+  height: 100dvh;
   overflow: hidden;
+  min-height: 0;
+  display: block;
+}
+
+/* —— Layout: rail + drawer + calendar —— */
+.app-body {
   display: grid;
-  grid-template-rows: var(--topbar) minmax(0, 1fr) auto;
-}
-
-/* —— Topbar —— */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px 0 8px;
-  border-bottom: 1px solid var(--hairline);
-  background: rgba(5, 6, 9, 0.65);
-}
-
-.topbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  grid-template-columns: var(--rail) var(--drawer) minmax(0, 1fr);
+  min-height: 0;
   min-width: 0;
+  height: 100%;
 }
 
-.brand-mark {
+@media (max-width: 1100px) {
+  :root {
+    --drawer: minmax(200px, 260px);
+  }
+}
+
+.side-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 8px;
+  border-right: 1px solid var(--hairline);
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0.92;
+  min-height: 0;
+}
+
+.rail-spacer {
+  flex: 1;
+}
+
+.side-brand {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 6px;
+}
+
+.side-logo {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-sm);
@@ -79,107 +101,23 @@ body {
   border: 1px solid rgba(126, 179, 255, 0.22);
 }
 
-.brand-text {
+.side-brand-text {
   display: flex;
   flex-direction: column;
+  align-items: center;
   line-height: 1.1;
 }
 
-.brand-name {
-  font-size: 13px;
+.side-brand-name {
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.brand-version {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-/* (v0.15.4.5) topbar houdt geen kalender-controls meer; Schedule-X header is leidend */
-.topbar-cal-controls {
-  display: none;
-}
-
-/* legacy topbar controls removed */
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sync-pill {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  border: 0;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--muted);
-  max-width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sync-pill.is-ok {
-  color: #a8dcc4;
-  background: rgba(95, 216, 154, 0.08);
-}
-
-.sync-pill.is-warn {
-  color: #e8d4a8;
-  background: rgba(224, 176, 96, 0.1);
-}
-
-.icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  border: 0;
-  background: rgba(255, 255, 255, 0.04);
+  letter-spacing: 0.04em;
   color: var(--text);
-  cursor: pointer;
-  font-size: 15px;
-  line-height: 1;
 }
 
-.icon-btn.ghost {
-  background: transparent;
+.side-brand-version {
+  font-size: 10px;
   color: var(--muted);
-}
-
-.icon-btn:hover {
-  background: rgba(255, 255, 255, 0.07);
-}
-
-/* —— Body: rail + canvas + drawer —— */
-.body {
-  display: grid;
-  grid-template-columns: var(--rail) var(--drawer) minmax(0, 1fr);
-  min-height: 0;
-  min-width: 0;
-}
-
-@media (max-width: 1100px) {
-  :root {
-    --drawer: minmax(200px, 260px);
-  }
-}
-
-.rail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 0;
-  border-right: 1px solid var(--hairline);
-  background: rgba(0, 0, 0, 0.35);
-  opacity: 0.92;
-}
-
-.rail-spacer {
-  flex: 1;
 }
 
 .rail-btn {
@@ -209,20 +147,37 @@ body {
   opacity: 0.5;
 }
 
-.canvas {
+.calendar-stage {
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 0;
   background: var(--bg-elevated);
+  overflow: hidden;
 }
 
-.daypart-bar {
-  position: absolute;
-  top: 8px;
-  left: 10px;
-  z-index: 3;
+.calendar-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px 8px;
+  overflow: hidden;
+}
+
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 0;
+  padding: 0;
+}
+
+.daypart-toggle {
   display: inline-flex;
   gap: 2px;
   padding: 2px;
@@ -230,7 +185,7 @@ body {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.daypart-bar.hidden {
+.daypart-toggle.hidden {
   display: none !important;
 }
 
@@ -249,16 +204,6 @@ body {
 .daypart-btn.is-active {
   color: var(--text);
   background: rgba(255, 255, 255, 0.06);
-}
-
-.calendar-wrap {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 6px 8px 8px;
 }
 
 .calendar-empty {
@@ -383,7 +328,7 @@ body {
 }
 
 /* —— Drawer —— */
-.drawer {
+.context-drawer {
   border-right: 1px solid var(--hairline);
   background: rgba(6, 7, 10, 0.92);
   backdrop-filter: blur(8px);
@@ -796,12 +741,12 @@ body {
 }
 
 @media (max-width: 960px) {
-  .body {
+  .app-body {
     display: flex;
     flex-direction: column;
   }
 
-  .rail {
+  .side-rail {
     flex-direction: row;
     justify-content: center;
     border-right: 0;
@@ -813,14 +758,14 @@ body {
     display: none;
   }
 
-  .canvas {
+  .calendar-stage {
     flex: 1;
     min-height: 280px;
   }
 
-  .drawer {
+  .context-drawer {
     max-height: 38vh;
-    border-left: 0;
+    border-right: 0;
     border-top: 1px solid var(--hairline);
   }
 }

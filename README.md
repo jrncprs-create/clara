@@ -1,8 +1,8 @@
 ## Clara (repo)
 
-### Clara Core v0.15.4.5 — Compact calendar-first werkplek (UI)
+### Clara Core v0.15.4.7 — Stabilized calendar shell (UI)
 
-- **Layout:** compacte topbar (brand + sync), smalle **rail** (Vandaag/Chat/Taken/Notities), **kalender** als hoofdcanvas, **uitleg/chat-drawer** (midden). **Geen globale composer** meer; chatinvoer zit alleen in de **Chat**-drawer.
+- **Layout:** geen globale topbar; branding/versie in de rail, smalle **rail** (Vandaag/Chat/Taken/Notities), **kalender** als hoofdcanvas, **uitleg/chat-drawer** (midden). **Geen globale composer**; chatinvoer zit alleen in de **Chat**-drawer.
 - **Functionaliteit (v0.15.x):** ongewijzigd — `GET/POST /api/clara-state`, `POST /api/clara-analyze`, Schedule-X DnD/resize → patches, expliciet **Toepassen** op analyze-voorstellen.
 - **Dev:** state JSON en test **+30 min** zitten in een modal achter het rail-icoon **State (dev)**.
 

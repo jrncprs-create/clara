@@ -1,5 +1,5 @@
 /**
- * Clara Core v0.15.4.5 — compact calendar-first werkplek (ongewijzigd functioneel).
+ * Clara Core v0.15.4.7 — stabilize calendar layout shell (ongewijzigd functioneel).
  */
 import 'temporal-polyfill/global'
 import '@schedule-x/theme-default/dist/index.css'
@@ -90,7 +90,6 @@ function countAgendaToday(state) {
 }
 
 async function main() {
-  const syncEl = document.getElementById('sync-indicator')
   const debugEl = document.getElementById('state-debug')
   const host = document.getElementById('calendar')
   const shiftBtn = document.getElementById('shift-first-item')
@@ -103,11 +102,11 @@ async function main() {
   const analyzeDismiss = document.getElementById('analyze-dismiss')
   const partDayBtn = document.getElementById('part-day')
   const partEveningBtn = document.getElementById('part-evening')
-  const composerFocus = document.getElementById('composer-focus')
   const devDialog = document.getElementById('dev-dialog')
   const devClose = document.getElementById('dev-close')
   const calendarEmpty = document.getElementById('calendar-empty')
-  const daypartBar = document.getElementById('daypart-bar')
+  const daypartToggle = document.getElementById('daypart-toggle')
+  const calendarToolbar = document.getElementById('calendar-toolbar')
 
   const { state: initialState, loadedViaApi } = await loadInitialState()
   let runtimeState = structuredClone(initialState)
@@ -132,14 +131,6 @@ async function main() {
     return (runtimeState.agenda_items ?? []).length
   }
 
-  function updateSyncPill() {
-    if (!syncEl) return
-    const warn = apiWarning ? ' · let op' : ''
-    syncEl.textContent = `Clara State · ${nAgenda()} agenda${warn}`.slice(0, 72)
-    syncEl.classList.toggle('is-warn', Boolean(apiWarning))
-    syncEl.classList.toggle('is-ok', !apiWarning)
-  }
-
   function updateCalendarEmptyState() {
     if (!calendarEmpty) return
     const empty = nAgenda() === 0
@@ -154,9 +145,17 @@ async function main() {
     }
   }
 
-  function updateDaypartBarVisibility() {
-    if (!daypartBar) return
-    daypartBar.classList.toggle('hidden', !isDayViewActive())
+  function updateDaypartToggleVisibility() {
+    if (!daypartToggle) return
+    daypartToggle.classList.toggle('hidden', !isDayViewActive())
+  }
+
+  function stabilizeCalendarToolbar() {
+    if (!calendarToolbar || !host) return
+    const header = host.querySelector('.sx__calendar-header')
+    if (header && header.parentElement !== calendarToolbar) {
+      calendarToolbar.prepend(header)
+    }
   }
 
   function renderDebug() {
@@ -307,7 +306,7 @@ async function main() {
       ? 'Clara State: verbonden via API.'
       : 'Clara State: lokale seed (`/core.json`); API niet beschikbaar.'
     const warnLine = apiWarning
-      ? `<p class="drawer-home-warn">Laatste actie: zie korte melding in de indicator linksboven.</p>`
+      ? `<p class="drawer-home-warn">Laatste actie: ${escapeHtml(String(apiWarning)).slice(0, 140)}</p>`
       : ''
     drawerBody.innerHTML = `
       <div class="stack drawer-stack--home">
@@ -405,7 +404,6 @@ async function main() {
       }
       runtimeState = next
       renderDebug()
-      updateSyncPill()
       syncCalendarFromState()
 
       const res = await fetch('/api/clara-state/patch', {
@@ -432,7 +430,6 @@ async function main() {
       apiWarning = err instanceof Error ? err.message : String(err)
     }
     renderDebug()
-    updateSyncPill()
     syncCalendarFromState()
     renderDrawer()
   }
@@ -482,7 +479,6 @@ async function main() {
             } catch (err) {
               console.error(err)
               apiWarning = err instanceof Error ? err.message : String(err)
-              updateSyncPill()
             }
           })()
         },
@@ -493,15 +489,19 @@ async function main() {
           renderDrawer()
         },
         onRangeUpdate: () => {
-          updateDaypartBarVisibility()
+          updateDaypartToggleVisibility()
         },
       },
     })
     calendar.setTheme('dark')
     calendar.render(host)
+    stabilizeCalendarToolbar()
     syncCalendarFromState()
     updateCalendarEmptyState()
-    requestAnimationFrame(() => updateDaypartBarVisibility())
+    requestAnimationFrame(() => {
+      stabilizeCalendarToolbar()
+      updateDaypartToggleVisibility()
+    })
   }
 
   rebuildCalendar()
@@ -613,20 +613,14 @@ async function main() {
   })
 
   renderDebug()
-  updateSyncPill()
   updateCalendarEmptyState()
-  updateDaypartBarVisibility()
+  updateDaypartToggleVisibility()
   renderDrawer()
 }
 
 main().catch((err) => {
   console.error(err)
-  const syncEl = document.getElementById('sync-indicator')
   const debugEl = document.getElementById('state-debug')
-  if (syncEl) {
-    syncEl.textContent = err instanceof Error ? err.message : String(err)
-    syncEl.classList.add('is-warn')
-  }
   if (debugEl) {
     debugEl.textContent = err instanceof Error ? err.stack ?? err.message : String(err)
   }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.15.4.7 — 2026-05-06
+
+- Technisch: topbar/appbar verwijderd; branding + versie naar rail (`.side-brand`).
+- Technisch: layout/scroll hard gefixt met `100dvh`, `overflow: hidden`, `min-height: 0` door de hele layout; drawer mag intern scrollen.
+- Technisch: daypart-toggle (`.daypart-toggle`) alleen zichtbaar in Schedule‑X **Day** view; inline in `.calendar-toolbar` zonder overlap.
+- Technisch: Schedule‑X header naar `.calendar-toolbar` verplaatst voor één stabiele control-zone.
+
 ## 0.15.4.5 — 2026-05-06
 
 - UI-compactie: **geen globale composer**; chatinvoer + Analyze alleen in **Chat**-drawer.
