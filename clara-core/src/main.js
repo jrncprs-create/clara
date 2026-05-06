@@ -106,7 +106,6 @@ async function main() {
   const devClose = document.getElementById('dev-close')
   const calendarEmpty = document.getElementById('calendar-empty')
   const daypartToggle = document.getElementById('daypart-toggle')
-  const calendarToolbar = document.getElementById('calendar-toolbar')
 
   const { state: initialState, loadedViaApi } = await loadInitialState()
   let runtimeState = structuredClone(initialState)
@@ -147,15 +146,8 @@ async function main() {
 
   function updateDaypartToggleVisibility() {
     if (!daypartToggle) return
+    // Only show in Schedule-X Day view; hide in Week and List.
     daypartToggle.classList.toggle('hidden', !isDayViewActive())
-  }
-
-  function stabilizeCalendarToolbar() {
-    if (!calendarToolbar || !host) return
-    const header = host.querySelector('.sx__calendar-header')
-    if (header && header.parentElement !== calendarToolbar) {
-      calendarToolbar.prepend(header)
-    }
   }
 
   function renderDebug() {
@@ -451,6 +443,8 @@ async function main() {
       calendar.destroy()
       calendar = null
     }
+    // Ensure Schedule-X does not leave any old DOM behind (prevents header/control duplication).
+    host?.replaceChildren()
     const initialEvents = mapClaraAgendaItemsToScheduleXEvents(runtimeState.agenda_items)
     const views = [createViewWeek(), createViewDay(), createViewList()]
     const selectedDate =
@@ -495,11 +489,9 @@ async function main() {
     })
     calendar.setTheme('dark')
     calendar.render(host)
-    stabilizeCalendarToolbar()
     syncCalendarFromState()
     updateCalendarEmptyState()
     requestAnimationFrame(() => {
-      stabilizeCalendarToolbar()
       updateDaypartToggleVisibility()
     })
   }
